@@ -1,0 +1,1021 @@
+{
+ "lieux": {
+  "eiffel": [
+   48.8584,
+   2.2945
+  ],
+  "notredame": [
+   48.853,
+   2.3499
+  ],
+  "garedunord": [
+   48.8809,
+   2.3553
+  ],
+  "bastille": [
+   48.8532,
+   2.3692
+  ],
+  "sacrecoeur": [
+   48.8867,
+   2.3431
+  ],
+  "italie": [
+   48.831,
+   2.3557
+  ],
+  "etoile": [
+   48.8738,
+   2.295
+  ],
+  "garedelyon": [
+   48.8443,
+   2.3743
+  ],
+  "nation": [
+   48.8483,
+   2.3959
+  ],
+  "montparnasse": [
+   48.8421,
+   2.3219
+  ]
+ },
+ "modes": {
+  "pied": {
+   "n": 77147,
+   "m": 218606,
+   "critere": "distance",
+   "itineraires": [
+    {
+     "de": "eiffel",
+     "a": "notredame",
+     "s": 13329,
+     "t": 76622,
+     "res": {
+      "dijkstra": {
+       "ms": 35.44,
+       "explores": 32147,
+       "rues": 181,
+       "distance_m": 4852.3,
+       "temps_s": 3493.7,
+       "trouve": true
+      },
+      "astar": {
+       "ms": 6.18,
+       "explores": 3643,
+       "rues": 181,
+       "distance_m": 4852.3,
+       "temps_s": 3493.7,
+       "trouve": true
+      },
+      "greedy": {
+       "ms": 0.33,
+       "explores": 179,
+       "rues": 166,
+       "distance_m": 6165.8,
+       "temps_s": 4439.4,
+       "trouve": true
+      },
+      "bfs": {
+       "ms": 7.87,
+       "explores": 14768,
+       "rues": 62,
+       "distance_m": 5381.1,
+       "temps_s": 3874.4,
+       "trouve": true
+      }
+     },
+     "ecart": {
+      "dijkstra": 0.0,
+      "astar": 0.0,
+      "greedy": 27.069637079323204,
+      "bfs": 10.897924695505228
+     }
+    },
+    {
+     "de": "garedunord",
+     "a": "montparnasse",
+     "s": 33550,
+     "t": 9077,
+     "res": {
+      "dijkstra": {
+       "ms": 54.19,
+       "explores": 46475,
+       "rues": 202,
+       "distance_m": 5579.9,
+       "temps_s": 4017.5,
+       "trouve": true
+      },
+      "astar": {
+       "ms": 12.34,
+       "explores": 6146,
+       "rues": 202,
+       "distance_m": 5579.9,
+       "temps_s": 4017.5,
+       "trouve": true
+      },
+      "greedy": {
+       "ms": 0.5,
+       "explores": 280,
+       "rues": 233,
+       "distance_m": 7063.2,
+       "temps_s": 5085.5,
+       "trouve": true
+      },
+      "bfs": {
+       "ms": 38.6,
+       "explores": 60456,
+       "rues": 160,
+       "distance_m": 6357.2,
+       "temps_s": 4577.2,
+       "trouve": true
+      }
+     },
+     "ecart": {
+      "dijkstra": 0.0,
+      "astar": 0.0,
+      "greedy": 26.58291367228804,
+      "bfs": 13.93035717485977
+     }
+    },
+    {
+     "de": "etoile",
+     "a": "nation",
+     "s": 12841,
+     "t": 21453,
+     "res": {
+      "dijkstra": {
+       "ms": 70.73,
+       "explores": 65327,
+       "rues": 275,
+       "distance_m": 8246.1,
+       "temps_s": 5937.2,
+       "trouve": true
+      },
+      "astar": {
+       "ms": 8.21,
+       "explores": 3889,
+       "rues": 275,
+       "distance_m": 8246.1,
+       "temps_s": 5937.2,
+       "trouve": true
+      },
+      "greedy": {
+       "ms": 0.67,
+       "explores": 346,
+       "rues": 332,
+       "distance_m": 11039.3,
+       "temps_s": 7948.3,
+       "trouve": true
+      },
+      "bfs": {
+       "ms": 35.09,
+       "explores": 50877,
+       "rues": 115,
+       "distance_m": 9899.8,
+       "temps_s": 7127.9,
+       "trouve": true
+      }
+     },
+     "ecart": {
+      "dijkstra": 0.0,
+      "astar": 0.0,
+      "greedy": 33.87298237954911,
+      "bfs": 20.05432871296733
+     }
+    },
+    {
+     "de": "sacrecoeur",
+     "a": "italie",
+     "s": 65630,
+     "t": 59301,
+     "res": {
+      "dijkstra": {
+       "ms": 71.94,
+       "explores": 59215,
+       "rues": 303,
+       "distance_m": 7309.0,
+       "temps_s": 5262.5,
+       "trouve": true
+      },
+      "astar": {
+       "ms": 25.03,
+       "explores": 13146,
+       "rues": 303,
+       "distance_m": 7309.0,
+       "temps_s": 5262.5,
+       "trouve": true
+      },
+      "greedy": {
+       "ms": 0.59,
+       "explores": 317,
+       "rues": 298,
+       "distance_m": 10270.2,
+       "temps_s": 7394.5,
+       "trouve": true
+      },
+      "bfs": {
+       "ms": 35.57,
+       "explores": 59124,
+       "rues": 168,
+       "distance_m": 11187.6,
+       "temps_s": 8055.1,
+       "trouve": true
+      }
+     },
+     "ecart": {
+      "dijkstra": 0.0,
+      "astar": 0.0,
+      "greedy": 40.514434259132585,
+      "bfs": 53.06608291147901
+     }
+    },
+    {
+     "de": "bastille",
+     "a": "eiffel",
+     "s": 25079,
+     "t": 13329,
+     "res": {
+      "dijkstra": {
+       "ms": 63.58,
+       "explores": 62636,
+       "rues": 141,
+       "distance_m": 6392.9,
+       "temps_s": 4602.9,
+       "trouve": true
+      },
+      "astar": {
+       "ms": 19.48,
+       "explores": 10950,
+       "rues": 141,
+       "distance_m": 6392.9,
+       "temps_s": 4602.9,
+       "trouve": true
+      },
+      "greedy": {
+       "ms": 0.46,
+       "explores": 257,
+       "rues": 240,
+       "distance_m": 8988.0,
+       "temps_s": 6471.4,
+       "trouve": true
+      },
+      "bfs": {
+       "ms": 15.1,
+       "explores": 32107,
+       "rues": 69,
+       "distance_m": 8483.6,
+       "temps_s": 6108.2,
+       "trouve": true
+      }
+     },
+     "ecart": {
+      "dijkstra": 0.0,
+      "astar": 0.0,
+      "greedy": 40.59347088175946,
+      "bfs": 32.70346790971235
+     }
+    },
+    {
+     "de": "garedelyon",
+     "a": "sacrecoeur",
+     "s": 15443,
+     "t": 65630,
+     "res": {
+      "dijkstra": {
+       "ms": 49.44,
+       "explores": 49938,
+       "rues": 201,
+       "distance_m": 5887.7,
+       "temps_s": 4239.2,
+       "trouve": true
+      },
+      "astar": {
+       "ms": 11.77,
+       "explores": 7213,
+       "rues": 201,
+       "distance_m": 5887.7,
+       "temps_s": 4239.2,
+       "trouve": true
+      },
+      "greedy": {
+       "ms": 0.47,
+       "explores": 263,
+       "rues": 247,
+       "distance_m": 8217.5,
+       "temps_s": 5916.6,
+       "trouve": true
+      },
+      "bfs": {
+       "ms": 38.07,
+       "explores": 74099,
+       "rues": 134,
+       "distance_m": 8853.9,
+       "temps_s": 6374.8,
+       "trouve": true
+      }
+     },
+     "ecart": {
+      "dijkstra": 0.0,
+      "astar": 0.0,
+      "greedy": 39.57063029705998,
+      "bfs": 50.379604939110344
+     }
+    }
+   ],
+   "aleatoire": {
+    "dijkstra": {
+     "paires": 60,
+     "ms_median": 40.01,
+     "explores_median": 41760,
+     "explores_moyen": 40834,
+     "ecart_median": 0.0,
+     "ecart_max": 0.0,
+     "optimal_pct": 100.0,
+     "trouve": 60
+    },
+    "astar": {
+     "paires": 60,
+     "ms_median": 8.19,
+     "explores_median": 4936,
+     "explores_moyen": 6227,
+     "ecart_median": 0.0,
+     "ecart_max": 0.0,
+     "optimal_pct": 100.0,
+     "trouve": 60
+    },
+    "greedy": {
+     "paires": 60,
+     "ms_median": 0.39,
+     "explores_median": 214,
+     "explores_moyen": 220,
+     "ecart_median": 29.46,
+     "ecart_max": 51.8,
+     "optimal_pct": 0.0,
+     "trouve": 60
+    },
+    "bfs": {
+     "paires": 60,
+     "ms_median": 20.69,
+     "explores_median": 44742,
+     "explores_moyen": 42087,
+     "ecart_median": 26.29,
+     "ecart_max": 103.8,
+     "optimal_pct": 0.0,
+     "trouve": 60
+    }
+   }
+  },
+  "velo": {
+   "n": 23609,
+   "m": 51501,
+   "critere": "distance",
+   "itineraires": [
+    {
+     "de": "eiffel",
+     "a": "notredame",
+     "s": 223,
+     "t": 10040,
+     "res": {
+      "dijkstra": {
+       "ms": 6.37,
+       "explores": 10168,
+       "rues": 75,
+       "distance_m": 5035.7,
+       "temps_s": 1208.6,
+       "trouve": true
+      },
+      "astar": {
+       "ms": 1.93,
+       "explores": 1496,
+       "rues": 75,
+       "distance_m": 5035.7,
+       "temps_s": 1208.6,
+       "trouve": true
+      },
+      "greedy": {
+       "ms": 0.18,
+       "explores": 118,
+       "rues": 101,
+       "distance_m": 7169.9,
+       "temps_s": 1720.8,
+       "trouve": true
+      },
+      "bfs": {
+       "ms": 1.39,
+       "explores": 4866,
+       "rues": 40,
+       "distance_m": 5919.8,
+       "temps_s": 1420.8,
+       "trouve": true
+      }
+     },
+     "ecart": {
+      "dijkstra": 0.0,
+      "astar": 0.0,
+      "greedy": 42.381396826657664,
+      "bfs": 17.556645550767527
+     }
+    },
+    {
+     "de": "garedunord",
+     "a": "montparnasse",
+     "s": 11693,
+     "t": 12142,
+     "res": {
+      "dijkstra": {
+       "ms": 7.88,
+       "explores": 12694,
+       "rues": 102,
+       "distance_m": 6070.5,
+       "temps_s": 1456.9,
+       "trouve": true
+      },
+      "astar": {
+       "ms": 2.51,
+       "explores": 1850,
+       "rues": 102,
+       "distance_m": 6070.5,
+       "temps_s": 1456.9,
+       "trouve": true
+      },
+      "greedy": {
+       "ms": 0.21,
+       "explores": 128,
+       "rues": 121,
+       "distance_m": 8487.5,
+       "temps_s": 2037.0,
+       "trouve": true
+      },
+      "bfs": {
+       "ms": 3.7,
+       "explores": 13006,
+       "rues": 89,
+       "distance_m": 6561.1,
+       "temps_s": 1574.7,
+       "trouve": true
+      }
+     },
+     "ecart": {
+      "dijkstra": 0.0,
+      "astar": 0.0,
+      "greedy": 39.81550119430031,
+      "bfs": 8.08170661395273
+     }
+    },
+    {
+     "de": "etoile",
+     "a": "nation",
+     "s": 12454,
+     "t": 290,
+     "res": {
+      "dijkstra": {
+       "ms": 11.49,
+       "explores": 18817,
+       "rues": 139,
+       "distance_m": 8313.3,
+       "temps_s": 1995.2,
+       "trouve": true
+      },
+      "astar": {
+       "ms": 1.26,
+       "explores": 839,
+       "rues": 139,
+       "distance_m": 8313.3,
+       "temps_s": 1995.2,
+       "trouve": true
+      },
+      "greedy": {
+       "ms": 0.15,
+       "explores": 87,
+       "rues": 83,
+       "distance_m": 10357.0,
+       "temps_s": 2485.7,
+       "trouve": true
+      },
+      "bfs": {
+       "ms": 4.15,
+       "explores": 14505,
+       "rues": 70,
+       "distance_m": 9854.4,
+       "temps_s": 2365.1,
+       "trouve": true
+      }
+     },
+     "ecart": {
+      "dijkstra": 0.0,
+      "astar": 0.0,
+      "greedy": 24.583498730949213,
+      "bfs": 18.537764786546866
+     }
+    },
+    {
+     "de": "sacrecoeur",
+     "a": "italie",
+     "s": 11601,
+     "t": 17612,
+     "res": {
+      "dijkstra": {
+       "ms": 10.57,
+       "explores": 17250,
+       "rues": 164,
+       "distance_m": 8669.4,
+       "temps_s": 2080.7,
+       "trouve": true
+      },
+      "astar": {
+       "ms": 5.02,
+       "explores": 3768,
+       "rues": 164,
+       "distance_m": 8669.4,
+       "temps_s": 2080.7,
+       "trouve": true
+      },
+      "greedy": {
+       "ms": 0.34,
+       "explores": 226,
+       "rues": 182,
+       "distance_m": 11487.2,
+       "temps_s": 2756.9,
+       "trouve": true
+      },
+      "bfs": {
+       "ms": 5.09,
+       "explores": 18297,
+       "rues": 109,
+       "distance_m": 12283.9,
+       "temps_s": 2948.1,
+       "trouve": true
+      }
+     },
+     "ecart": {
+      "dijkstra": 0.0,
+      "astar": 0.0,
+      "greedy": 32.502826031789986,
+      "bfs": 41.6926200198399
+     }
+    },
+    {
+     "de": "bastille",
+     "a": "eiffel",
+     "s": 17433,
+     "t": 223,
+     "res": {
+      "dijkstra": {
+       "ms": 10.5,
+       "explores": 17008,
+       "rues": 122,
+       "distance_m": 6445.2,
+       "temps_s": 1546.8,
+       "trouve": true
+      },
+      "astar": {
+       "ms": 3.29,
+       "explores": 2452,
+       "rues": 122,
+       "distance_m": 6445.2,
+       "temps_s": 1546.8,
+       "trouve": true
+      },
+      "greedy": {
+       "ms": 0.24,
+       "explores": 140,
+       "rues": 122,
+       "distance_m": 7856.1,
+       "temps_s": 1885.5,
+       "trouve": true
+      },
+      "bfs": {
+       "ms": 2.18,
+       "explores": 7623,
+       "rues": 47,
+       "distance_m": 8120.1,
+       "temps_s": 1948.8,
+       "trouve": true
+      }
+     },
+     "ecart": {
+      "dijkstra": 0.0,
+      "astar": 0.0,
+      "greedy": 21.890709365108926,
+      "bfs": 25.986780860175024
+     }
+    },
+    {
+     "de": "garedelyon",
+     "a": "sacrecoeur",
+     "s": 14257,
+     "t": 11601,
+     "res": {
+      "dijkstra": {
+       "ms": 11.17,
+       "explores": 18233,
+       "rues": 142,
+       "distance_m": 7407.2,
+       "temps_s": 1777.7,
+       "trouve": true
+      },
+      "astar": {
+       "ms": 7.7,
+       "explores": 5976,
+       "rues": 142,
+       "distance_m": 7407.2,
+       "temps_s": 1777.7,
+       "trouve": true
+      },
+      "greedy": {
+       "ms": 0.31,
+       "explores": 202,
+       "rues": 122,
+       "distance_m": 8284.8,
+       "temps_s": 1988.4,
+       "trouve": true
+      },
+      "bfs": {
+       "ms": 6.74,
+       "explores": 21898,
+       "rues": 87,
+       "distance_m": 10399.6,
+       "temps_s": 2495.9,
+       "trouve": true
+      }
+     },
+     "ecart": {
+      "dijkstra": 0.0,
+      "astar": 0.0,
+      "greedy": 11.847931742088772,
+      "bfs": 40.39853115887246
+     }
+    }
+   ],
+   "aleatoire": {
+    "dijkstra": {
+     "paires": 60,
+     "ms_median": 7.53,
+     "explores_median": 12222,
+     "explores_moyen": 12471,
+     "ecart_median": 0.0,
+     "ecart_max": 0.0,
+     "optimal_pct": 100.0,
+     "trouve": 60
+    },
+    "astar": {
+     "paires": 60,
+     "ms_median": 2.65,
+     "explores_median": 1983,
+     "explores_moyen": 2302,
+     "ecart_median": 0.0,
+     "ecart_max": 0.0,
+     "optimal_pct": 100.0,
+     "trouve": 60
+    },
+    "greedy": {
+     "paires": 60,
+     "ms_median": 0.23,
+     "explores_median": 138,
+     "explores_moyen": 159,
+     "ecart_median": 29.33,
+     "ecart_max": 74.6,
+     "optimal_pct": 0.0,
+     "trouve": 60
+    },
+    "bfs": {
+     "paires": 60,
+     "ms_median": 3.85,
+     "explores_median": 13481,
+     "explores_moyen": 13084,
+     "ecart_median": 12.53,
+     "ecart_max": 71.17,
+     "optimal_pct": 0.0,
+     "trouve": 60
+    }
+   }
+  },
+  "voiture": {
+   "n": 9417,
+   "m": 18047,
+   "critere": "temps",
+   "itineraires": [
+    {
+     "de": "eiffel",
+     "a": "notredame",
+     "s": 8070,
+     "t": 7227,
+     "res": {
+      "dijkstra": {
+       "ms": 2.57,
+       "explores": 4622,
+       "rues": 35,
+       "distance_m": 5175.1,
+       "temps_s": 569.6,
+       "trouve": true
+      },
+      "astar": {
+       "ms": 2.53,
+       "explores": 2123,
+       "rues": 35,
+       "distance_m": 5175.1,
+       "temps_s": 569.6,
+       "trouve": true
+      },
+      "greedy": {
+       "ms": 0.13,
+       "explores": 90,
+       "rues": 74,
+       "distance_m": 6096.5,
+       "temps_s": 756.8,
+       "trouve": true
+      },
+      "bfs": {
+       "ms": 0.55,
+       "explores": 2111,
+       "rues": 33,
+       "distance_m": 5303.7,
+       "temps_s": 636.4,
+       "trouve": true
+      }
+     },
+     "ecart": {
+      "dijkstra": 0.0,
+      "astar": 0.0,
+      "greedy": 32.86516853932583,
+      "bfs": 11.727528089887631
+     }
+    },
+    {
+     "de": "garedunord",
+     "a": "montparnasse",
+     "s": 6927,
+     "t": 7197,
+     "res": {
+      "dijkstra": {
+       "ms": 3.69,
+       "explores": 6735,
+       "rues": 97,
+       "distance_m": 8284.9,
+       "temps_s": 978.8,
+       "trouve": true
+      },
+      "astar": {
+       "ms": 5.58,
+       "explores": 4743,
+       "rues": 97,
+       "distance_m": 8284.9,
+       "temps_s": 978.8,
+       "trouve": true
+      },
+      "greedy": {
+       "ms": 0.17,
+       "explores": 114,
+       "rues": 96,
+       "distance_m": 9432.1,
+       "temps_s": 1131.9,
+       "trouve": true
+      },
+      "bfs": {
+       "ms": 2.21,
+       "explores": 9041,
+       "rues": 84,
+       "distance_m": 10176.8,
+       "temps_s": 1206.6,
+       "trouve": true
+      }
+     },
+     "ecart": {
+      "dijkstra": 0.0,
+      "astar": 0.0,
+      "greedy": 15.64160196158563,
+      "bfs": 23.27339599509603
+     }
+    },
+    {
+     "de": "etoile",
+     "a": "nation",
+     "s": 7885,
+     "t": 254,
+     "res": {
+      "dijkstra": {
+       "ms": 4.25,
+       "explores": 7754,
+       "rues": 83,
+       "distance_m": 8869.9,
+       "temps_s": 869.2,
+       "trouve": true
+      },
+      "astar": {
+       "ms": 5.71,
+       "explores": 4734,
+       "rues": 83,
+       "distance_m": 8869.9,
+       "temps_s": 869.2,
+       "trouve": true
+      },
+      "greedy": {
+       "ms": 0.18,
+       "explores": 126,
+       "rues": 114,
+       "distance_m": 12032.5,
+       "temps_s": 1388.4,
+       "trouve": true
+      },
+      "bfs": {
+       "ms": 2.2,
+       "explores": 8430,
+       "rues": 63,
+       "distance_m": 19389.4,
+       "temps_s": 1454.3,
+       "trouve": true
+      }
+     },
+     "ecart": {
+      "dijkstra": 0.0,
+      "astar": 0.0,
+      "greedy": 59.7330878969167,
+      "bfs": 67.3147722043258
+     }
+    },
+    {
+     "de": "sacrecoeur",
+     "a": "italie",
+     "s": 3803,
+     "t": 8731,
+     "res": {
+      "dijkstra": {
+       "ms": 0.0,
+       "explores": 3,
+       "rues": 0,
+       "distance_m": 0.0,
+       "temps_s": 0.0,
+       "trouve": false
+      },
+      "astar": {
+       "ms": 0.0,
+       "explores": 3,
+       "rues": 0,
+       "distance_m": 0.0,
+       "temps_s": 0.0,
+       "trouve": false
+      },
+      "greedy": {
+       "ms": 0.0,
+       "explores": 3,
+       "rues": 0,
+       "distance_m": 0.0,
+       "temps_s": 0.0,
+       "trouve": false
+      },
+      "bfs": {
+       "ms": 0.0,
+       "explores": 3,
+       "rues": 0,
+       "distance_m": 0.0,
+       "temps_s": 0.0,
+       "trouve": false
+      }
+     },
+     "ecart": {
+      "dijkstra": null,
+      "astar": null,
+      "greedy": null,
+      "bfs": null
+     }
+    },
+    {
+     "de": "bastille",
+     "a": "eiffel",
+     "s": 8713,
+     "t": 8070,
+     "res": {
+      "dijkstra": {
+       "ms": 5.01,
+       "explores": 9331,
+       "rues": 0,
+       "distance_m": 0.0,
+       "temps_s": 0.0,
+       "trouve": false
+      },
+      "astar": {
+       "ms": 10.67,
+       "explores": 9331,
+       "rues": 0,
+       "distance_m": 0.0,
+       "temps_s": 0.0,
+       "trouve": false
+      },
+      "greedy": {
+       "ms": 9.39,
+       "explores": 9331,
+       "rues": 0,
+       "distance_m": 0.0,
+       "temps_s": 0.0,
+       "trouve": false
+      },
+      "bfs": {
+       "ms": 2.25,
+       "explores": 9331,
+       "rues": 0,
+       "distance_m": 0.0,
+       "temps_s": 0.0,
+       "trouve": false
+      }
+     },
+     "ecart": {
+      "dijkstra": null,
+      "astar": null,
+      "greedy": null,
+      "bfs": null
+     }
+    },
+    {
+     "de": "garedelyon",
+     "a": "sacrecoeur",
+     "s": 4808,
+     "t": 3803,
+     "res": {
+      "dijkstra": {
+       "ms": 4.37,
+       "explores": 8045,
+       "rues": 85,
+       "distance_m": 7473.5,
+       "temps_s": 884.5,
+       "trouve": true
+      },
+      "astar": {
+       "ms": 6.59,
+       "explores": 5551,
+       "rues": 85,
+       "distance_m": 7473.5,
+       "temps_s": 884.5,
+       "trouve": true
+      },
+      "greedy": {
+       "ms": 0.17,
+       "explores": 116,
+       "rues": 89,
+       "distance_m": 9350.2,
+       "temps_s": 1123.0,
+       "trouve": true
+      },
+      "bfs": {
+       "ms": 2.28,
+       "explores": 9303,
+       "rues": 71,
+       "distance_m": 19312.9,
+       "temps_s": 1593.8,
+       "trouve": true
+      }
+     },
+     "ecart": {
+      "dijkstra": 0.0,
+      "astar": 0.0,
+      "greedy": 26.964386659129453,
+      "bfs": 80.19219898247597
+     }
+    }
+   ],
+   "aleatoire": {
+    "dijkstra": {
+     "paires": 60,
+     "ms_median": 2.79,
+     "explores_median": 5019,
+     "explores_moyen": 5001,
+     "ecart_median": 0.0,
+     "ecart_max": 0.0,
+     "optimal_pct": 100.0,
+     "trouve": 60
+    },
+    "astar": {
+     "paires": 60,
+     "ms_median": 3.0,
+     "explores_median": 2508,
+     "explores_moyen": 3066,
+     "ecart_median": 0.0,
+     "ecart_max": 0.0,
+     "optimal_pct": 100.0,
+     "trouve": 60
+    },
+    "greedy": {
+     "paires": 60,
+     "ms_median": 0.13,
+     "explores_median": 90,
+     "explores_moyen": 95,
+     "ecart_median": 28.22,
+     "ecart_max": 94.86,
+     "optimal_pct": 3.3,
+     "trouve": 60
+    },
+    "bfs": {
+     "paires": 60,
+     "ms_median": 1.42,
+     "explores_median": 5519,
+     "explores_moyen": 4945,
+     "ecart_median": 15.39,
+     "ecart_max": 111.95,
+     "optimal_pct": 3.3,
+     "trouve": 60
+    }
+   }
+  }
+ }
+}

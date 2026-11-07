@@ -1,0 +1,265 @@
+---
+/**
+ * Étude de cas — Projet d'optimisation : plus courts chemins sur les rues de Paris (FR / EN).
+ * Application : réseau exporté par scripts/pathfinding/export_graph.py, algorithmes portés en JS
+ * (src/viz/pathfinding-algos.ts). Chiffres : scripts/pathfinding/benchmark.py, exécuté sur les
+ * algorithmes Python du dépôt ; parité JS/Python : scripts/pathfinding/verify.mjs.
+ */
+import CaseStudy from '../layouts/CaseStudy.astro';
+import CaseSection from '../components/CaseSection.astro';
+import PathfindingApp from '../components/PathfindingApp.astro';
+import bench from '../data/pathfinding.json';
+import parite from '../data/pathfinding-parity.json';
+import type { Lang } from '../i18n';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const t = (fr: string, en: string) => (lang === 'fr' ? fr : en);
+const loc = lang === 'fr' ? 'fr-FR' : 'en-GB';
+const n = (v: number, d = 0) => v.toLocaleString(loc, { minimumFractionDigits: d, maximumFractionDigits: d });
+const pc = (v: number) => (lang === 'fr' ? `${n(v, 0)} %` : `${n(v, 0)}%`);
+const REPO = 'https://github.com/MatteoLouet/Projet-d-optimisation-';
+
+const M = bench.modes;
+const pied = M.pied.aleatoire, velo = M.velo.aleatoire, voit = M.voiture.aleatoire;
+const ratio = (a: { explores_median: number }, b: { explores_median: number }) => a.explores_median / b.explores_median;
+
+const LIEUX: Record<string, { fr: string; en: string }> = {
+  eiffel: { fr: 'Tour Eiffel', en: 'Eiffel Tower' },
+  notredame: { fr: 'Notre-Dame', en: 'Notre-Dame' },
+  garedunord: { fr: 'Gare du Nord', en: 'Gare du Nord' },
+  bastille: { fr: 'Bastille', en: 'Bastille' },
+  sacrecoeur: { fr: 'Sacré-Cœur', en: 'Sacré-Cœur' },
+  italie: { fr: 'Place d’Italie', en: 'Place d’Italie' },
+  etoile: { fr: 'Arc de Triomphe', en: 'Arc de Triomphe' },
+  garedelyon: { fr: 'Gare de Lyon', en: 'Gare de Lyon' },
+  nation: { fr: 'Nation', en: 'Nation' },
+  montparnasse: { fr: 'Montparnasse', en: 'Montparnasse' },
+};
+const places = Object.entries(bench.lieux).map(([key, [lat, lon]]) => ({ key, label: t(LIEUX[key].fr, LIEUX[key].en), lat, lon }));
+
+const facts = [
+  { k: t('Données', 'Data'), v: t('OpenStreetMap via osmnx, 3 réseaux', 'OpenStreetMap via osmnx, 3 networks') },
+  { k: t('Algorithmes', 'Algorithms'), v: t('Dijkstra · A* · Glouton · BFS', 'Dijkstra · A* · Greedy · BFS') },
+  { k: 'Stack', v: 'Python · osmnx · Flask · deck.gl' },
+  { k: t('Taille du réseau', 'Network size'), v: t(`${n(M.pied.n)} intersections à pied`, `${n(M.pied.n)} walking intersections`) },
+  { k: t('Mesure', 'Measured'), v: t(`A* : ${n(ratio(pied.dijkstra, pied.astar), 1)} × moins de nœuds que Dijkstra`, `A*: ${n(ratio(pied.dijkstra, pied.astar), 1)}× fewer nodes than Dijkstra`) },
+];
+
+const ALG = [
+  { k: 'dijkstra', n: 'Dijkstra' },
+  { k: 'astar', n: 'A*' },
+  { k: 'greedy', n: t('Glouton', 'Greedy') },
+  { k: 'bfs', n: 'BFS' },
+] as const;
+const MODES = [
+  { k: 'pied', n: t('À pied', 'Walking'), d: pied },
+  { k: 'velo', n: t('Vélo', 'Cycling'), d: velo },
+  { k: 'voiture', n: t('Voiture', 'Car'), d: voit },
+] as const;
+const maxExpl = Math.max(...MODES.flatMap((m) => ALG.map((a) => m.d[a.k].explores_median)));
+const fmtDist = (m: number) => `${n(m / 1000, 2)} km`;
+const itinPied = M.pied.itineraires;
+---
+<CaseStudy slug="pathfinding" lang={lang} kicker={t('Algorithmique des graphes · Optimisation', 'Graph algorithms · Optimisation')} facts={facts}>
+  <div slot="bleed" class="pf-band">
+    <div class="wrap pf-band__head">
+      <p class="meta">{t('L’application du projet, exécutée dans votre navigateur', 'The project’s app, running in your browser')}</p>
+      <a class="meta link" href={REPO} rel="noopener">Code ↗</a>
+    </div>
+    <PathfindingApp lang={lang} places={places} />
+    <p class="wrap pf-band__foot small muted">{t(
+      `Réseaux : © contributeurs OpenStreetMap (licence ODbL), téléchargés avec osmnx par le code du dépôt. L’original tourne sur un serveur Flask ; ici, le réseau est pré-exporté et les quatre algorithmes sont portés en JavaScript, ligne à ligne. Sur ${parite.cas} cas de test, le portage donne exactement les mêmes chemins et le même nombre de nœuds explorés que la version Python. Différence : pas de recherche d’adresse, A et B se placent par clic ou dans la liste.`,
+      `Networks: © OpenStreetMap contributors (ODbL licence), downloaded with osmnx by the repository’s code. The original runs on a Flask server; here the network is pre-exported and the four algorithms are ported to JavaScript line by line. Across ${parite.cas} test cases, the port returns exactly the same paths and the same number of explored nodes as the Python version. One difference: no address search, A and B are placed by clicking or from the list.`
+    )}</p>
+  </div>
+
+  <CaseSection n="01" title={t('Contexte', 'Context')} id="contexte">
+    {lang === 'fr' ? (
+      <>
+        <h3>D’une grille de cases aux 77 147 intersections de Paris.</h3>
+        <p>Le projet part de deux scripts sur grille, <code>astar.py</code> et <code>greedy.py</code> : chaque case a quatre voisines, chaque pas coûte 1, et l’heuristique est la distance de Manhattan. Ils comparent un algorithme qui garantit le plus court chemin (A*) à un algorithme qui fonce vers la cible (glouton).</p>
+        <p>L’application reprend la même logique sur un vrai graphe : le réseau de rues de Paris, téléchargé depuis OpenStreetMap. Un clic place le départ et l’arrivée, le serveur calcule les quatre itinéraires, et la carte rejoue l’exploration de chaque algorithme, nœud par nœud.</p>
+      </>
+    ) : (
+      <>
+        <h3>From a grid of cells to the 77,147 intersections of Paris.</h3>
+        <p>The project starts from two grid scripts, <code>astar.py</code> and <code>greedy.py</code>: each cell has four neighbours, each step costs 1 and the heuristic is the Manhattan distance. They compare an algorithm that guarantees the shortest path (A*) with one that rushes towards the target (greedy).</p>
+        <p>The app applies the same logic to a real graph: the street network of Paris, downloaded from OpenStreetMap. A click places the start and the destination, the server computes the four routes, and the map replays each algorithm’s search, node by node.</p>
+      </>
+    )}
+  </CaseSection>
+
+  <CaseSection n="02" title={t('Données', 'Data')} id="donnees">
+    <h3>{t('Trois réseaux, trois façons de compter le coût d’une rue.', 'Three networks, three ways to count the cost of a street.')}</h3>
+    <p>{t(
+      'graphe.py télécharge chaque réseau avec osmnx, numérote les intersections de 0 à n − 1 et construit une liste d’adjacence : pour chaque nœud, ses voisins, la longueur de la rue et son temps de parcours. Quand deux rues relient les mêmes intersections, seule la moins coûteuse est gardée.',
+      'graphe.py downloads each network with osmnx, numbers the intersections from 0 to n − 1 and builds an adjacency list: for each node, its neighbours, the street length and its travel time. When two streets join the same intersections, only the cheaper one is kept.'
+    )}</p>
+    <table class="pf-tab">
+      <thead><tr><th>{t('Réseau', 'Network')}</th><th class="num">{t('Intersections', 'Intersections')}</th><th class="num">{t('Tronçons orientés', 'Directed segments')}</th><th>{t('Coût d’une arête', 'Edge cost')}</th></tr></thead>
+      <tbody>
+        <tr><td>{t('À pied', 'Walking')}</td><td class="num">{n(M.pied.n)}</td><td class="num">{n(M.pied.m)}</td><td>{t('longueur (m), sans sens interdits', 'length (m), no one-way rules')}</td></tr>
+        <tr><td>{t('Vélo', 'Cycling')}</td><td class="num">{n(M.velo.n)}</td><td class="num">{n(M.velo.m)}</td><td>{t('longueur (m), sens uniques respectés', 'length (m), one-way rules respected')}</td></tr>
+        <tr><td>{t('Voiture', 'Car')}</td><td class="num">{n(M.voiture.n)}</td><td class="num">{n(M.voiture.m)}</td><td>{t('temps (s), selon les limitations de vitesse', 'time (s), from speed limits')}</td></tr>
+      </tbody>
+    </table>
+    <p>{t(
+      'L’heuristique d’A* et du glouton est la distance à vol d’oiseau (formule de haversine). En voiture, le coût est un temps : la distance est donc divisée par la vitesse maximale du réseau, 70 km/h, pour rester une borne inférieure. C’est ce qui garantit qu’A* trouve toujours le chemin optimal.',
+      'The heuristic for A* and greedy is the straight-line distance (haversine formula). By car the cost is a time, so the distance is divided by the network’s top speed, 70 km/h, to remain a lower bound. That is what guarantees A* always finds the optimal path.'
+    )}</p>
+  </CaseSection>
+
+  <CaseSection n="03" title={t('Algorithmes', 'Algorithms')} id="algorithmes">
+    <h3>{t('Même file de priorité, quatre façons de choisir le prochain nœud.', 'One priority queue, four ways of choosing the next node.')}</h3>
+    <ul class="bul">
+      <li><strong>Dijkstra</strong> {t(': sort le nœud au plus faible coût depuis le départ. Il explore en cercles et sert de référence optimale.', ': pops the node with the lowest cost from the start. It explores in circles and is the optimal reference.')}</li>
+      <li><strong>A*</strong> {t(': coût depuis le départ + estimation jusqu’à l’arrivée. Avec une heuristique qui ne surestime jamais, il reste optimal en explorant surtout vers la cible.', ': cost from the start + estimate to the destination. With a heuristic that never overestimates, it stays optimal while exploring mostly towards the target.')}</li>
+      <li><strong>{t('Glouton', 'Greedy')}</strong> {t(': seulement l’estimation jusqu’à l’arrivée. Très rapide, sans garantie sur la qualité du chemin.', ': only the estimate to the destination. Very fast, with no guarantee on path quality.')}</li>
+      <li><strong>BFS</strong> {t(': une file simple, sans coût. Il minimise le nombre de rues traversées, pas la distance.', ': a plain queue, no cost. It minimises the number of streets crossed, not the distance.')}</li>
+    </ul>
+    <p>{t(
+      'La version grille d’A* n’ajoutait le nœud courant à la liste fermée qu’à l’arrivée, si bien qu’un même nœud pouvait être développé plusieurs fois. La version Paris ferme chaque nœud dès qu’il sort de la file et ignore les entrées devenues obsolètes : chaque intersection n’est traitée qu’une fois.',
+      'The grid version of A* only added the current node to the closed list on arrival, so the same node could be expanded several times. The Paris version closes each node as soon as it leaves the queue and skips stale entries: each intersection is processed once.'
+    )}</p>
+  </CaseSection>
+
+  <CaseSection n="04" title={t('Mesures', 'Measurements')} id="mesures">
+    <h3>{t(
+      `À pied, A* explore en médiane ${n(ratio(pied.dijkstra, pied.astar), 1)} fois moins de nœuds que Dijkstra, pour le même chemin.`,
+      `On foot, A* explores a median of ${n(ratio(pied.dijkstra, pied.astar), 1)} times fewer nodes than Dijkstra, for the same path.`
+    )}</h3>
+    <p>{t(
+      `Les algorithmes du dépôt ont été exécutés sans modification sur ${pied.dijkstra.paires} paires d’intersections tirées au hasard dans chaque réseau (graine fixe), chaque calcul répété 3 fois. L’écart se mesure par rapport au chemin de Dijkstra, optimal par construction.`,
+      `The repository’s algorithms were run unmodified on ${pied.dijkstra.paires} random pairs of intersections in each network (fixed seed), each computation repeated 3 times. The gap is measured against Dijkstra’s path, optimal by construction.`
+    )}</p>
+    <figure class="pf-fig" aria-labelledby="pf-expl-t">
+      <div class="fig-head">
+        <span class="meta"><span class="accent">Fig. 2</span>&nbsp;&nbsp;<span id="pf-expl-t">{t('Nœuds explorés, médiane sur 60 trajets', 'Nodes explored, median over 60 trips')}</span></span>
+        <span class="meta meta--ink2">{t('Mesure', 'Measured')}</span>
+      </div>
+      <div class="pf-bars">
+        {MODES.map((m) => (
+          <div class="pf-bars__grp">
+            <p class="pf-bars__mode">{m.n}</p>
+            {ALG.map((a) => {
+              const d = m.d[a.k];
+              return (
+                <div class="pf-bars__row">
+                  <span class="pf-bars__n">{a.n}</span>
+                  <span class="pf-bars__track"><span class={`pf-bars__bar pf-bars__bar--${a.k}`} style={`width:${Math.max((d.explores_median / maxExpl) * 100, 0.4)}%`}></span></span>
+                  <span class="pf-bars__v tnum">{n(d.explores_median)}</span>
+                </div>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+    </figure>
+
+    <table class="pf-tab pf-tab--wide">
+      <caption class="meta meta--ink2">{t('Qualité et temps de calcul, médianes sur 60 trajets par réseau (Python, un cœur)', 'Quality and compute time, medians over 60 trips per network (Python, one core)')}</caption>
+      <thead><tr><th>{t('Réseau', 'Network')}</th><th>Algo</th><th class="num">{t('Calcul', 'Compute')}</th><th class="num">{t('Chemins optimaux', 'Optimal paths')}</th><th class="num">{t('Écart médian', 'Median gap')}</th><th class="num">{t('Écart max.', 'Max gap')}</th></tr></thead>
+      <tbody>
+        {MODES.map((m) => ALG.map((a, i) => {
+          const d = m.d[a.k];
+          return (
+            <tr class:list={[{ 'pf-tab__first': i === 0 }]}>
+              <td>{i === 0 ? m.n : ''}</td>
+              <td>{a.n}</td>
+              <td class="num">{n(d.ms_median, d.ms_median < 10 ? 1 : 0)} ms</td>
+              <td class="num">{pc(d.optimal_pct ?? 0)}</td>
+              <td class="num">{d.ecart_median ? `+${pc(d.ecart_median)}` : '0'}</td>
+              <td class="num">{d.ecart_max ? `+${pc(d.ecart_max)}` : '0'}</td>
+            </tr>
+          );
+        }))}
+      </tbody>
+    </table>
+
+    <ul class="bul">
+      <li><strong>{t('A* est toujours optimal', 'A* is always optimal')}</strong>{t(` : 100 % des trajets, dans les trois réseaux, au même coût que Dijkstra. À pied, il calcule en ${n(pied.astar.ms_median, 1)} ms contre ${n(pied.dijkstra.ms_median, 0)} ms.`, `: 100% of trips, in all three networks, at the same cost as Dijkstra. On foot it computes in ${n(pied.astar.ms_median, 1)} ms against ${n(pied.dijkstra.ms_median, 0)} ms.`)}</li>
+      <li><strong>{t('En voiture, l’avantage disparaît', 'By car, the advantage disappears')}</strong>{t(` : l’heuristique divise la distance par 70 km/h, bien plus que la vitesse réelle en ville. Elle sous-estime fortement le temps restant ; A* n’explore alors que ${n(ratio(voit.dijkstra, voit.astar), 1)} fois moins de nœuds, et le calcul de la haversine à chaque nœud le rend un peu plus lent que Dijkstra (${n(voit.astar.ms_median, 1)} ms contre ${n(voit.dijkstra.ms_median, 1)} ms).`, `: the heuristic divides the distance by 70 km/h, far above real city speeds. It heavily underestimates the remaining time; A* then explores only ${n(ratio(voit.dijkstra, voit.astar), 1)} times fewer nodes, and computing the haversine at every node makes it slightly slower than Dijkstra (${n(voit.astar.ms_median, 1)} ms against ${n(voit.dijkstra.ms_median, 1)} ms).`)}</li>
+      <li><strong>{t('Le glouton est le plus rapide, presque jamais le meilleur', 'Greedy is the fastest, almost never the best')}</strong>{t(` : à pied, environ ${n(pied.greedy.explores_median)} nœuds explorés et moins d’une milliseconde, mais aucun chemin optimal sur 60 et un trajet ${pc(pied.greedy.ecart_median ?? 0)} plus long en médiane, jusqu’à +${pc(pied.greedy.ecart_max ?? 0)}.`, `: on foot, around ${n(pied.greedy.explores_median)} nodes explored and under a millisecond, but no optimal path out of 60 and a route ${pc(pied.greedy.ecart_median ?? 0)} longer at the median, up to +${pc(pied.greedy.ecart_max ?? 0)}.`)}</li>
+      <li><strong>{t('BFS optimise autre chose', 'BFS optimises something else')}</strong>{t(` : il compte les rues, pas les mètres. Son chemin est ${pc(pied.bfs.ecart_median ?? 0)} plus long en médiane à pied, et il explore autant que Dijkstra.`, `: it counts streets, not metres. Its path is ${pc(pied.bfs.ecart_median ?? 0)} longer at the median on foot, and it explores as much as Dijkstra.`)}</li>
+    </ul>
+
+    <table class="pf-tab pf-tab--wide">
+      <caption class="meta meta--ink2">{t('Six itinéraires à pied, entre lieux connus (recalés sur l’intersection la plus proche)', 'Six walking routes between landmarks (snapped to the nearest intersection)')}</caption>
+      <thead><tr><th>{t('Itinéraire', 'Route')}</th><th class="num">{t('Distance optimale', 'Optimal distance')}</th><th class="num">{t('Explorés Dijkstra', 'Explored Dijkstra')}</th><th class="num">{t('Explorés A*', 'Explored A*')}</th><th class="num">{t('Glouton', 'Greedy')}</th><th class="num">BFS</th></tr></thead>
+      <tbody>
+        {itinPied.map((it) => (
+          <tr>
+            <td>{t(LIEUX[it.de].fr, LIEUX[it.de].en)} → {t(LIEUX[it.a].fr, LIEUX[it.a].en)}</td>
+            <td class="num">{fmtDist(it.res.dijkstra.distance_m)}</td>
+            <td class="num">{n(it.res.dijkstra.explores)}</td>
+            <td class="num">{n(it.res.astar.explores)}</td>
+            <td class="num">+{pc(it.ecart.greedy ?? 0)}</td>
+            <td class="num">+{pc(it.ecart.bfs ?? 0)}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </CaseSection>
+
+  <CaseSection n="05" title={t('Limite trouvée', 'A limit found')} id="limite">
+    <h3>{t('En voiture, certains clics ne mènent nulle part.', 'By car, some clicks lead nowhere.')}</h3>
+    <p>{t(
+      'Le départ et l’arrivée sont recalés sur l’intersection la plus proche, sans regarder si elle est reliée au reste du réseau. Or le réseau routier n’est pas entièrement connecté dans les deux sens : sens uniques, voies privées, entrées de parking.',
+      'The start and destination are snapped to the nearest intersection, without checking whether it is connected to the rest of the network. But the road network is not fully connected both ways: one-way streets, private roads, car-park entrances.'
+    )}</p>
+    <ul class="bul">
+      <li>{t('Sur les 9 417 intersections du réseau voiture, 184 sont hors de la grande composante fortement connexe (à vélo : 472 sur 23 609 ; à pied, aucune).', 'Of the 9,417 intersections in the car network, 184 lie outside the large strongly connected component (cycling: 472 of 23,609; walking: none).')}</li>
+      <li>{t('Près de la tour Eiffel, le nœud le plus proche (à 174 m) n’a aucune rue entrante : aucun trajet ne peut y arriver. Depuis Bastille, les quatre algorithmes parcourent tout le réseau atteignable, 9 331 nœuds, avant de conclure qu’il n’y a pas de chemin.', 'Near the Eiffel Tower, the nearest node (174 m away) has no incoming street: no trip can reach it. From Bastille, all four algorithms traverse the whole reachable network, 9,331 nodes, before concluding there is no path.')}</li>
+      <li>{t('Au pied du Sacré-Cœur, le nœud retenu appartient à une poche de 3 intersections : le calcul s’arrête au bout de 3 nœuds, sans résultat.', 'At the foot of Sacré-Cœur, the chosen node belongs to a 3-intersection pocket: the search stops after 3 nodes, with no result.')}</li>
+    </ul>
+    <p>{t(
+      'La correction tient en une étape de préparation : ne recaler les clics que sur les nœuds de la grande composante fortement connexe. Vous pouvez reproduire le cas dans l’application ci-dessus : mode Voiture, de Bastille à la tour Eiffel.',
+      'The fix is one preparation step: only snap clicks to nodes in the large strongly connected component. You can reproduce the case in the app above: Car mode, from Bastille to the Eiffel Tower.'
+    )}</p>
+  </CaseSection>
+
+  <CaseSection n="06" title={t('Réflexion', 'Reflection')} id="reflexion">
+    <h3>{t('Une bonne heuristique compte plus qu’un bon langage.', 'A good heuristic matters more than a good language.')}</h3>
+    <ul class="bul">
+      <li><strong>{t('L’heuristique fait tout', 'The heuristic does the work')}</strong>{t(' : à pied, la distance à vol d’oiseau est proche du vrai trajet et A* gagne un facteur 8. En voiture, une borne trop prudente annule le gain. Une vitesse de référence plus réaliste réduirait l’exploration, mais il faudrait vérifier qu’elle reste une borne inférieure pour garder l’optimalité.', ': on foot the straight-line distance is close to the real route and A* gains a factor of 8. By car, an overly cautious bound cancels the gain. A more realistic reference speed would cut the search, but it would have to remain a lower bound to keep optimality.')}</li>
+      <li><strong>{t('Pistes', 'Next steps')}</strong>{t(' : une recherche bidirectionnelle, ou un pré-calcul (landmarks, contraction hierarchies) comme dans les calculateurs d’itinéraires en production.', ': a bidirectional search, or a precomputation (landmarks, contraction hierarchies) as in production route planners.')}</li>
+      <li><strong>{t('Rendre le travail vérifiable', 'Making the work checkable')}</strong>{t(` : pour l’intégrer à ce site, l’application a été portée en JavaScript. Un script compare le portage à l’original sur ${parite.cas} cas ; les ${parite.identiques} donnent le même chemin, nœud pour nœud.`, `: to embed it in this site, the app was ported to JavaScript. A script compares the port with the original on ${parite.cas} cases; all ${parite.identiques} give the same path, node for node.`)}</li>
+    </ul>
+    <p><a class="link link-arrow" href={REPO} rel="noopener">{t('Code sur GitHub', 'Code on GitHub')} <span class="arr" aria-hidden="true">↗</span></a></p>
+  </CaseSection>
+</CaseStudy>
+
+<style>
+  .pf-band { background: #000; border-block: 1px solid var(--ink); color: #f4f4f5; }
+  .pf-band__head { display: flex; justify-content: space-between; gap: var(--s-2); padding-block: 12px; border-bottom: 1px solid #26262b; color: #a1a1aa; }
+  .pf-band__head .link { color: #f4f4f5; }
+  .pf-band__foot { padding-block: var(--s-3); color: #a1a1aa !important; max-width: 110ch; }
+
+  .pf-tab { width: 100%; max-width: 44rem; margin-inline: auto; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+  .pf-tab--wide { max-width: none; }
+  .pf-tab caption { text-align: left; padding-bottom: 8px; }
+  .pf-tab th { text-align: left; font-weight: 500; color: var(--ink-2); padding: 8px 10px 8px 0; border-bottom: 1px solid var(--ink); }
+  .pf-tab td { padding: 7px 10px 7px 0; border-bottom: 1px solid var(--rule); }
+  .pf-tab .num { text-align: right; }
+  .pf-tab__first td { border-top: 1px solid var(--ink-3); }
+
+  .pf-fig { width: 100%; }
+  .pf-bars { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-4); margin-top: var(--s-2); }
+  .pf-bars__mode { font-family: var(--f-display); font-weight: 600; font-size: 17px; border-top: 1px solid var(--ink); padding-top: 8px; margin-bottom: 8px; }
+  .pf-bars__row { display: grid; grid-template-columns: 7ch minmax(0, 1fr) 7ch; gap: 8px; align-items: center; font-size: 13px; padding-block: 3px; }
+  .pf-bars__track { height: 12px; background: var(--paper-2); }
+  .pf-bars__bar { display: block; height: 100%; }
+  .pf-bars__bar--dijkstra { background: var(--ink); }
+  .pf-bars__bar--astar { background: var(--accent); }
+  .pf-bars__bar--greedy { background: var(--ink-3); }
+  .pf-bars__bar--bfs { background: var(--blue); }
+  .pf-bars__v { text-align: right; font-size: 12px; }
+
+  @media (max-width: 1024px) {
+    .pf-bars { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 640px) {
+    .pf-tab--wide { display: block; overflow-x: auto; }
+  }
+</style>

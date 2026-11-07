@@ -54,6 +54,25 @@ python3 scripts/prepare_eco2mix.py chemin/vers/eco2mix-regional-cons-def.csv
 - `src/data/cdataframe.json` : suite `rand()` réelle et sortie du programme CDataframe compilé tel quel.
 - Study Planner : captures de l'application lancée en local (`public/images/planner/`). Aucune réponse du modèle n'est simulée sur le site.
 
+## Plus court chemin dans Paris (étude de cas 09)
+
+L'application du dépôt [Projet-d-optimisation-](https://github.com/MatteoLouet/Projet-d-optimisation-) tourne sur un serveur Flask ; GitHub Pages n'en a pas. Elle est donc intégrée ainsi :
+
+- `public/data/paris/{pied,velo,voiture}.bin.gz` + `.json` : les réseaux de rues (© OpenStreetMap, ODbL), exportés par `scripts/pathfinding/export_graph.py` avec la classe `Graphe` du dépôt (mêmes nœuds, même ordre des voisins). Chargés seulement quand la carte approche de l'écran.
+- `src/viz/pathfinding-algos.ts` : portage ligne à ligne de `app/algorithmes/*.py` ; `src/viz/pathfinding.ts` + `src/components/PathfindingApp.astro` : la carte (Canvas 2D) et le panneau.
+- `src/data/pathfinding.json` : mesures réelles (`scripts/pathfinding/benchmark.py`, algorithmes Python du dépôt, 60 paires aléatoires par réseau + 6 itinéraires nommés).
+- `src/data/pathfinding-parity.json` : `scripts/pathfinding/verify.mjs` compare le portage JS à Python (72 cas, 72 identiques).
+- `src/data/pathfinding-thumb.json` : vignette de la section Projets (`scripts/pathfinding/thumbnail.py`).
+
+Pour tout régénérer, depuis un clone du dépôt du projet avec son environnement (`pip install osmnx flask`) :
+
+```bash
+.venv/bin/python <portfolio>/scripts/pathfinding/export_graph.py <portfolio>/public/data/paris
+.venv/bin/python <portfolio>/scripts/pathfinding/benchmark.py <portfolio>/src/data/pathfinding.json parite.json
+.venv/bin/python <portfolio>/scripts/pathfinding/thumbnail.py <portfolio>/src/data/pathfinding-thumb.json
+node scripts/pathfinding/verify.mjs parite.json src/data/pathfinding-parity.json   # depuis le portfolio
+```
+
 ## Ajouter une étude de cas
 
 Créer `src/pages/travaux/<slug>.astro` sur le modèle de `cmapss.astro` (gabarit `CaseStudy` + sections `CaseSection`), puis renseigner `caseStudy: '/travaux/<slug>/'` dans `projects.ts`.

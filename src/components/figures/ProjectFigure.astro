@@ -9,6 +9,7 @@ import type { FigureKey } from '../../data/projects';
 import { rng } from '../../lib/rng';
 import cmapss from '../../data/cmapss.json';
 import elec from '../../data/elec.json';
+import pfThumb from '../../data/pathfinding-thumb.json';
 
 import type { Lang } from '../../i18n';
 interface Props { kind: FigureKey; label: string; lang: Lang }
@@ -183,6 +184,9 @@ if (kind === 'memory') {
   mem = { W, H, cols };
 }
 
+/* ---------------- 9. Plus court chemin : vraies sorties de Dijkstra et A* sur le réseau piéton ---------------- */
+const streets = kind === 'streets' ? pfThumb : null;
+
 /* ---------------- 6. Diagramme de séquence ---------------- */
 const seq = kind === 'sequence' ? {
   W: 600, H: 420,
@@ -283,6 +287,21 @@ const seq = kind === 'sequence' ? {
     </svg>
   )}
 
+  {streets && (
+    <svg viewBox={`0 0 ${streets.W} ${streets.H}`}>
+      <defs><clipPath id="pf-clip"><rect width={streets.W} height={streets.H} /></clipPath></defs>
+      <g clip-path="url(#pf-clip)">
+        <path class="st-rues" d={streets.rues} />
+        <path class="st-dij" d={streets.dijkstra} />
+        <path class="st-ast" d={streets.astar} />
+        <path class="st-route" d={streets.chemin} />
+      </g>
+      <circle class="st-pin" cx={streets.a[0]} cy={streets.a[1]} r="7" />
+      <circle class="st-pin st-pin--b" cx={streets.b[0]} cy={streets.b[1]} r="7" />
+      <text class="ax-label" x="10" y={streets.H - 12}>{tr(`Dijkstra : ${streets.n_dijkstra.toLocaleString('fr-FR')} nœuds explorés · A* : ${streets.n_astar.toLocaleString('fr-FR')}`, `Dijkstra: ${streets.n_dijkstra.toLocaleString('en-GB')} nodes explored · A*: ${streets.n_astar.toLocaleString('en-GB')}`)}</text>
+    </svg>
+  )}
+
   {mem && (
     <svg viewBox={`0 0 ${mem.W} ${mem.H}`}>
       <rect class="tbl" x="10" y="150" width="150" height="120" />
@@ -336,6 +355,12 @@ const seq = kind === 'sequence' ? {
 
 <style>
   .pf { background: var(--paper-2); padding: clamp(14px, 2.4vw, 32px); }
+  .st-rues { fill: none; stroke: var(--ink); stroke-opacity: 0.22; stroke-width: 0.8; }
+  .st-dij { fill: var(--ink); fill-opacity: 0.06; stroke: var(--ink); stroke-opacity: 0.45; stroke-width: 1; stroke-dasharray: 4 4; }
+  .st-ast { fill: var(--accent); fill-opacity: 0.14; stroke: var(--accent); stroke-width: 1.2; }
+  .st-route { fill: none; stroke: var(--ink); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
+  .st-pin { fill: var(--paper); stroke: var(--ink); stroke-width: 2; }
+  .st-pin--b { fill: var(--ink); }
   .pf svg { width: 100%; height: auto; overflow: visible; }
 
   .g12 { stroke: var(--rule); stroke-width: 1; }

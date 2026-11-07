@@ -8,15 +8,17 @@ const { lang } = Astro.props;
 const t = (fr: string, en: string) => (lang === 'fr' ? fr : en);
 
 // Composition éditoriale : chaque entrée a sa propre place dans la grille
+// Mise en page de chaque projet (par slug, pour rester stable si l'ordre change)
 const layout: Record<string, string> = {
-  '01': 'e--feature',
-  '02': 'e--left7',
-  '03': 'e--right5',
-  '04': 'e--band',
-  '05': 'e--left5',
-  '06': 'e--right6',
-  '07': 'e--left7',
-  '08': 'e--right5',
+  cmapss: 'e--feature',
+  pathfinding: 'e--band',
+  consommation: 'e--left7',
+  audit: 'e--right5',
+  chatbot: 'e--band',
+  roverrun: 'e--left5',
+  messagerie: 'e--right6',
+  planner: 'e--left7',
+  cdataframe: 'e--right5',
 };
 const list = projects.map((p) => ({
   ...p,
@@ -47,9 +49,9 @@ const list = projects.map((p) => ({
       {list.map((p) => {
         const href = p.url;
         const isDemo = p.figure === 'degradation' && cmapss.meta.demo;
-        const isReal = (p.figure === 'degradation' && !cmapss.meta.demo) || p.figure === 'multiples';
+        const isReal = (p.figure === 'degradation' && !cmapss.meta.demo) || p.figure === 'multiples' || p.figure === 'streets';
         return (
-          <article class:list={['e', layout[p.n], 'reveal']} aria-labelledby={`p-${p.slug}`}>
+          <article class:list={['e', layout[p.slug], 'reveal']} aria-labelledby={`p-${p.slug}`}>
             <figure class="e__fig">
               {href ? (
                 <a href={href} class="e__figlink" tabindex="-1" aria-hidden="true">
@@ -60,7 +62,7 @@ const list = projects.map((p) => ({
               )}
               <figcaption class="e__cap">
                 <span class="meta"><span class="accent">Fig. 2.{Number(p.n)}</span>&nbsp;&nbsp;{p.figCaption}</span>
-                {isDemo ? <span class="tag-demo">{t('Données démo', 'Demo data')}</span> : isReal ? <span class="meta meta--ink2">{p.figure === 'multiples' ? t('Données RTE éCO2mix', 'RTE éCO2mix data') : t('Données NASA FD001', 'NASA FD001 data')}</span> : <span class="meta meta--ink2">{t('Figure illustrative', 'Illustrative figure')}</span>}
+                {isDemo ? <span class="tag-demo">{t('Données démo', 'Demo data')}</span> : isReal ? <span class="meta meta--ink2">{p.figure === 'multiples' ? t('Données RTE éCO2mix', 'RTE éCO2mix data') : p.figure === 'streets' ? t('Données OpenStreetMap', 'OpenStreetMap data') : t('Données NASA FD001', 'NASA FD001 data')}</span> : <span class="meta meta--ink2">{t('Figure illustrative', 'Illustrative figure')}</span>}
               </figcaption>
             </figure>
             <div class="e__text">

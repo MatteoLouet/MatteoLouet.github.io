@@ -1,5 +1,5 @@
 /**
- * TF-IDF minimal, calculé dans le navigateur — même principe que le chatbot du projet 04.
+ * TF-IDF minimal, calculé dans le navigateur — même principe que le chatbot du projet 05.
  * tf = occurrences / longueur du document ; idf = ln((1 + N) / (1 + df)) + 1 (lissage) ;
  * similarité = cosinus entre le vecteur de la question et celui de chaque document.
  */

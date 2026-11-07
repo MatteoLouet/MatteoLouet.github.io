@@ -41,7 +41,7 @@ const edgePath = (a: string, b: string) => {
     <!-- ============ A. TF-IDF ============ -->
     <div class="lab__panel g12" role="tabpanel" id="panel-a" aria-labelledby="tab-a">
       <div class="tf__side">
-        <p class="fig-notice">{lang === 'fr' ? <Fragment>Posez une question : chaque mot est pondéré par sa <em>rareté</em> dans le corpus (IDF), puis la question est comparée à dix courts documents tirés de mon CV. Le document le plus proche devient la réponse. C’est le mécanisme du chatbot du projet&nbsp;04.</Fragment> : <Fragment>Ask a question: each word is weighted by its <em>rarity</em> in the corpus (IDF), then the question is compared with ten short documents drawn from my CV. The closest document becomes the answer. This is the mechanism behind the chatbot of project&nbsp;04.</Fragment>}</p>
+        <p class="fig-notice">{lang === 'fr' ? <Fragment>Posez une question : chaque mot est pondéré par sa <em>rareté</em> dans le corpus (IDF), puis la question est comparée à dix courts documents tirés de mon CV. Le document le plus proche devient la réponse. C’est le mécanisme du chatbot du projet&nbsp;05.</Fragment> : <Fragment>Ask a question: each word is weighted by its <em>rarity</em> in the corpus (IDF), then the question is compared with ten short documents drawn from my CV. The closest document becomes the answer. This is the mechanism behind the chatbot of project&nbsp;05.</Fragment>}</p>
         <label class="meta tf__label" for="tf-q">{t('Votre question', 'Your question')}</label>
         <div class="tf__field">
           <input id="tf-q" type="text" autocomplete="off" spellcheck="false" value={pick(defaultQuery, lang)} />

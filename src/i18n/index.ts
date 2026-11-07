@@ -22,6 +22,7 @@ export const routes = {
   roverrun: { fr: '/travaux/roverrun/', en: '/en/work/roverrun/' },
   planner: { fr: '/travaux/study-planner/', en: '/en/work/study-planner/' },
   cdataframe: { fr: '/travaux/cdataframe/', en: '/en/work/cdataframe/' },
+  pathfinding: { fr: '/travaux/plus-court-chemin/', en: '/en/work/shortest-path/' },
 } as const;
 export type RouteKey = keyof typeof routes;
 
