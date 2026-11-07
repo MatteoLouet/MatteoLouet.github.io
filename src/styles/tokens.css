@@ -13,8 +13,8 @@
   --ink-2: #66645f;
   --ink-3: #77746c;        /* axes, graduations (4,2:1 sur --paper) */
   --rule: #d8d5ce;
-  --accent: #e45b2b;       /* aplats, traits, marques de figure */
-  --accent-ink: #b8441a;   /* même orange assombri pour le texte (4,9:1 sur --paper) */
+  --accent: #cc1505;       /* aplats, traits, marques de figure */
+  --accent-ink: #cc1505;   /* texte : 5,2:1 sur --paper, la même couleur suffit */
 
   /* Couleurs — figures */
   --blue: #315c9b;
@@ -94,8 +94,8 @@
   --ink-2: #a8a59d;
   --ink-3: #8a877f;
   --rule: #363530;
-  --accent: #e8653a;
-  --accent-ink: #f0875d;
+  --accent: #e0301f;       /* même rouge, éclairci pour rester visible sur fond sombre (4:1) */
+  --accent-ink: #dd6459;   /* texte : 5,3:1 sur fond sombre */
   --blue: #7da3dc;
   --green: #93ad93;
   --yellow: #e2c470;
@@ -111,8 +111,8 @@
     --ink-2: #a8a59d;
     --ink-3: #8a877f;
     --rule: #363530;
-    --accent: #e8653a;
-    --accent-ink: #f0875d;
+    --accent: #e0301f;
+    --accent-ink: #dd6459;
     --blue: #7da3dc;
     --green: #93ad93;
     --yellow: #e2c470;
@@ -124,7 +124,7 @@
 .theme-light {
   --paper: #f5f3ee; --paper-2: #edeae3; --paper-3: #e9e5dc;
   --ink: #181818; --ink-2: #66645f; --ink-3: #77746c; --rule: #d8d5ce;
-  --accent: #e45b2b; --accent-ink: #b8441a; --tip-sub: #b9b6ae;
+  --accent: #cc1505; --accent-ink: #cc1505; --tip-sub: #b9b6ae;
   color: var(--ink);
   color-scheme: light;
 }

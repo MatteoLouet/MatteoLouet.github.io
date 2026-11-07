@@ -20,7 +20,7 @@ npm run build    # sortie dans dist/
 | `src/styles/tokens.css` | Couleurs, typographie, grille |
 | `src/pages/travaux/cmapss.astro` | Étude de cas C-MAPSS |
 
-Tout ce qui manque s'affiche en orange `[à compléter]` : rien n'est inventé.
+Tout ce qui manque s'affiche dans la couleur d'accent `[à compléter]` : rien n'est inventé.
 
 ## Deux langues (FR / EN)
 

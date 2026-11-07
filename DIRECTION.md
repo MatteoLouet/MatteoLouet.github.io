@@ -22,7 +22,7 @@ Document de travail produit avant l'implémentation (§11 et Recommandation 1 du
 2. **Deux registres typographiques seulement** : une grande voix (titres) et une petite voix (métadonnées mono en capitales). Le corps de texte est neutre.
 3. **Le numéro est un élément graphique** (index de projet, numéro de figure, numéro de section).
 4. **Chaque visualisation est une figure éditoriale** : `Fig. n`, titre, une phrase « à remarquer », légende, source & méthode.
-5. **Interface calme, figures expressives.** L'orange est un *signal* (≈ 5 % de surface).
+5. **Interface calme, figures expressives.** Le rouge d'accent est un *signal* (≈ 5 % de surface).
 6. **Mouvement statique par défaut** ; l'animation n'existe que pour relier une action à son effet.
 7. **Honnêteté de la donnée** : toute donnée simulée porte une étiquette `DÉMO` visible dans la figure, pas seulement en note.
 
@@ -32,7 +32,7 @@ Papier ivoire, encre noire, filets gris chaud. Un journal de recherche suisse im
 
 ## 4. Design tokens
 
-**Couleurs** — `--paper #F5F3EE`, `--ink #181818`, `--ink-2 #66645F`, `--rule #D8D5CE`, `--accent #E45B2B` ; figures : `--blue #315C9B`, `--green #718B72`, `--yellow #E8C86A`.
+**Couleurs** — `--paper #F5F3EE`, `--ink #181818`, `--ink-2 #66645F`, `--rule #D8D5CE`, `--accent #CC1505` ; figures : `--blue #315C9B`, `--green #718B72`, `--yellow #E8C86A`.
 
 **Typographie** — Display : *Inter Tight* (grotesque serrée, la plus proche de Helvetica Now en open source). Texte : *Inter*. Métadonnées : *IBM Plex Mono*. Échelle fixe :
 

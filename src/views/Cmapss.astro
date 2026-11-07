@@ -44,7 +44,6 @@ const AW = 5 * BW + 4 * GAP;
 <CaseStudy slug="cmapss" lang={lang} kicker={t('Machine learning · Maintenance prédictive', 'Machine learning · Predictive maintenance')} facts={facts}>
   <div slot="bleed" class="fd-band theme-light">
     <div class="wrap fd-band__head">
-      <p class="meta">{t('Le site du projet, conçu par Daniil Hirchyts', 'The project website, designed by Daniil Hirchyts')}</p>
       <a class="meta link" href={REPO} rel="noopener">Code &amp; notebook ↗</a>
     </div>
     <Fd001 client:load lang={lang} />
@@ -272,6 +271,7 @@ const AW = 5 * BW + 4 * GAP;
           <li><strong>100 moteurs, c’est peu</strong> : le rappel peut aller de 0,67 à 0,96. On ne départage pas des modèles sur quelques points.</li>
         </ul>
         <p><strong>Pour aller plus loin :</strong> donner au modèle l’historique de chaque moteur (moyennes glissantes et pentes sur 5 à 30 cycles, calculées sans regarder le futur). C’est la principale limite, une prédiction n’utilisant qu’une seule ligne ; fixer le seuil par un coût réel plutôt que le F2 ; prédire la RUL elle-même ; passer à FD002–FD004 et leurs conditions de vol multiples.</p>
+        <p>Le site interactif présenté en haut de cette page a été co-réalisé avec Daniil Hirchyts.</p>
       </>
     ) : (
       <>
@@ -283,6 +283,7 @@ const AW = 5 * BW + 4 * GAP;
           <li><strong>100 engines is few</strong>: recall could be anywhere from 0.67 to 0.96. Models cannot be separated on a few points.</li>
         </ul>
         <p><strong>Next steps:</strong> give the model each engine’s history (moving averages and slopes over 5 to 30 cycles, computed without looking ahead). That is the main limit, since a prediction uses a single row; set the threshold from a real cost rather than F2; predict the RUL itself; move to FD002–FD004 and their multiple flight conditions.</p>
+        <p>The interactive site at the top of this page was co-built with Daniil Hirchyts.</p>
       </>
     )}
   </CaseSection>
@@ -373,7 +374,7 @@ const AW = 5 * BW + 4 * GAP;
 
 <style>
   .fd-band { background: #fafafa; border-block: 1px solid var(--ink); }
-  .fd-band__head { display: flex; justify-content: space-between; gap: var(--s-2); padding-block: 12px; border-bottom: 1px solid var(--rule); }
+  .fd-band__head { display: flex; justify-content: flex-end; gap: var(--s-2); padding-block: 12px; border-bottom: 1px solid var(--rule); }
   .fd-band__foot { padding-block: var(--s-3); }
   .nbfig { margin-top: var(--s-2); }
   .nbfig img { width: 100%; height: auto; background: #fff; border: 1px solid var(--rule); }

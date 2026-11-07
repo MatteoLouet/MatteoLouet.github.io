@@ -2,7 +2,6 @@
  * Compétences par domaine — sources : CV et dépôts GitHub. Textes bilingues.
  * `ctx` indique OÙ la compétence est pratiquée (pas un « niveau » inventé) :
  *   pro = en entreprise (alternance, stages) · aca = en formation / projets
- *   [] = contexte non précisé
  */
 import type { L } from '../i18n';
 
@@ -22,7 +21,7 @@ export const skills: SkillGroup[] = [
       { name: { fr: 'Conception de flux ETL', en: 'ETL flow design' }, ctx: ['pro'], detail: 'Talend' },
       { name: { fr: 'Cartographie & lignage', en: 'Data mapping & lineage' }, ctx: ['pro'] },
       { name: { fr: 'Création & intégration d’API', en: 'API design & integration' }, ctx: ['pro'] },
-      { name: 'Postman', ctx: [] },
+      { name: 'Postman', ctx: ['aca'] },
     ],
   },
   {
@@ -39,7 +38,7 @@ export const skills: SkillGroup[] = [
     domain: { fr: 'Analyse & visualisation', en: 'Analysis & visualisation' },
     items: [
       { name: 'Qlik Sense', ctx: ['pro'] },
-      { name: 'Power BI', ctx: [] },
+      { name: 'Power BI', ctx: ['aca'] },
       { name: { fr: 'Tableaux de bord stratégiques', en: 'Strategic dashboards' }, ctx: ['pro'] },
     ],
   },
@@ -49,9 +48,9 @@ export const skills: SkillGroup[] = [
     items: [
       { name: 'Python', ctx: ['aca'], detail: 'pandas, scikit-learn' },
       { name: 'TypeScript · React', ctx: ['aca'] },
-      { name: 'Java', ctx: [] },
+      { name: 'Java', ctx: ['aca'] },
       { name: 'C', ctx: ['aca'], detail: 'RoverRun' },
-      { name: 'Matlab', ctx: [] },
+      { name: 'Matlab', ctx: ['aca'] },
     ],
   },
   {
@@ -68,7 +67,7 @@ export const skills: SkillGroup[] = [
     n: 'F',
     domain: { fr: 'Méthodes', en: 'Methods' },
     items: [
-      { name: 'Agile', ctx: [] },
+      { name: 'Agile', ctx: ['aca'] },
       { name: '5S', ctx: ['pro'], detail: 'Lacoste' },
       { name: { fr: 'Données sensibles', en: 'Sensitive data' }, ctx: ['pro'] },
     ],

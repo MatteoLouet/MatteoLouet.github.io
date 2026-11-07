@@ -21,22 +21,22 @@ const t = (fr: string, en: string) => (lang === 'fr' ? fr : en);
       <div class="about__text prose">
         {lang === 'fr' ? (
           <>
-            <p class="lead">Élève-ingénieur en deuxième année de cycle ingénieur à l’EFREI Paris, en Big Data &amp; Machine Learning, je suis aussi data analyst en alternance au Ministère des Armées.</p>
-            <p>Ma formation croise mathématiques, physique et informatique. Mon alternance m’apprend, dans un milieu technique et exigeant, à cartographier des données, à documenter leur lignage, à concevoir des flux ETL avec Talend et à construire des tableaux de bord stratégiques sous Qlik Sense.</p>
-            <p>Avant la donnée, j’ai travaillé dans une ferme, une usine de teinturerie et un magasin. J’y ai appris la méthode 5S et le travail en équipe.</p>
+            <p class="lead">Actuellement étudiant en quatrième année à l’Efrei Paris, j’étudie l’ingénierie en combinant un enseignement approfondi en mathématiques, physique et informatique, que j’applique lors de mon alternance au Commissariat des armées en tant que Data Analyst.</p>
+            <p>Ma formation m’apporte continuellement de nouvelles compétences techniques grâce à une approche pluridisciplinaire. J’ai également l’occasion d’aiguiser mon esprit critique grâce à des analyses variées et de développer mes compétences en communication. Je suis sérieux et j’ai une bonne capacité d’adaptation. Après l’obtention de mon diplôme en 2028, je compte poursuivre une carrière dans le domaine de l’ingénierie, en France ou à l’étranger.</p>
+            <p>Toujours en apprentissage, je m’attache à enrichir mes compétences et à bâtir un réseau professionnel solide pour mieux appréhender les enjeux du secteur.</p>
           </>
         ) : (
           <>
-            <p class="lead">A second-year engineering student at EFREI Paris, specialising in Big Data &amp; Machine Learning, I am also an apprentice data analyst at the French Ministry of the Armed Forces.</p>
-            <p>My degree combines mathematics, physics and computer science. My work-study teaches me, in a demanding technical environment, to map data, document its lineage, design ETL flows with Talend and build strategic dashboards in Qlik Sense.</p>
-            <p>Before data, I worked on a farm, in a dye factory and in a shop, where I learned the 5S method and teamwork.</p>
+            <p class="lead">Currently a fourth-year student at Efrei Paris, I study engineering through in-depth teaching in mathematics, physics and computer science, which I apply in my work-study position as a Data Analyst at the French Armed Forces Commissariat.</p>
+            <p>My degree keeps bringing me new technical skills through a multidisciplinary approach. It also lets me sharpen my critical thinking through a wide range of analyses and develop my communication skills. I am serious and I adapt well. After graduating in 2028, I plan to pursue a career in engineering, in France or abroad.</p>
+            <p>Always learning, I work at broadening my skills and building a strong professional network to better understand the challenges of the field.</p>
           </>
         )}
       </div>
 
       <dl class="about__sheet">
         <div><dt class="meta meta--ink2">{t('Langues', 'Languages')}</dt><dd>{languages.map((l) => <span>{pick(l.name, lang)} <span class="muted">· {pick(l.level, lang)}</span></span>)}</dd></div>
-        <div><dt class="meta meta--ink2">{t('Hors écran', 'Off screen')}</dt><dd>{interests.map((i) => <span>{pick(i, lang)}</span>)}</dd></div>
+        <div><dt class="meta meta--ink2">{t('Activités', 'Activities')}</dt><dd>{interests.map((i) => <span>{pick(i, lang)}</span>)}</dd></div>
         <div><dt class="meta meta--ink2">{t('Mobilité', 'Mobility')}</dt><dd><span>{t('Permis B', 'Driving licence (B)')}</span></dd></div>
         <div><dt class="meta meta--ink2">CV</dt><dd><a class="link" href={site.contact.cv} download="Matteo-Louet-CV.pdf">{t('Télécharger le CV', 'Download the CV')} (PDF) ↓</a></dd></div>
       </dl>

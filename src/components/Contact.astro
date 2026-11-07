@@ -17,7 +17,7 @@ const links = [
       <h2 class="display contact__title" id="contact-title">{lang === 'fr' ? <Fragment>Parlons<br />données.</Fragment> : <Fragment>Let’s talk<br />data.</Fragment>}</h2>
 
       <div class="g12 contact__body">
-        <p class="lead contact__invite">{t('Pour un stage, un projet ou une question sur une figure de ce site, écrivez-moi par e-mail ou sur LinkedIn.', 'For an internship, a project or a question about a figure on this site, write to me by email or on LinkedIn.')}</p>
+        <p class="lead contact__invite">{t('Pour un stage, un projet ou une question sur un élément de ce site, écrivez-moi par e-mail ou sur LinkedIn.', 'For an internship, a project or a question about anything on this site, write to me by email or on LinkedIn.')}</p>
         <a class="contact__mail" href={`mailto:${site.contact.email}`}>{site.contact.email}</a>
         <dl class="contact__list">
           {links.map((l) => (
