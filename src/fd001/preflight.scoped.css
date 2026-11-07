@@ -1,0 +1,137 @@
+.fd001 *, .fd001 ::after, .fd001 ::before, .fd001 ::backdrop, .fd001 ::file-selector-button {
+  box-sizing: border-box; 
+  margin: 0; 
+  padding: 0; 
+  border: 0 solid; 
+}.fd001, .fd001 {
+  line-height: 1.5; 
+  -webkit-text-size-adjust: 100%; 
+  tab-size: 4; 
+  font-family: --theme(
+    --default-font-family,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    'Helvetica Neue',
+    'Noto Sans',
+    Arial,
+    sans-serif,
+    'Apple Color Emoji',
+    'Segoe UI Emoji',
+    'Segoe UI Symbol',
+    'Noto Color Emoji'
+  ); 
+  font-feature-settings: --theme(--default-font-feature-settings, normal); 
+  font-variation-settings: --theme(--default-font-variation-settings, normal); 
+  -webkit-tap-highlight-color: transparent; 
+}.fd001 hr {
+  height: 0; 
+  color: inherit; 
+  border-top-width: 1px; 
+}.fd001 abbr:where([title]) {
+  -webkit-text-decoration: underline dotted;
+  text-decoration: underline dotted;
+}.fd001 h1, .fd001 h2, .fd001 h3, .fd001 h4, .fd001 h5, .fd001 h6 {
+  font-size: inherit;
+  font-weight: inherit;
+}.fd001 a {
+  color: inherit;
+  -webkit-text-decoration: inherit;
+  text-decoration: inherit;
+}.fd001 b, .fd001 strong {
+  font-weight: bolder;
+}.fd001 code, .fd001 kbd, .fd001 samp, .fd001 pre {
+  font-family: --theme(
+    --default-mono-font-family,
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    'Liberation Mono',
+    'Courier New',
+    monospace
+  ); 
+  font-feature-settings: --theme(--default-mono-font-feature-settings, normal); 
+  font-variation-settings: --theme(--default-mono-font-variation-settings, normal); 
+  font-size: 1em; 
+}.fd001 small {
+  font-size: 80%;
+}.fd001 sub, .fd001 sup {
+  font-size: 75%;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+}.fd001 sub {
+  bottom: -0.25em;
+}.fd001 sup {
+  top: -0.5em;
+}.fd001 table {
+  text-indent: 0; 
+  border-color: inherit; 
+  border-collapse: collapse; 
+}.fd001 :-moz-focusring:where(:not(iframe)) {
+  outline: auto;
+}.fd001 progress {
+  vertical-align: baseline;
+}.fd001 summary {
+  display: list-item;
+}.fd001 ol, .fd001 ul, .fd001 menu {
+  list-style: none;
+}.fd001 img, .fd001 svg, .fd001 video, .fd001 canvas, .fd001 audio, .fd001 iframe, .fd001 embed, .fd001 object {
+  display: block; 
+  vertical-align: middle; 
+}.fd001 img, .fd001 video {
+  max-width: 100%;
+  height: auto;
+}.fd001 button, .fd001 input, .fd001 select, .fd001 optgroup, .fd001 textarea, .fd001 ::file-selector-button {
+  font: inherit; 
+  font-feature-settings: inherit; 
+  font-variation-settings: inherit; 
+  letter-spacing: inherit; 
+  color: inherit; 
+  border-radius: 0; 
+  background-color: transparent; 
+  opacity: 1; 
+}.fd001 :where(select:is([multiple], .fd001 [size])) optgroup {
+  font-weight: bolder;
+}.fd001 :where(select:is([multiple], .fd001 [size])) optgroup option {
+  padding-inline-start: 20px;
+}.fd001 ::file-selector-button {
+  margin-inline-end: 4px;
+}.fd001 ::placeholder {
+  opacity: 1;
+}
+
+
+
+@supports (not (-webkit-appearance: -apple-pay-button))  or
+  (contain-intrinsic-size: 1px)  {
+  ::placeholder {
+    color: color-mix(in oklab, currentcolor 50%, transparent);
+  }
+}.fd001 textarea {
+  resize: vertical;
+}.fd001 ::-webkit-search-decoration {
+  -webkit-appearance: none;
+}.fd001 ::-webkit-date-and-time-value {
+  min-height: 1lh; 
+  text-align: inherit; 
+}.fd001 ::-webkit-datetime-edit {
+  display: inline-flex;
+}.fd001 ::-webkit-datetime-edit-fields-wrapper {
+  padding: 0;
+}.fd001 ::-webkit-datetime-edit, .fd001 ::-webkit-datetime-edit-year-field, .fd001 ::-webkit-datetime-edit-month-field, .fd001 ::-webkit-datetime-edit-day-field, .fd001 ::-webkit-datetime-edit-hour-field, .fd001 ::-webkit-datetime-edit-minute-field, .fd001 ::-webkit-datetime-edit-second-field, .fd001 ::-webkit-datetime-edit-millisecond-field, .fd001 ::-webkit-datetime-edit-meridiem-field {
+  padding-block: 0;
+}.fd001 ::-webkit-calendar-picker-indicator {
+  line-height: 1;
+}.fd001 :-moz-ui-invalid {
+  box-shadow: none;
+}.fd001 button, .fd001 input:where([type='button'], .fd001 [type='reset'], .fd001 [type='submit']), .fd001 ::file-selector-button {
+  appearance: button;
+}.fd001 ::-webkit-inner-spin-button, .fd001 ::-webkit-outer-spin-button {
+  height: auto;
+}.fd001 [hidden]:where(:not([hidden='until-found'])) {
+  display: none !important;
+}

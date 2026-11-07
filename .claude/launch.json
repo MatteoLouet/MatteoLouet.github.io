@@ -1,0 +1,7 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    { "name": "portfolio", "runtimeExecutable": "npm", "runtimeArgs": ["run", "dev"], "port": 4321 },
+    { "name": "portfolio-attach", "url": "http://localhost:4321" }
+  ]
+}

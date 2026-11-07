@@ -1,0 +1,102 @@
+---
+import { site } from '../data/site';
+import { href, pick, type Lang } from '../i18n';
+import Chronogram from './Chronogram.astro';
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const t = (fr: string, en: string) => (lang === 'fr' ? fr : en);
+---
+<section class="hero" id="sommaire" data-section={t('Sommaire', 'Contents')} aria-labelledby="hero-title">
+  <div class="wrap">
+    <div class="g12 hero__top">
+      <p class="meta hero__kicker"><span class="accent">01</span> — {pick(site.hero.kicker, lang)}</p>
+      <p class="meta meta--ink2 hero__ed">{t('Portfolio · édition', 'Portfolio · edition')} {new Date().getFullYear()}</p>
+    </div>
+
+    <h1 class="display hero__title" id="hero-title">
+      {pick(site.hero.headline, lang).map((line, i) => (
+        <span class:list={['hero__line', { 'hero__line--indent': i === 1 }]}>{line}</span>
+      ))}
+    </h1>
+
+    <div class="g12 hero__body">
+      <dl class="hero__facts">
+        <div><dt class="meta meta--ink2">{t('Auteur', 'Author')}</dt><dd>{site.name}</dd></div>
+        <div><dt class="meta meta--ink2">{t('Poste', 'Role')}</dt><dd>{t('Data analyst, Ministère des Armées', 'Data analyst, French Ministry of the Armed Forces')}</dd></div>
+        <div><dt class="meta meta--ink2">{t('Formation', 'Education')}</dt><dd>{t('Cycle ingénieur Big Data & ML, EFREI Paris', 'Big Data & ML engineering degree, EFREI Paris')}</dd></div>
+      </dl>
+      <div class="hero__intro">
+        <p class="lead">{pick(site.hero.intro, lang)}</p>
+        <p class="hero__links">
+          <a class="link link-arrow" href={site.contact.cv} download="Matteo-Louet-CV.pdf">{t('Télécharger le CV', 'Download the CV')} <span class="muted small">(PDF)</span> <span class="arr" aria-hidden="true">↓</span></a>
+          <a class="link link-arrow" href="#travaux">{t('Lire les travaux', 'Read the work')} <span class="arr" aria-hidden="true">↓</span></a>
+          <a class="link link-arrow muted" href={href('cmapss', lang)}>{t('Étude de cas : C-MAPSS', 'Case study: C-MAPSS')} <span class="arr" aria-hidden="true">→</span></a>
+        </p>
+      </div>
+    </div>
+
+    <div class="hero__fig">
+      <Chronogram lang={lang} />
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero { padding-top: var(--s-5); }
+  .hero__top { align-items: baseline; }
+  .hero__kicker { grid-column: 1 / span 6; }
+  .hero__ed { grid-column: 7 / -1; text-align: right; }
+
+  .hero__title {
+    margin-top: var(--s-5);
+    margin-left: -0.04em; /* compensation optique de l'approche */
+  }
+  .hero__line { display: block; }
+  .hero__line--indent { padding-left: calc((100% + var(--gutter)) / 12 * 2); }
+
+  .hero__body {
+    margin-top: var(--s-6);
+    row-gap: var(--s-4);
+    align-items: start;
+  }
+  .hero__facts {
+    grid-column: 1 / span 4;
+    border-top: 1px solid var(--ink);
+  }
+  .hero__facts > div {
+    display: grid;
+    grid-template-columns: 9ch 1fr;
+    gap: 12px;
+    padding-block: 9px 10px;
+    border-bottom: 1px solid var(--rule);
+    font-size: 14px;
+    line-height: 1.35;
+  }
+  .hero__facts dt { padding-top: 2px; }
+  .hero__intro { grid-column: 7 / span 6; }
+  .hero__intro .lead { max-width: 30em; }
+  .hero__links {
+    margin-top: var(--s-3);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 28px;
+    font-size: 15px;
+  }
+  .hero__fig { margin-top: var(--s-7); }
+
+  @media (max-width: 1024px) {
+    .hero__kicker { grid-column: 1 / span 4; }
+    .hero__ed { grid-column: 5 / -1; }
+    .hero__line--indent { padding-left: 0; }
+    .hero__facts { grid-column: 1 / -1; order: 2; }
+    .hero__intro { grid-column: 1 / -1; }
+  }
+  @media (max-width: 640px) {
+    .hero { padding-top: var(--s-4); }
+    .hero__ed { display: none; }
+    .hero__kicker { grid-column: 1 / -1; }
+    .hero__title { margin-top: var(--s-4); font-size: clamp(44px, 13.4vw, 64px); }
+    .hero__body { margin-top: var(--s-4); }
+    .hero__fig { margin-top: var(--s-6); }
+  }
+</style>

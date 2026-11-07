@@ -1,0 +1,373 @@
+---
+import { lineage, suggestions, defaultQuery } from '../data/lab';
+import { pick, type Lang } from '../i18n';
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const t = (fr: string, en: string) => (lang === 'fr' ? fr : en);
+const cols = pick(lineage.cols, lang);
+// Textes utilisés par le script client
+const ui = {
+  absent: t('absent', 'absent'),
+  noTerm: t('Aucun terme exploitable.', 'No usable term.'),
+  noDoc: t('Aucun document ne partage de terme avec la question.', 'No document shares a term with the question.'),
+  hidden: t('(masqué)', '(hidden)'),
+};
+
+const NW = 168, NH = 46, X0 = 0, DX = 208, Y0 = 52, DY = 104;
+const pos = Object.fromEntries(lineage.nodes.map((n) => [n.id, { x: X0 + n.col * DX, y: Y0 + n.row * DY }]));
+const VW = X0 + 4 * DX + NW, VH = Y0 + 2 * DY + NH + 8;
+const edgePath = (a: string, b: string) => {
+  const p = pos[a], q = pos[b];
+  const x1 = p.x + NW, y1 = p.y + NH / 2, x2 = q.x, y2 = q.y + NH / 2, mx = (x1 + x2) / 2;
+  return `M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`;
+};
+---
+<section class="section lab" id="labo" data-section={t('Laboratoire', 'Lab')} data-lang={lang} data-ui={JSON.stringify(ui)} data-default-q={pick(defaultQuery, lang)} aria-labelledby="lab-title">
+  <div class="wrap">
+    <header class="sec-head g12">
+      <p class="meta sec-num"><span class="accent">04</span> — {t('Laboratoire', 'Lab')}</p>
+      <h2 class="h2 sec-title" id="lab-title">{lang === 'fr' ? <Fragment>Deux expériences<br />à manipuler.</Fragment> : <Fragment>Two experiments<br />to play with.</Fragment>}</h2>
+      <p class="lab__intro small muted">{t('Des calculs réels, exécutés dans votre navigateur, sur des données de démonstration. Chaque expérience reprend un geste que je pratique : interroger un corpus, remonter le fil d’une donnée.', 'Real computations, run in your browser, on demo data. Each experiment mirrors something I do: querying a corpus, tracing a piece of data back to its source.')}</p>
+    </header>
+
+    <div class="lab__tabs" role="tablist" aria-label={t('Expériences', 'Experiments')}>
+      <button role="tab" id="tab-a" aria-controls="panel-a" aria-selected="true" class="lab__tab">
+        <span class="meta accent">Exp. A</span><span class="lab__tabt">{t('Un TF-IDF en direct', 'A live TF-IDF')}</span>
+      </button>
+      <button role="tab" id="tab-b" aria-controls="panel-b" aria-selected="false" tabindex="-1" class="lab__tab">
+        <span class="meta accent">Exp. B</span><span class="lab__tabt">{t('Remonter un lignage', 'Tracing lineage')}</span>
+      </button>
+    </div>
+
+    <!-- ============ A. TF-IDF ============ -->
+    <div class="lab__panel g12" role="tabpanel" id="panel-a" aria-labelledby="tab-a">
+      <div class="tf__side">
+        <p class="fig-notice">{lang === 'fr' ? <Fragment>Posez une question : chaque mot est pondéré par sa <em>rareté</em> dans le corpus (IDF), puis la question est comparée à dix courts documents tirés de mon CV. Le document le plus proche devient la réponse — c’est le mécanisme du chatbot du projet&nbsp;04.</Fragment> : <Fragment>Ask a question: each word is weighted by its <em>rarity</em> in the corpus (IDF), then the question is compared with ten short documents drawn from my CV. The closest document becomes the answer — the mechanism behind the chatbot of project&nbsp;04.</Fragment>}</p>
+        <label class="meta tf__label" for="tf-q">{t('Votre question', 'Your question')}</label>
+        <div class="tf__field">
+          <input id="tf-q" type="text" autocomplete="off" spellcheck="false" value={pick(defaultQuery, lang)} />
+          <button type="button" class="tf__reset meta" data-tf-reset aria-label={t('Revenir à la question par défaut', 'Back to the default question')}>{t('Réinit.', 'Reset')}</button>
+        </div>
+        <div class="tf__chips" aria-label={t('Exemples', 'Examples')}>
+          {pick(suggestions, lang).map((s) => <button type="button" class="tf__chip" data-q={s}>{s}</button>)}
+        </div>
+        <div class="tf__terms">
+          <p class="meta meta--ink2">{t('Termes retenus · poids IDF', 'Terms kept · IDF weight')}</p>
+          <ul data-tf-terms></ul>
+        </div>
+      </div>
+
+      <figure class="tf__fig" aria-labelledby="figA-title">
+        <div class="fig-head">
+          <span class="meta"><span class="accent">Fig. 3.1</span>&nbsp;&nbsp;<span id="figA-title">{t('Similarité cosinus question ↔ documents', 'Cosine similarity question ↔ documents')}</span></span>
+          <span class="tag-demo">{t('Corpus démo', 'Demo corpus')}</span>
+        </div>
+        <ol class="tf__rank" data-tf-rank aria-live="polite"></ol>
+        <div class="tf__answer">
+          <p class="meta meta--ink2">{t('Réponse retenue', 'Answer')}</p>
+          <p data-tf-answer class="tf__answer-t"></p>
+        </div>
+        <figcaption class="fig-source">
+          {lang === 'fr' ? (
+            <><strong>Méthode :</strong> tf = fréquence du mot dans le document, idf = ln((1+N)/(1+df))+1, score = cosinus des vecteurs. Mots vides retirés, accents normalisés. Chaque segment de barre = contribution d’un terme au score. <strong>Corpus :</strong> 10 notices rédigées à partir du CV.</>
+          ) : (
+            <><strong>Method:</strong> tf = word frequency in the document, idf = ln((1+N)/(1+df))+1, score = cosine of the vectors. Stop words removed, accents normalised. Each bar segment = one term’s contribution to the score. <strong>Corpus:</strong> 10 notes written from the CV.</>
+          )}
+        </figcaption>
+      </figure>
+    </div>
+
+    <!-- ============ B. Lignage ============ -->
+    <div class="lab__panel g12" role="tabpanel" id="panel-b" aria-labelledby="tab-b" hidden>
+      <div class="lg__side">
+        <p class="fig-notice">{lang === 'fr' ? <Fragment>« D’où vient ce chiffre ? » — c’est la question qu’une cartographie de données doit résoudre. Choisissez un élément : ses <span class="c-up">sources en amont</span> et ses <span class="c-down">usages en aval</span> s’allument.</Fragment> : <Fragment>“Where does this number come from?” — the question data mapping has to answer. Pick an element: its <span class="c-up">upstream sources</span> and <span class="c-down">downstream uses</span> light up.</Fragment>}</p>
+        <div class="lg__ctrl">
+          <span class="meta meta--ink2" id="lg-dir">Direction</span>
+          <div class="seg" role="group" aria-labelledby="lg-dir">
+            <button type="button" data-dir="up" aria-pressed="false">{t('Amont', 'Upstream')}</button>
+            <button type="button" data-dir="both" aria-pressed="true">{t('Les deux', 'Both')}</button>
+            <button type="button" data-dir="down" aria-pressed="false">{t('Aval', 'Downstream')}</button>
+          </div>
+        </div>
+        <dl class="lg__readout" aria-live="polite">
+          <div><dt class="meta meta--ink2">{t('Sélection', 'Selected')}</dt><dd data-lg-sel></dd></div>
+          <div><dt class="meta meta--ink2 c-up">{t('Amont', 'Upstream')}</dt><dd data-lg-up></dd></div>
+          <div><dt class="meta meta--ink2 c-down">{t('Aval', 'Downstream')}</dt><dd data-lg-down></dd></div>
+        </dl>
+      </div>
+
+      <figure class="lg__fig" aria-labelledby="figB-title">
+        <div class="fig-head">
+          <span class="meta"><span class="accent">Fig. 3.2</span>&nbsp;&nbsp;<span id="figB-title">{t('Graphe de lignage d’une chaîne décisionnelle', 'Lineage graph of a BI pipeline')}</span></span>
+          <span class="tag-demo">{t('Schéma générique', 'Generic schema')}</span>
+        </div>
+        <div class="lg__scroll">
+          <svg class="lg__svg" viewBox={`-2 0 ${VW + 4} ${VH}`} data-edges={JSON.stringify(lineage.edges)}>
+            {cols.map((c, i) => (
+              <text class="ax-label" x={X0 + i * DX} y="14">{String(i + 1).padStart(2, '0')} {c.toUpperCase()}</text>
+            ))}
+            {cols.map((_, i) => <line class="lg__colrule" x1={X0 + i * DX} x2={X0 + i * DX + NW} y1="24" y2="24" />)}
+            <g class="lg__edges">
+              {lineage.edges.map(([a, b]) => <path class="lg__edge" data-a={a} data-b={b} d={edgePath(a, b)} />)}
+            </g>
+            {lineage.nodes.map((n) => (
+              <g class={`lg__node lg__node--${n.kind}`} data-id={n.id} data-label={pick(n.label, lang)} transform={`translate(${pos[n.id].x},${pos[n.id].y})`} tabindex="0" role="button" aria-label={`${pick(n.label, lang)} — ${t('afficher le lignage', 'show lineage')}`}>
+                <rect width={NW} height={NH} />
+                <text x="12" y="28">{pick(n.label, lang)}</text>
+              </g>
+            ))}
+          </svg>
+        </div>
+        <figcaption class="fig-source">
+          {lang === 'fr' ? (
+            <><strong>Note :</strong> architecture type d’une chaîne ETL → entrepôt → tableaux de bord, construite pour la démonstration. Elle ne reflète aucun système ni aucune donnée de mon alternance. Parcours du graphe en largeur (BFS) dans les deux sens.</>
+          ) : (
+            <><strong>Note:</strong> a typical ETL → warehouse → dashboards architecture, built for the demo. It reflects no system or data from my work-study. Breadth-first traversal (BFS) in both directions.</>
+          )}
+        </figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { buildIndex } from '../viz/tfidf';
+  import { corpus as corpora, lineage } from '../data/lab';
+  import type { Lang } from '../i18n';
+
+  const labEl = document.getElementById('labo')!;
+  const lang = (labEl.dataset.lang || 'fr') as Lang;
+  const ui = JSON.parse(labEl.dataset.ui || '{}');
+  const corpus = corpora[lang];
+
+  /* ---------- Onglets accessibles ---------- */
+  const tabs = [...document.querySelectorAll<HTMLButtonElement>('.lab__tab')];
+  const select = (t: HTMLButtonElement) => {
+    tabs.forEach((x) => {
+      const on = x === t;
+      x.setAttribute('aria-selected', String(on));
+      x.tabIndex = on ? 0 : -1;
+      document.getElementById(x.getAttribute('aria-controls')!)!.hidden = !on;
+    });
+  };
+  tabs.forEach((t, i) => {
+    t.addEventListener('click', () => select(t));
+    t.addEventListener('keydown', (e) => {
+      if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+      const n = tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length];
+      select(n); n.focus();
+    });
+  });
+
+  /* ---------- A. TF-IDF ---------- */
+  const COLORS = ['var(--accent)', 'var(--blue)', 'var(--green)', 'var(--yellow)', 'var(--ink)', 'var(--ink-3)'];
+  const index = buildIndex(corpus);
+  const input = document.getElementById('tf-q') as HTMLInputElement;
+  const rankEl = document.querySelector<HTMLElement>('[data-tf-rank]')!;
+  const termsEl = document.querySelector<HTMLElement>('[data-tf-terms]')!;
+  const ansEl = document.querySelector<HTMLElement>('[data-tf-answer]')!;
+  const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
+
+  // Lignes créées une fois : les barres peuvent ensuite transitionner
+  const rows = new Map<string, HTMLLIElement>();
+  corpus.forEach((d) => {
+    const li = document.createElement('li');
+    li.className = 'tf__row';
+    li.innerHTML = `<span class="tf__doc">${esc(d.title)}</span><span class="tf__bar"></span><span class="tf__score tnum"></span>`;
+    rows.set(d.id, li);
+    rankEl.appendChild(li);
+  });
+
+  const run = () => {
+    const { terms, ranking } = index.query(input.value);
+    const color = new Map(terms.map((t, i) => [t.w, COLORS[i % COLORS.length]]));
+    const maxIdf = Math.max(...terms.map((t) => t.idf), 1);
+    termsEl.innerHTML = terms.length
+      ? terms.map((t) => `<li><i style="background:${color.get(t.w)}"></i><span class="tf__w">${esc(t.w)}</span><span class="tf__idf"><b style="width:${(t.idf / maxIdf) * 100}%"></b></span><span class="tnum">${t.known ? t.idf.toFixed(2) : ui.absent}</span></li>`).join('')
+      : `<li class="muted small">${ui.noTerm}</li>`;
+
+    const order = ranking.length ? ranking : corpus.map((doc) => ({ doc, score: 0, contrib: new Map() }));
+    order.forEach((r, i) => {
+      const li = rows.get(r.doc.id)!;
+      li.style.order = String(i);
+      li.classList.toggle('is-top', i === 0 && r.score > 0);
+      li.querySelector('.tf__score')!.textContent = r.score.toFixed(3);
+      li.querySelector('.tf__bar')!.innerHTML = [...r.contrib.entries()]
+        .map(([w, c]) => `<b title="${esc(w)} : ${c.toFixed(3)}" style="width:${c * 100}%;background:${color.get(w)}"></b>`).join('');
+    });
+
+    const top = order[0];
+    if (top && top.score > 0) {
+      let html = esc(top.doc.text);
+      const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+      html = html.replace(/[\p{L}\p{N}-]+/gu, (m) => {
+        const n = norm(m);
+        const hit = terms.find((t) => n === t.w || n === t.w + 's');
+        return hit ? `<mark style="--c:${color.get(hit.w)}">${m}</mark>` : m;
+      });
+      ansEl.innerHTML = `<strong>${esc(top.doc.title)}.</strong> ${html}`;
+    } else {
+      ansEl.innerHTML = `<span class="muted">${ui.noDoc}</span>`;
+    }
+  };
+  input.addEventListener('input', run);
+  document.querySelectorAll<HTMLButtonElement>('.tf__chip').forEach((b) =>
+    b.addEventListener('click', () => { input.value = b.dataset.q!; run(); })
+  );
+  document.querySelector('[data-tf-reset]')!.addEventListener('click', () => { input.value = labEl.dataset.defaultQ || ''; run(); });
+  run();
+
+  /* ---------- B. Lignage ---------- */
+  const svg = document.querySelector<SVGSVGElement>('.lg__svg')!;
+  const edges = lineage.edges;
+  const label = new Map(lineage.nodes.map((n) => [n.id, n.label[lang]]));
+  const walk = (start: string, dir: 'up' | 'down') => {
+    const seen = new Set<string>(); const q = [start];
+    while (q.length) {
+      const c = q.shift()!;
+      edges.forEach(([a, b]) => {
+        const nxt = dir === 'down' ? (a === c ? b : null) : (b === c ? a : null);
+        if (nxt && !seen.has(nxt)) { seen.add(nxt); q.push(nxt); }
+      });
+    }
+    return seen;
+  };
+  let sel = 'stg';
+  let dir: 'up' | 'down' | 'both' = 'both';
+  const paint = () => {
+    const up = dir !== 'down' ? walk(sel, 'up') : new Set<string>();
+    const down = dir !== 'up' ? walk(sel, 'down') : new Set<string>();
+    svg.classList.add('has-sel');
+    svg.querySelectorAll<SVGGElement>('.lg__node').forEach((g) => {
+      const id = g.dataset.id!;
+      g.classList.toggle('is-sel', id === sel);
+      g.classList.toggle('is-up', up.has(id));
+      g.classList.toggle('is-down', down.has(id));
+      g.setAttribute('aria-pressed', String(id === sel));
+    });
+    svg.querySelectorAll<SVGPathElement>('.lg__edge').forEach((p) => {
+      const a = p.dataset.a!, b = p.dataset.b!;
+      p.classList.toggle('is-up', up.has(a) && (up.has(b) || b === sel));
+      p.classList.toggle('is-down', down.has(b) && (down.has(a) || a === sel));
+    });
+    const list = (s: Set<string>) => (s.size ? [...s].map((i) => label.get(i)).join(', ') : '—');
+    document.querySelector('[data-lg-sel]')!.textContent = label.get(sel)!;
+    document.querySelector('[data-lg-up]')!.textContent = dir === 'down' ? ui.hidden : `${up.size} · ${list(up)}`;
+    document.querySelector('[data-lg-down]')!.textContent = dir === 'up' ? ui.hidden : `${down.size} · ${list(down)}`;
+  };
+  svg.querySelectorAll<SVGGElement>('.lg__node').forEach((g) => {
+    const pick = () => { sel = g.dataset.id!; paint(); };
+    g.addEventListener('click', pick);
+    g.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } });
+  });
+  document.querySelectorAll<HTMLButtonElement>('[data-dir]').forEach((b) =>
+    b.addEventListener('click', () => {
+      dir = b.dataset.dir as typeof dir;
+      document.querySelectorAll('[data-dir]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      paint();
+    })
+  );
+  paint();
+</script>
+
+<style>
+  .lab__intro { grid-column: 11 / -1; padding-top: 6px; }
+  :global(.lab .sec-title) { grid-column: 4 / span 6; }
+
+  .lab__tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 1px solid var(--ink); margin-bottom: var(--s-5); }
+  .lab__tab {
+    appearance: none; background: none; border: 0; border-bottom: 1px solid var(--rule);
+    text-align: left; padding: 14px 0 16px; cursor: pointer;
+    display: flex; flex-direction: column; gap: 4px;
+    transition: border-color var(--dur) var(--ease);
+  }
+  .lab__tab + .lab__tab { padding-left: var(--gutter); border-left: 1px solid var(--rule); }
+  .lab__tabt { font-family: var(--f-display); font-size: var(--t-h3); font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; color: var(--ink-3); transition: color var(--dur) var(--ease); }
+  .lab__tab[aria-selected='true'] { border-bottom: 3px solid var(--ink); padding-bottom: 14px; }
+  .lab__tab[aria-selected='true'] .lab__tabt, .lab__tab:hover .lab__tabt { color: var(--ink); }
+
+  .lab__panel { row-gap: var(--s-5); align-items: start; }
+
+  /* --- A --- */
+  .tf__side { grid-column: 1 / span 4; display: flex; flex-direction: column; gap: var(--s-2); }
+  .tf__label { margin-top: var(--s-2); }
+  .tf__field { display: flex; border-bottom: 2px solid var(--ink); }
+  .tf__field input {
+    flex: 1; min-width: 0; border: 0; background: transparent; padding: 8px 0;
+    font-family: var(--f-display); font-size: 24px; font-weight: 500; letter-spacing: -0.015em; color: var(--ink);
+  }
+  .tf__field input:focus { outline: none; }
+  .tf__field:focus-within { border-bottom-color: var(--accent); }
+  .tf__reset { background: none; border: 0; cursor: pointer; color: var(--ink-2); padding: 0 0 0 8px; }
+  .tf__reset:hover { color: var(--accent); }
+  .tf__chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tf__chip {
+    background: none; border: 1px solid var(--rule); padding: 5px 9px 4px; cursor: pointer;
+    font-size: 13px; transition: border-color var(--dur) var(--ease), color var(--dur) var(--ease);
+  }
+  .tf__chip:hover { border-color: var(--ink); color: var(--accent); }
+  .tf__terms { margin-top: var(--s-3); border-top: 1px solid var(--ink); padding-top: 10px; }
+  .tf__terms ul { margin-top: 8px; display: grid; gap: 6px; }
+  .tf__terms :global(li) { display: grid; grid-template-columns: 10px 9ch 1fr 6ch; gap: 10px; align-items: center; font-size: 14px; }
+  .tf__terms :global(li > i) { width: 10px; height: 10px; }
+  .tf__terms :global(.tf__w) { overflow: hidden; text-overflow: ellipsis; }
+  .tf__terms :global(.tf__idf) { height: 4px; background: var(--rule); position: relative; }
+  .tf__terms :global(.tf__idf b) { position: absolute; inset: 0 auto 0 0; background: var(--ink); }
+  .tf__terms :global(.tnum) { font-size: 12px; text-align: right; color: var(--ink-2); }
+
+  .tf__fig { grid-column: 6 / -1; }
+  .tf__rank { display: flex; flex-direction: column; }
+  .tf__rank :global(.tf__row) {
+    display: grid; grid-template-columns: minmax(0, 15em) 1fr 6ch; gap: 14px; align-items: center;
+    padding-block: 7px; border-bottom: 1px solid var(--rule); font-size: 14px;
+    color: var(--ink-2);
+    transition: color var(--dur) var(--ease);
+  }
+  .tf__rank :global(.tf__row.is-top) { color: var(--ink); font-weight: 550; }
+  .tf__rank :global(.tf__doc) { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tf__rank :global(.tf__bar) { display: flex; height: 12px; background: linear-gradient(var(--rule), var(--rule)) 0 50% / 100% 1px no-repeat; }
+  .tf__rank :global(.tf__bar b) { display: block; height: 100%; transition: width 400ms var(--ease); }
+  .tf__rank :global(.tf__score) { font-size: 12px; text-align: right; }
+  .tf__answer { margin-top: var(--s-3); padding: var(--s-2) var(--s-3) var(--s-3); background: var(--paper-2); }
+  .tf__answer-t { margin-top: 6px; font-size: 16px; line-height: 1.5; max-width: 62ch; }
+  .tf__answer-t :global(mark) { background: none; color: inherit; box-shadow: inset 0 -0.45em 0 color-mix(in srgb, var(--c) 30%, transparent); }
+
+  /* --- B --- */
+  .lg__side { grid-column: 1 / span 4; display: flex; flex-direction: column; gap: var(--s-3); }
+  .c-up { color: var(--blue); }
+  .c-down { color: var(--accent); }
+  .lg__ctrl { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+  .lg__readout { border-top: 1px solid var(--ink); }
+  .lg__readout > div { display: grid; grid-template-columns: 10ch 1fr; gap: 10px; padding-block: 9px; border-bottom: 1px solid var(--rule); font-size: 14px; line-height: 1.4; }
+  .lg__fig { grid-column: 5 / -1; }
+  .lg__scroll { overflow-x: auto; }
+  .lg__svg { min-width: 640px; width: 100%; height: auto; }
+  .lg__colrule { stroke: var(--ink); }
+  .lg__edge { fill: none; stroke: var(--ink-3); stroke-width: 1.2; transition: stroke var(--dur) var(--ease), opacity var(--dur) var(--ease); }
+  .has-sel .lg__edge { opacity: 0.25; }
+  .has-sel .lg__edge.is-up { stroke: var(--blue); stroke-width: 2; opacity: 1; }
+  .has-sel .lg__edge.is-down { stroke: var(--accent); stroke-width: 2; opacity: 1; }
+  .lg__node { cursor: pointer; outline: none; }
+  .lg__node rect { fill: var(--paper); stroke: var(--ink); stroke-width: 1; transition: fill var(--dur) var(--ease), stroke var(--dur) var(--ease); }
+  .lg__node--source rect { stroke-dasharray: 3 3; }
+  .lg__node--output rect { stroke-width: 2; }
+  .lg__node text { font-size: 14px; fill: var(--ink); letter-spacing: -0.005em; pointer-events: none; }
+  .has-sel .lg__node:not(.is-sel):not(.is-up):not(.is-down) { opacity: 0.4; }
+  .lg__node.is-up rect { stroke: var(--blue); stroke-width: 2; }
+  .lg__node.is-down rect { stroke: var(--accent); stroke-width: 2; }
+  .lg__node.is-sel rect { fill: var(--ink); stroke: var(--ink); }
+  .lg__node.is-sel text { fill: var(--paper); }
+  .lg__node:hover rect { stroke-width: 2; }
+  .lg__node:focus-visible rect { stroke: var(--accent); stroke-width: 3; }
+
+  @media (max-width: 1024px) {
+    .lab__intro { grid-column: 1 / -1; max-width: 52ch; }
+    :global(.lab .sec-title) { grid-column: 1 / -1; }
+    .tf__side, .tf__fig, .lg__side, .lg__fig { grid-column: 1 / -1; }
+  }
+  @media (max-width: 640px) {
+    .lab__tabt { font-size: 19px; }
+    .tf__rank :global(.tf__row) { grid-template-columns: minmax(0, 9em) 1fr 5ch; gap: 8px; font-size: 13px; }
+    .lg__scroll { margin-inline: calc(var(--margin) * -1); padding-inline: var(--margin); }
+  }
+</style>

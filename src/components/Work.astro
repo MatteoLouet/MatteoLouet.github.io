@@ -1,0 +1,263 @@
+---
+import { projects, archive } from '../data/projects';
+import ProjectFigure from './figures/ProjectFigure.astro';
+import cmapss from '../data/cmapss.json';
+import { href as route, pick, type Lang } from '../i18n';
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const t = (fr: string, en: string) => (lang === 'fr' ? fr : en);
+
+// Composition éditoriale : chaque entrée a sa propre place dans la grille
+const layout: Record<string, string> = {
+  '01': 'e--feature',
+  '02': 'e--left7',
+  '03': 'e--right5',
+  '04': 'e--band',
+  '05': 'e--left5',
+  '06': 'e--right6',
+  '07': 'e--left7',
+  '08': 'e--right5',
+};
+const list = projects.map((p) => ({
+  ...p,
+  title: pick(p.title, lang),
+  dek: pick(p.dek, lang),
+  category: pick(p.category, lang),
+  stack: pick(p.stack, lang),
+  todo: p.todo ? pick(p.todo, lang) : undefined,
+  figCaption: pick(p.figCaption, lang),
+  team: p.team ? pick(p.team, lang) : undefined,
+  url: p.caseStudy ? route(p.caseStudy, lang) : undefined,
+}));
+---
+<section class="section work" id="travaux" data-section={t('Travaux choisis', 'Selected work')} aria-labelledby="work-title">
+  <div class="wrap">
+    <header class="sec-head g12">
+      <p class="meta sec-num"><span class="accent">03</span> — {t('Travaux choisis', 'Selected work')}</p>
+      <h2 class="h2 sec-title" id="work-title">{lang === 'fr'
+        ? <Fragment>Huit projets,<br />une obsession&nbsp;:<br />la donnée lisible.</Fragment>
+        : <Fragment>Eight projects,<br />one obsession:<br />readable data.</Fragment>}</h2>
+      <div class="sec-tools">
+        <span class="meta meta--ink2" id="view-label">{t('Affichage', 'View')}</span>
+        <div class="seg" role="group" aria-labelledby="view-label">
+          <button type="button" data-view="edito" aria-pressed="true">{t('Éditorial', 'Editorial')}</button>
+          <button type="button" data-view="index" aria-pressed="false">Index</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="work__edito" data-panel="edito">
+      {list.map((p) => {
+        const href = p.url;
+        const isDemo = p.figure === 'degradation' && cmapss.meta.demo;
+        const isReal = (p.figure === 'degradation' && !cmapss.meta.demo) || p.figure === 'multiples';
+        return (
+          <article class:list={['e', layout[p.n], 'reveal']} aria-labelledby={`p-${p.slug}`}>
+            <figure class="e__fig">
+              {href ? (
+                <a href={href} class="e__figlink" tabindex="-1" aria-hidden="true">
+                  <ProjectFigure kind={p.figure} label={p.figCaption} lang={lang} />
+                </a>
+              ) : (
+                <ProjectFigure kind={p.figure} label={p.figCaption} lang={lang} />
+              )}
+              <figcaption class="e__cap">
+                <span class="meta"><span class="accent">Fig. 2.{Number(p.n)}</span>&nbsp;&nbsp;{p.figCaption}</span>
+                {isDemo ? <span class="tag-demo">{t('Données démo', 'Demo data')}</span> : isReal ? <span class="meta meta--ink2">{p.figure === 'multiples' ? t('Données RTE éCO2mix', 'RTE éCO2mix data') : t('Données NASA FD001', 'NASA FD001 data')}</span> : <span class="meta meta--ink2">{t('Figure illustrative', 'Illustrative figure')}</span>}
+              </figcaption>
+            </figure>
+            <div class="e__text">
+              <p class="e__meta meta"><span class="e__n tnum">{p.n}</span><span class="meta--ink2">{p.category}</span></p>
+              <h3 class="h3 e__title" id={`p-${p.slug}`}>
+                {href ? <a href={href}>{p.title}</a> : p.title}
+              </h3>
+              <p class="e__dek">{p.dek}</p>
+              <ul class="e__stack meta" aria-label={t('Technologies et méthodes', 'Technologies and methods')}>
+                {p.stack.map((s) => <li>{s}</li>)}
+                {p.todo?.map((x) => <li class="todo">[{x} {t('à compléter', 'to be added')}]</li>)}
+              </ul>
+              {p.team && <p class="e__team small muted">{t('Projet mené', 'Project carried out')} {p.team}</p>}
+              <p class="e__ctas">
+                {href ? (
+                  <a class="link link-arrow e__cta" href={href}>{t('Lire l’étude de cas', 'Read the case study')} <span class="arr" aria-hidden="true">→</span></a>
+                ) : (
+                  <span class="e__cta meta meta--ink2">{t('Étude de cas en préparation', 'Case study in progress')}</span>
+                )}
+                {p.repo && <a class="link link-arrow e__repo muted" href={p.repo} rel="noopener">Code <span class="arr" aria-hidden="true">↗</span></a>}
+              </p>
+            </div>
+          </article>
+        );
+      })}
+    </div>
+
+    <div class="work__index" data-panel="index" hidden>
+      <table class="idx">
+        <caption class="sr-only">{t('Index des projets', 'Project index')}</caption>
+        <thead>
+          <tr class="meta meta--ink2">
+            <th scope="col">N°</th><th scope="col">{t('Projet', 'Project')}</th><th scope="col" class="idx__cat">{t('Domaine', 'Field')}</th><th scope="col" class="idx__stack">{t('Méthodes', 'Methods')}</th><th scope="col" class="idx__st">{t('Étude', 'Study')}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {list.map((p) => (
+            <tr>
+              <td class="tnum">{p.n}</td>
+              <th scope="row">{p.url ? <a href={p.url}>{p.title}</a> : p.title}</th>
+              <td class="idx__cat">{p.category}</td>
+              <td class="idx__stack meta">{p.stack.join(' · ')}</td>
+              <td class="idx__st meta">{p.url ? <a class="accent" href={p.url}>{t('Lire →', 'Read →')}</a> : <span class="meta--ink2">{t('À venir', 'Coming')}</span>}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="arch-list">
+      <p class="meta arch-list__h"><span class="accent">03.b</span> — {t('Autres dépôts', 'Other repositories')}</p>
+      <ul>
+        {archive.map((a) => (
+          <li>
+            <a href={a.repo} rel="noopener">
+              <span class="arch-list__t">{pick(a.title, lang)} <span aria-hidden="true">↗</span></span>
+              <span class="arch-list__w small muted">{pick(a.what, lang)}{a.team ? ` — ${pick(a.team, lang)}` : ''}</span>
+              <span class="arch-list__s meta">{a.stack}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </div>
+</section>
+
+<script>
+  const root = document.getElementById('travaux');
+  if (root) {
+    const btns = root.querySelectorAll<HTMLButtonElement>('[data-view]');
+    const panels = root.querySelectorAll<HTMLElement>('[data-panel]');
+    const set = (v: string) => {
+      btns.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.view === v)));
+      panels.forEach((p) => (p.hidden = p.dataset.panel !== v));
+      if (v === 'edito') root.querySelectorAll('.reveal').forEach((el) => el.classList.add('is-in'));
+      try { localStorage.setItem('work-view', v); } catch {}
+    };
+    btns.forEach((b) => b.addEventListener('click', () => set(b.dataset.view!)));
+    try { const saved = localStorage.getItem('work-view'); if (saved === 'index') set('index'); } catch {}
+  }
+</script>
+
+<style>
+  /* En-tête de section (réutilisé ailleurs via :global) */
+  :global(.sec-head) {
+    border-top: 1px solid var(--ink);
+    padding-top: 12px;
+    row-gap: var(--s-3);
+    align-items: start;
+    margin-bottom: var(--s-7);
+  }
+  :global(.sec-num) { grid-column: 1 / span 3; padding-top: 6px; }
+  :global(.sec-title) { grid-column: 4 / span 7; }
+  .sec-tools {
+    grid-column: 11 / -1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    padding-top: 4px;
+  }
+
+  .work__edito {
+    display: grid;
+    grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+    column-gap: var(--gutter);
+    row-gap: var(--s-8);
+  }
+  .e { display: grid; gap: var(--s-3); align-content: start; }
+  .e__figlink { display: block; }
+  .e__fig :global(.pf) { transition: background var(--dur) var(--ease); }
+  .e:hover .e__fig :global(.pf) { background: #e9e5dc; }
+  .e__cap {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--s-2);
+    margin-top: 10px;
+  }
+  .e__text { display: flex; flex-direction: column; gap: 12px; }
+  .e__meta { display: flex; gap: 14px; align-items: baseline; border-top: 1px solid var(--ink); padding-top: 10px; }
+  .e__n { font-size: 11px; color: var(--accent); }
+  .e__title a { text-decoration: none; transition: color var(--dur) var(--ease); }
+  .e:hover .e__title a, .e__title a:hover { color: var(--accent); }
+  .e__dek { color: var(--ink-2); max-width: 46ch; }
+  .e__stack { display: flex; flex-wrap: wrap; gap: 4px 14px; color: var(--ink); }
+  .e__stack li:not(.todo)::before { content: '/ '; color: var(--ink-3); }
+  .e__stack .todo { font-size: 10px; }
+  .e__cta { font-size: 15px; }
+  .e__ctas { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: baseline; }
+  .e__repo { font-size: 15px; }
+  .e__team { margin-top: -4px; }
+
+  .arch-list { margin-top: var(--s-8); display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--gutter); }
+  .arch-list__h { grid-column: 1 / span 3; border-top: 1px solid var(--ink); padding-top: 10px; }
+  .arch-list ul { grid-column: 4 / -1; border-top: 1px solid var(--ink); }
+  .arch-list a { display: grid; grid-template-columns: 14em 1fr 13em; gap: var(--gutter); align-items: baseline; padding-block: 12px; border-bottom: 1px solid var(--rule); text-decoration: none; transition: background var(--dur) var(--ease); }
+  .arch-list a:hover { background: var(--paper-2); }
+  .arch-list a:hover .arch-list__t { color: var(--accent); }
+  .arch-list__t { font-family: var(--f-display); font-weight: 600; font-size: 18px; letter-spacing: -0.01em; }
+  .arch-list__s { text-align: right; color: var(--ink-2); }
+  @media (max-width: 1024px) {
+    .arch-list { grid-template-columns: 1fr; }
+    .arch-list__h, .arch-list ul { grid-column: 1; }
+    .arch-list__h { border-top: 0; padding-top: 0; margin-bottom: 8px; }
+    .arch-list a { grid-template-columns: 1fr; gap: 4px; }
+    .arch-list__s { text-align: left; }
+  }
+
+  /* Composition desktop */
+  .e--feature { grid-column: 1 / -1; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--gutter); }
+  .e--feature .e__fig { grid-column: 1 / span 8; }
+  .e--feature .e__text { grid-column: 9 / span 4; align-self: end; padding-bottom: 38px; }
+  .e--feature .e__title { font-size: clamp(30px, 3vw, 44px); letter-spacing: -0.03em; line-height: 1.02; }
+  .e--left7 { grid-column: 1 / span 7; }
+  .e--right5 { grid-column: 9 / span 4; margin-top: var(--s-8); }
+  .e--band { grid-column: 1 / -1; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--gutter); }
+  .e--band .e__fig { grid-column: 4 / -1; grid-row: 1; }
+  .e--band .e__text { grid-column: 1 / span 3; grid-row: 1; }
+  .e--left5 { grid-column: 2 / span 5; }
+  .e--right6 { grid-column: 8 / span 5; margin-top: var(--s-7); }
+
+  /* Index */
+  .idx { width: 100%; border-collapse: collapse; }
+  .idx th, .idx td { text-align: left; vertical-align: baseline; padding: 16px 16px 16px 0; border-bottom: 1px solid var(--rule); }
+  .idx thead th { padding-block: 8px; border-bottom: 1px solid var(--ink); font-weight: 400; }
+  .idx tbody th { font-family: var(--f-display); font-size: 21px; font-weight: 600; letter-spacing: -0.015em; line-height: 1.2; }
+  .idx tbody th a { text-decoration: none; }
+  .idx tbody th a:hover { color: var(--accent); }
+  .idx td.num { color: var(--accent); font-size: 12px; width: 4ch; }
+  .idx__cat { color: var(--ink-2); font-size: 14px; }
+  .idx__st a { text-decoration: none; }
+  .idx tbody tr { transition: background var(--dur) var(--ease); }
+  .idx tbody tr:hover { background: var(--paper-2); }
+
+  @media (max-width: 1024px) {
+    :global(.sec-num) { grid-column: 1 / -1; }
+    :global(.sec-title) { grid-column: 1 / span 5; }
+    .sec-tools { grid-column: 1 / -1; flex-direction: row; justify-content: flex-start; align-items: center; }
+    .e--feature, .e--band { grid-template-columns: 1fr; }
+    .e--feature .e__fig, .e--feature .e__text, .e--band .e__fig, .e--band .e__text { grid-column: 1; grid-row: auto; }
+    .e--feature .e__text { padding-bottom: 0; }
+    .e--left7, .e--left5 { grid-column: 1 / span 4; }
+    .e--right5, .e--right6 { grid-column: 3 / -1; margin-top: 0; }
+    .idx__stack { display: none; }
+  }
+  @media (max-width: 640px) {
+    :global(.sec-title) { grid-column: 1 / -1; }
+    :global(.sec-head) { margin-bottom: var(--s-6); }
+    .work__edito { row-gap: var(--s-7); }
+    .e--left7, .e--left5, .e--right5, .e--right6 { grid-column: 1 / -1; }
+    .e__fig { margin-inline: calc(var(--margin) * -1); }
+    .e__cap { padding-inline: var(--margin); }
+    .idx__cat { display: none; }
+    .idx tbody th { font-size: 17px; }
+  }
+</style>

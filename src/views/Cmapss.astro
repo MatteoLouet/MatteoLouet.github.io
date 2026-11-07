@@ -1,0 +1,388 @@
+---
+import CaseStudy from '../layouts/CaseStudy.astro';
+import CaseSection from '../components/CaseSection.astro';
+import data from '../data/cmapss.json';
+import Fd001 from '../fd001/Fd001';
+import type { Lang } from '../i18n';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const t = (fr: string, en: string) => (lang === 'fr' ? fr : en);
+
+const isDemo = data.meta.demo;
+const lives = data.units.map((u) => u.life);
+const facts = [
+  { k: t('Jeu de données', 'Dataset'), v: 'NASA C-MAPSS — FD001' },
+  { k: 'Question', v: t('Panne dans ≤ 30 cycles ? (binaire)', 'Failure within ≤ 30 cycles? (binary)') },
+  { k: t('Modèle retenu', 'Chosen model'), v: t('Régression logistique, seuil 0,592', 'Logistic regression, threshold 0.592') },
+  { k: 'Stack', v: 'Python · pandas · scikit-learn · Plotly' },
+  { k: t('Équipe', 'Team'), v: 'Mattéo Louet, Daniil Hirchyts' },
+  { k: t('Livrables', 'Deliverables'), v: t('Notebook, rapport technique, site web', 'Notebook, technical report, website') },
+];
+const REPO = 'https://github.com/MatteoLouet/NASA-C-MAPSS-FD001-engine-degradation-ML-Project-';
+const img = (f: string) => `/images/cmapss/${f}.png`;
+const cap = t('Capture du notebook.', 'Notebook screenshot.');
+
+// Schéma d'architecture (SVG statique)
+const pageFlow = [
+  { t: 'train_FD001.txt', s: t('20 631 lignes, 26 col.', '20,631 rows, 26 cols') },
+  { t: 'prepare_cmapss.py', s: t('Parsing, 8 capteurs', 'Parsing, 8 sensors') },
+  { t: 'cmapss.json', s: t('Format pivot', 'Pivot format') },
+  { t: 'Build Astro', s: t('1 fichier JSON / capteur', '1 JSON file / sensor') },
+  { t: t('Explorateur D3', 'D3 explorer'), s: t('Chargé à la demande', 'Loaded on demand') },
+];
+const mlFlow = [
+  { t: t('Étiquette', 'Label'), s: t('y = 1 si RUL ≤ 30', 'y = 1 if RUL ≤ 30') },
+  { t: t('14 capteurs', '14 sensors'), s: t('7 constants retirés', '7 constant ones dropped') },
+  { t: t('7 modèles', '7 models'), s: t('CV groupée par moteur', 'CV grouped by engine') },
+  { t: t('Seuil d’alarme', 'Alarm threshold'), s: t('max. F2 → 0,592', 'max. F2 → 0.592') },
+  { t: 'Test', s: t('100 moteurs, dernière ligne', '100 engines, last row') },
+];
+const BW = 176, BH = 54, GAP = 38;
+const AW = 5 * BW + 4 * GAP;
+---
+<CaseStudy slug="cmapss" lang={lang} kicker={t('Machine learning · Maintenance prédictive', 'Machine learning · Predictive maintenance')} facts={facts}>
+  <div slot="bleed" class="fd-band">
+    <div class="wrap fd-band__head">
+      <p class="meta"><span class="accent">{t('Livrable', 'Deliverable')}</span> — {t('Le site du projet, conçu par Daniil Hirchyts', 'The project website, designed by Daniil Hirchyts')}</p>
+      <a class="meta link" href={REPO} rel="noopener">Code &amp; notebook ↗</a>
+    </div>
+    <Fd001 client:load lang={lang} />
+    <p class="wrap fd-band__foot small muted">{t('Site compilé depuis le code source du projet (React, Recharts). Illustration du turboréacteur :', 'Site built from the project’s source code (React, Recharts). Turbofan illustration:')} <a class="link" href="https://github.com/wheresryan22/anatomy" rel="noopener">Anatomy</a> {t('(licence MIT).', '(MIT licence).')}</p>
+  </div>
+
+  <CaseSection n="01" title={t('Contexte', 'Context')} id="contexte">
+    {lang === 'fr' ? (
+      <>
+        <h3>Remplacer une pièce juste avant qu’elle ne casse — ni trop tard, ni trop tôt.</h3>
+        <p>La maintenance prédictive cherche à anticiper la défaillance d’une machine à partir de ses capteurs. Une alarme trop prudente immobilise des moteurs sains ; trop tardive, elle laisse survenir la panne.</p>
+        <p>Nous avons posé la question sous sa forme la plus utile en exploitation : <strong>à partir des 21 capteurs d’un seul cycle, ce moteur va-t-il tomber en panne dans les 30 prochains cycles&nbsp;?</strong> C’est une classification binaire : <em>y</em> = 1 quand la durée de vie restante (RUL) est inférieure ou égale à 30.</p>
+        <p>Projet de machine learning réalisé à l’EFREI avec Daniil Hirchyts : un notebook unique qui va de l’exploration à l’évaluation, un rapport technique et un site de restitution.</p>
+      </>
+    ) : (
+      <>
+        <h3>Replace a part just before it breaks — neither too late nor too early.</h3>
+        <p>Predictive maintenance tries to anticipate a machine’s failure from its sensors. An over-cautious alarm grounds healthy engines; a late one lets the failure happen.</p>
+        <p>We framed the question in its most useful operational form: <strong>from the 21 sensors of a single cycle, will this engine fail within the next 30 cycles?</strong> It is a binary classification: <em>y</em> = 1 when the remaining useful life (RUL) is 30 or less.</p>
+        <p>A machine learning project carried out at EFREI with Daniil Hirchyts: one notebook from exploration to evaluation, a technical report and a presentation website.</p>
+      </>
+    )}
+  </CaseSection>
+
+  <CaseSection n="02" title={t('Données', 'Data')} id="donnees">
+    {lang === 'fr' ? (
+      <>
+        <h3>Cent moteurs, vingt et un capteurs, une seule façon de tomber en panne.</h3>
+        <p>C-MAPSS (<em>Commercial Modular Aero-Propulsion System Simulation</em>) est publié par le Prognostics Center of Excellence de la NASA (Saxena et al., 2008). Il simule des turbofans dont l’usure progresse jusqu’à la panne.</p>
+        <dl class="ds">
+          <div><dt class="meta meta--ink2">FD001</dt><dd>100 moteurs d’entraînement, 100 de test ; 1 condition de vol ; 1 mode de panne (dégradation du compresseur haute pression)</dd></div>
+          <div><dt class="meta meta--ink2">Une ligne</dt><dd>= un cycle : identifiant moteur, n° de cycle, 3 réglages opérationnels, 21 capteurs</dd></div>
+          <div><dt class="meta meta--ink2">Volumes</dt><dd>20 631 lignes d’entraînement (séries complètes jusqu’à la panne) ; 13 096 lignes de test (séries interrompues, vraie RUL fournie à part)</dd></div>
+          <div><dt class="meta meta--ink2">Classes</dt><dd>Au seuil de 30 cycles, environ 15 % des lignes d’entraînement sont positives : un modèle qui ne prédit jamais de panne atteint déjà 85 % d’exactitude — l’exactitude n’est donc pas la bonne mesure</dd></div>
+        </dl>
+      </>
+    ) : (
+      <>
+        <h3>One hundred engines, twenty-one sensors, a single way to fail.</h3>
+        <p>C-MAPSS (<em>Commercial Modular Aero-Propulsion System Simulation</em>) is published by NASA’s Prognostics Center of Excellence (Saxena et al., 2008). It simulates turbofans whose wear progresses until failure.</p>
+        <dl class="ds">
+          <div><dt class="meta meta--ink2">FD001</dt><dd>100 training engines, 100 test engines; 1 flight condition; 1 failure mode (high-pressure compressor degradation)</dd></div>
+          <div><dt class="meta meta--ink2">One row</dt><dd>= one cycle: engine id, cycle number, 3 operational settings, 21 sensors</dd></div>
+          <div><dt class="meta meta--ink2">Volumes</dt><dd>20,631 training rows (complete series up to failure); 13,096 test rows (truncated series, true RUL given separately)</dd></div>
+          <div><dt class="meta meta--ink2">Classes</dt><dd>At a 30-cycle window, about 15% of training rows are positive: a model that never predicts failure already reaches 85% accuracy — so accuracy is the wrong metric</dd></div>
+        </dl>
+      </>
+    )}
+    <figure class="exp" data-explorer data-lang={lang} aria-labelledby="fig1-title">
+      <div class="fig-head">
+        <span class="meta"><span class="accent">Fig. 1</span>&nbsp;&nbsp;<span id="fig1-title">{t('Comment un capteur raconte l’usure d’un moteur', 'How a sensor tells the story of engine wear')}</span></span>
+        {isDemo ? <span class="tag-demo">{t('Données démo · simulées', 'Demo data · simulated')}</span> : <span class="meta meta--ink2">NASA C-MAPSS · {data.meta.subset}</span>}
+      </div>
+      <p class="fig-notice exp__notice">{lang === 'fr'
+        ? <Fragment>Chaque fil est un moteur suivi jusqu’à sa panne. Alignés sur leur <strong>début</strong>, ils semblent désordonnés ; alignés sur leur <strong>panne</strong>, une même signature de dégradation apparaît dans les derniers cycles. C’est ce signal que le modèle apprend à reconnaître, avec une alarme à 30 cycles de la panne.</Fragment>
+        : <Fragment>Each line is an engine followed until it fails. Aligned on their <strong>start</strong>, they look disordered; aligned on their <strong>failure</strong>, the same degradation signature appears in the last cycles. That is the signal the model learns to recognise, with an alarm 30 cycles before failure.</Fragment>}</p>
+
+      <div class="exp__ctrls">
+        <div class="exp__ctrl exp__ctrl--sensors">
+          <span class="meta meta--ink2" id="c-sensor">{t('Capteur', 'Sensor')}</span>
+          <div class="seg seg--wrap" role="group" aria-labelledby="c-sensor" data-sensors></div>
+        </div>
+        <div class="exp__ctrl">
+          <span class="meta meta--ink2" id="c-align">{t('Alignement', 'Alignment')}</span>
+          <div class="seg" role="group" aria-labelledby="c-align">
+            <button type="button" data-align="start" aria-pressed="false">{t('Début', 'Start')}</button>
+            <button type="button" data-align="end" aria-pressed="true">{t('Panne', 'Failure')}</button>
+          </div>
+        </div>
+        <div class="exp__ctrl exp__ctrl--end">
+          <label class="exp__check meta"><input type="checkbox" data-smooth checked /> {t('Lissage 11 cycles', '11-cycle smoothing')}</label>
+          <button type="button" class="exp__reset meta" data-reset>{t('Réinitialiser', 'Reset')}</button>
+        </div>
+      </div>
+
+      <p class="exp__title"><span data-sensor-title>&nbsp;</span></p>
+      <div class="exp__stage">
+        <div class="exp__plot" data-plot><p class="meta meta--ink2 exp__loading">{t('Chargement des données…', 'Loading data…')}</p></div>
+        <div class="tip" role="presentation"></div>
+      </div>
+      <div class="exp__under">
+        <p class="meta meta--ink2 exp__readout" data-readout aria-live="polite"></p>
+        <ul class="exp__legend small" aria-label={t('Légende', 'Legend')}>
+          <li><i class="lg-trace"></i>{t('un moteur', 'one engine')}</li>
+          <li><i class="lg-med"></i>{t('médiane', 'median')}</li>
+          <li><i class="lg-iqr"></i>{t('50 % central', 'middle 50%')}</li>
+          <li><i class="lg-focus"></i>{t('moteur survolé / épinglé', 'hovered / pinned engine')}</li>
+        </ul>
+      </div>
+      <div class="exp__histwrap">
+        <p class="meta meta--ink2">{t('Durées de vie — cliquez une classe pour n’afficher que ces moteurs', 'Lifetimes — click a bin to show only those engines')}</p>
+        <div data-hist class="exp__hist"></div>
+      </div>
+
+      <figcaption class="fig-source">{lang === 'fr' ? (
+        <>{isDemo
+          ? <><strong>Données de démonstration.</strong> Trajectoires simulées qui reproduisent la structure de FD001 ; ce ne sont pas des mesures. Pour afficher les vraies données : <code>python3 scripts/prepare_cmapss.py train_FD001.txt</code>.</>
+          : <><strong>Source :</strong> NASA Prognostics Center of Excellence, C-MAPSS {data.meta.subset}, jeu d’entraînement — les 100 moteurs, 8 des 14 capteurs informatifs.</>}
+        {' '}<strong>Méthode :</strong> lissage par moyenne glissante centrée (fenêtre de 11 cycles) ; médiane et quartiles calculés pour chaque cycle avant panne dès que 8 moteurs au moins sont présents (3 lorsqu’une classe de durée de vie est filtrée). Survol : moteur le plus proche du curseur ; clic : épingler.</>
+      ) : (
+        <>{isDemo
+          ? <><strong>Demo data.</strong> Simulated trajectories reproducing the structure of FD001; these are not measurements. To show the real data: <code>python3 scripts/prepare_cmapss.py train_FD001.txt</code>.</>
+          : <><strong>Source:</strong> NASA Prognostics Center of Excellence, C-MAPSS {data.meta.subset}, training set — all 100 engines, 8 of the 14 informative sensors.</>}
+        {' '}<strong>Method:</strong> centred moving average (11-cycle window); median and quartiles computed for each cycle before failure as soon as at least 8 engines are present (3 when a lifetime bin is filtered). Hover: engine closest to the cursor; click: pin.</>
+      )}</figcaption>
+    </figure>
+    <figure class="nbfig">
+      <img src={img('11-sensors-last-200')} alt={t('Les 14 capteurs informatifs sur les 200 derniers cycles avant la panne', 'The 14 informative sensors over the last 200 cycles before failure')} loading="lazy" />
+      <figcaption class="fig-source"><span class="accent">Fig. 2</span> {t('Les 14 capteurs retenus sur les 200 derniers cycles avant la panne. Sept capteurs, constants à plus de 95 %, ont été écartés.', 'The 14 sensors kept, over the last 200 cycles before failure. Seven sensors, constant over 95% of the time, were dropped.')} <em>{cap}</em></figcaption>
+    </figure>
+    <figure class="nbfig nbfig--half">
+      <img src={img('22-corr-rul')} alt={t('Corrélation de chaque capteur avec la durée de vie restante', 'Correlation of each sensor with remaining useful life')} loading="lazy" />
+      <figcaption class="fig-source"><span class="accent">Fig. 3</span> {t('Corrélation de chaque capteur avec le nombre de cycles restants.', 'Correlation of each sensor with the number of cycles left.')} <em>{cap}</em></figcaption>
+    </figure>
+    {lang === 'fr'
+      ? <p><strong>Limites.</strong> Les données sont simulées : ni panne multiple, ni maintenance intermédiaire, ni condition de vol variable dans FD001. L’usure initiale de chaque moteur est inconnue. Un bon score ici ne garantit rien sur des moteurs réels.</p>
+      : <p><strong>Limits.</strong> The data is simulated: no multiple failures, no intermediate maintenance, no varying flight condition in FD001. Each engine’s initial wear is unknown. A good score here guarantees nothing on real engines.</p>}
+  </CaseSection>
+
+  <CaseSection n="03" title="Architecture" id="architecture">
+    <h3>{t('Deux chaînes : celle du modèle, et celle qui publie cette page.', 'Two pipelines: the model’s, and the one that publishes this page.')}</h3>
+    <figure class="arch" aria-labelledby="fig2-title">
+      <div class="fig-head">
+        <span class="meta"><span class="accent">Fig. 2b</span>&nbsp;&nbsp;<span id="fig2-title">{t('Flux de données', 'Data flow')}</span></span>
+        <span class="meta meta--ink2">{t('Schéma', 'Diagram')}</span>
+      </div>
+      <div class="arch__scroll">
+        <svg viewBox={`0 0 ${AW} 250`} class="arch__svg" role="img" aria-label={t('Deux chaînes de traitement : publication de la figure, et pipeline de machine learning', 'Two processing pipelines: publishing the figure, and the machine learning pipeline')}>
+          <defs><marker id="ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#181818" /></marker></defs>
+          <text class="ax-label" x="0" y="12">{t('A · PIPELINE DE MACHINE LEARNING', 'A · MACHINE LEARNING PIPELINE')}</text>
+          {mlFlow.map((b, i) => (
+            <g transform={`translate(${i * (BW + GAP)},24)`}>
+              <rect width={BW} height={BH} class:list={['ab', { 'ab--key': i === 2 || i === 3 }]} />
+              <text x="12" y="23" class="ab-t">{b.t}</text>
+              <text x="12" y="41" class="ab-s">{b.s}</text>
+              {i < mlFlow.length - 1 && <line x1={BW} x2={BW + GAP - 2} y1={BH / 2} y2={BH / 2} class="ar" marker-end="url(#ah)" />}
+            </g>
+          ))}
+          <text class="ax-label" x="0" y="146">{t('B · PUBLICATION DE LA FIG. 1 (CE SITE)', 'B · PUBLISHING FIG. 1 (THIS SITE)')}</text>
+          {pageFlow.map((b, i) => (
+            <g transform={`translate(${i * (BW + GAP)},158)`}>
+              <rect width={BW} height={BH} class="ab" />
+              <text x="12" y="23" class="ab-t ab-t--mono">{b.t}</text>
+              <text x="12" y="41" class="ab-s">{b.s}</text>
+              {i < pageFlow.length - 1 && <line x1={BW} x2={BW + GAP - 2} y1={BH / 2} y2={BH / 2} class="ar" marker-end="url(#ah)" />}
+            </g>
+          ))}
+        </svg>
+      </div>
+      <figcaption class="fig-source">{t('A — chaîne du notebook, de l’étiquette au test. B — chaîne réelle de ce site, voir', 'A — the notebook pipeline, from label to test. B — this site’s actual pipeline, see')} <code>scripts/</code> {t('et', 'and')} <code>src/pages/data/cmapss/</code>.</figcaption>
+    </figure>
+  </CaseSection>
+
+  <CaseSection n="04" title={t('Ingénierie', 'Engineering')} id="ingenierie">
+    {lang === 'fr' ? (
+      <>
+        <h3>Valider par moteur, choisir le plus simple, fixer le seuil explicitement.</h3>
+        <ul class="bul">
+          <li><strong>Validation croisée groupée par moteur</strong> (5 plis) : toutes les lignes d’un même moteur restent du même côté, sinon le modèle « reconnaît » le moteur au lieu d’apprendre l’usure.</li>
+          <li><strong>Sept modèles comparés</strong> : régression logistique, Naive Bayes, k-NN, SVM (RBF), arbre de décision, forêt aléatoire, gradient boosting, puis optimisés par recherche en grille.</li>
+          <li><strong>Choix du modèle</strong> : cinq modèles sont à moins de 0,005 de la meilleure précision moyenne (AP 0,955). Règle fixée à l’avance : prendre le plus simple et le plus lisible, la régression logistique (C = 100, poids de classes équilibrés).</li>
+          <li><strong>Choix du seuil</strong> : sur les scores hors-pli, le seuil qui maximise le F2 (qui privilégie le rappel : rater une panne coûte plus cher qu’une fausse alarme) — 0,592.</li>
+          <li><strong>Test</strong> : une seule évaluation, sur la dernière ligne enregistrée de chacun des 100 moteurs de test ; intervalles de confiance par bootstrap (2 000 tirages).</li>
+        </ul>
+      </>
+    ) : (
+      <>
+        <h3>Validate by engine, pick the simplest, set the threshold explicitly.</h3>
+        <ul class="bul">
+          <li><strong>Cross-validation grouped by engine</strong> (5 folds): all rows of an engine stay on the same side, otherwise the model “recognises” the engine instead of learning wear.</li>
+          <li><strong>Seven models compared</strong>: logistic regression, Naive Bayes, k-NN, SVM (RBF), decision tree, random forest, gradient boosting, then tuned with a grid search.</li>
+          <li><strong>Model choice</strong>: five models are within 0.005 of the best average precision (AP 0.955). A rule set in advance: take the simplest and most readable one, logistic regression (C = 100, balanced class weights).</li>
+          <li><strong>Threshold choice</strong>: on out-of-fold scores, the threshold that maximises F2 (which favours recall: missing a failure costs more than a false alarm) — 0.592.</li>
+          <li><strong>Test</strong>: a single evaluation, on the last recorded row of each of the 100 test engines; bootstrap confidence intervals (2,000 draws).</li>
+        </ul>
+      </>
+    )}
+    <figure class="nbfig">
+      <img src={img('23-seven-models')} alt={t('Sept modèles en validation croisée groupée : rappel, précision, F1, AUC et AP', 'Seven models in grouped cross-validation: recall, precision, F1, AUC and AP')} loading="lazy" />
+      <figcaption class="fig-source"><span class="accent">Fig. 4</span> {t('Sept modèles en validation croisée groupée sur les 14 capteurs : la qualité de classement (AUC, AP) est quasi identique pour la plupart.', 'Seven models in grouped cross-validation on the 14 sensors: ranking quality (AUC, AP) is nearly identical for most.')} <em>{cap}</em></figcaption>
+    </figure>
+    <figure class="nbfig">
+      <img src={img('28-threshold')} alt={t('Rappel, précision et F2 de la régression logistique selon le seuil d’alarme', 'Logistic regression recall, precision and F2 along the alarm threshold')} loading="lazy" />
+      <figcaption class="fig-source"><span class="accent">Fig. 5</span> {t('Rappel, précision et F2 le long du seuil d’alarme (scores hors-pli).', 'Recall, precision and F2 along the alarm threshold (out-of-fold scores).')} <em>{cap}</em></figcaption>
+    </figure>
+    {lang === 'fr'
+      ? <p>Pour la Fig. 1 de cette page, le build découpe les séries en <strong>un fichier par capteur</strong> : le visiteur ne télécharge que le capteur affiché, les autres à la demande.</p>
+      : <p>For Fig. 1 on this page, the build splits the series into <strong>one file per sensor</strong>: visitors only download the sensor on screen, the others on demand.</p>}
+  </CaseSection>
+
+  <CaseSection n="05" title={t('Résultats', 'Results')} id="resultats">
+    <h3>{t('21 pannes imminentes détectées sur 25, avec 3 fausses alarmes.', '21 of 25 imminent failures detected, with 3 false alarms.')}</h3>
+    <div class="kpis">
+      <div><span class="kpi__v tnum">{t('0,84', '0.84')}</span><span class="meta meta--ink2">{t('Rappel', 'Recall')}</span><span class="small muted">{t('IC 95 % : 0,67 – 0,96', '95% CI: 0.67 – 0.96')}</span></div>
+      <div><span class="kpi__v tnum">{t('0,875', '0.875')}</span><span class="meta meta--ink2">{t('Précision', 'Precision')}</span><span class="small muted">{t('IC 95 % : 0,73 – 1,00', '95% CI: 0.73 – 1.00')}</span></div>
+      <div><span class="kpi__v tnum">{t('0,857', '0.857')}</span><span class="meta meta--ink2">F1</span><span class="small muted">{t('IC 95 % : 0,73 – 0,95', '95% CI: 0.73 – 0.95')}</span></div>
+      <div><span class="kpi__v tnum">{t('0,978', '0.978')}</span><span class="meta meta--ink2">AUC</span><span class="small muted">{t('IC 95 % : 0,95 – 0,995', '95% CI: 0.95 – 0.995')}</span></div>
+    </div>
+    <table class="res">
+      <caption class="meta meta--ink2">{t('100 moteurs de test, dernière ligne enregistrée, seuil 0,592', '100 test engines, last recorded row, threshold 0.592')}</caption>
+      <thead><tr class="meta meta--ink2"><th scope="col"></th><th scope="col">{t('Alarme', 'Alarm')}</th><th scope="col">{t('Pas d’alarme', 'No alarm')}</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">{t('Panne dans ≤ 30 cycles (25)', 'Failure within ≤ 30 cycles (25)')}</th><td><strong>21</strong> {t('détectées', 'detected')}</td><td><span class="accent"><strong>4</strong> {t('manquées', 'missed')}</span></td></tr>
+        <tr><th scope="row">{t('Moteur sain (75)', 'Healthy engine (75)')}</th><td><strong>3</strong> {t('fausses alarmes', 'false alarms')}</td><td><strong>72</strong> {t('silences justes', 'correct silences')}</td></tr>
+      </tbody>
+    </table>
+    <figure class="nbfig">
+      <img src={img('31-score-vs-rul')} alt={t('Score du modèle pour chaque moteur de test selon sa vraie durée de vie restante', 'Model score of each test engine against its true remaining useful life')} loading="lazy" />
+      <figcaption class="fig-source"><span class="accent">Fig. 6</span> {t('Score de chaque moteur de test contre sa vraie RUL. Les 7 erreurs se situent toutes à moins de 12 cycles de la frontière RUL = 30.', 'Score of each test engine against its true RUL. All 7 errors lie within 12 cycles of the RUL = 30 boundary.')} <em>{cap}</em></figcaption>
+    </figure>
+    <figure class="nbfig">
+      <img src={img('32-alarm-by-rul')} alt={t('Part des lignes de test où l’alarme sonne, par tranche de durée de vie restante', 'Share of test rows where the alarm rings, by remaining-life band')} loading="lazy" />
+      <figcaption class="fig-source"><span class="accent">Fig. 7</span> {t('Sur les 13 096 lignes de test, l’alarme sonne sur 100 % des lignes à 0–10 cycles de la panne, 71 % à 21–30 cycles, et jamais au-delà de 100 cycles.', 'Over the 13,096 test rows, the alarm rings on 100% of rows 0–10 cycles from failure, 71% at 21–30 cycles, and never beyond 100 cycles.')} <em>{cap}</em></figcaption>
+    </figure>
+  </CaseSection>
+
+  <CaseSection n="06" title={t('Réflexion', 'Reflection')} id="reflexion">
+    {lang === 'fr' ? (
+      <>
+        <h3>Les erreurs viennent de la frontière qu’on a tracée, pas d’un angle mort.</h3>
+        <ul class="bul">
+          <li><strong>L’exactitude ment</strong> quand 85 % des cas sont sains : il faut lire rappel, précision, F1, AUC et AP.</li>
+          <li><strong>Un modèle linéaire suffit</strong> : six modèles se tiennent à 0,01 près ; la complexité n’achète rien ici.</li>
+          <li><strong>La validation par moteur était le bon protocole</strong> : les scores de validation tombent dans les intervalles du test.</li>
+          <li><strong>100 moteurs, c’est peu</strong> : le rappel peut aller de 0,67 à 0,96. On ne départage pas des modèles sur quelques points.</li>
+        </ul>
+        <p><strong>Pour aller plus loin :</strong> donner au modèle l’historique de chaque moteur (moyennes glissantes et pentes sur 5 à 30 cycles, calculées sans regarder le futur) — c’est la principale limite, une prédiction n’utilisant qu’une seule ligne ; fixer le seuil par un coût réel plutôt que le F2 ; prédire la RUL elle-même ; passer à FD002–FD004 et leurs conditions de vol multiples.</p>
+      </>
+    ) : (
+      <>
+        <h3>The errors come from the boundary we drew, not from a blind spot.</h3>
+        <ul class="bul">
+          <li><strong>Accuracy lies</strong> when 85% of cases are healthy: read recall, precision, F1, AUC and AP instead.</li>
+          <li><strong>A linear model is enough</strong>: six models sit within 0.01 of each other; complexity buys nothing here.</li>
+          <li><strong>Validating by engine was the right protocol</strong>: validation scores fall inside the test intervals.</li>
+          <li><strong>100 engines is few</strong>: recall could be anywhere from 0.67 to 0.96. Models cannot be separated on a few points.</li>
+        </ul>
+        <p><strong>Next steps:</strong> give the model each engine’s history (moving averages and slopes over 5 to 30 cycles, computed without looking ahead) — the main limit, since a prediction uses a single row; set the threshold from a real cost rather than F2; predict the RUL itself; move to FD002–FD004 and their multiple flight conditions.</p>
+      </>
+    )}
+  </CaseSection>
+</CaseStudy>
+
+<script>
+  import { mountExplorer } from '../viz/cmapss-explorer';
+  const root = document.querySelector<HTMLElement>('[data-explorer]');
+  if (root) mountExplorer(root).catch(() => {
+    root.querySelector('[data-plot]')!.innerHTML = `<p class="meta accent">${root.dataset.lang === 'en' ? 'Could not load the data.' : 'Impossible de charger les données.'}</p>`;
+  });
+</script>
+
+<style>
+  .exp__notice { margin-bottom: var(--s-3); }
+  .exp__ctrls { display: flex; flex-wrap: wrap; gap: var(--s-2) var(--s-4); align-items: flex-end; padding-bottom: var(--s-2); border-bottom: 1px solid var(--rule); }
+  .exp__ctrl { display: flex; flex-direction: column; gap: 6px; }
+  .exp__ctrl--end { margin-left: auto; flex-direction: row; align-items: center; gap: var(--s-3); }
+  .seg--wrap { display: grid; grid-template-columns: repeat(8, auto); gap: 1px; background: var(--ink); }
+  .seg--wrap :global(button) { border: 0 !important; background: var(--paper); }
+  .seg--wrap :global(button[aria-pressed='true']) { background: var(--ink); color: var(--paper); }
+  @media (max-width: 640px) { .seg--wrap { grid-template-columns: repeat(4, 1fr); } }
+  .exp__check { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+  .exp__check input { accent-color: var(--ink); margin: 0; }
+  .exp__reset { background: none; border: 0; border-bottom: 1px solid var(--ink); padding: 0 0 2px; cursor: pointer; }
+  .exp__reset:hover { color: var(--accent); border-color: var(--accent); }
+  .exp__title { margin-top: var(--s-3); font-family: var(--f-display); font-size: 19px; font-weight: 600; letter-spacing: -0.01em; }
+  .exp__stage { position: relative; margin-top: var(--s-1); }
+  .exp__plot { min-height: 300px; }
+  .exp__loading { padding-top: 120px; text-align: center; }
+  .exp__under { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; margin-top: 6px; }
+  .exp__legend { display: flex; flex-wrap: wrap; gap: 6px 16px; color: var(--ink-2); }
+  .exp__legend i { display: inline-block; width: 18px; height: 0; vertical-align: middle; margin-right: 6px; border-top: 1px solid; }
+  .lg-trace { border-color: rgba(24, 24, 24, 0.3) !important; }
+  .lg-med { border-top-width: 2.5px !important; border-color: var(--ink) !important; }
+  .lg-iqr { height: 9px !important; border: 0 !important; background: color-mix(in srgb, var(--blue) 20%, transparent); }
+  .lg-focus { border-top-width: 2.5px !important; border-color: var(--accent) !important; }
+  .exp__histwrap { margin-top: var(--s-3); max-width: 760px; }
+  .exp__hist { margin-top: 6px; }
+
+  .exp :global(.gridline) { stroke: var(--rule); }
+  .exp :global(.gridline--y) { stroke-dasharray: 2 3; }
+  .exp :global(.trace) { fill: none; stroke: var(--ink); stroke-opacity: 0.16; stroke-width: 1; transition: stroke-opacity var(--dur) var(--ease); }
+  .exp :global(.trace.is-out) { stroke-opacity: 0.03; }
+  .exp :global(.trace.is-pin) { stroke: var(--accent); stroke-opacity: 0.6; }
+  .exp :global(.iqr) { fill: var(--blue); fill-opacity: 0.16; }
+  .exp :global(.median) { fill: none; stroke: var(--ink); stroke-width: 2.5; }
+  .exp :global(.failline) { stroke: var(--ink); stroke-width: 1.5; }
+  .exp :global(.focus) { fill: none; stroke: var(--accent); stroke-width: 2.5; pointer-events: none; }
+  .exp :global(.focus-dot) { fill: var(--paper); stroke: var(--accent); stroke-width: 2; pointer-events: none; }
+  .exp :global(svg) { display: block; touch-action: pan-y; }
+  .exp :global(.hbar) { fill: var(--ink); transition: fill var(--dur) var(--ease); }
+  .exp :global(.hhit) { fill: transparent; cursor: pointer; }
+  .exp :global(.hbin:hover .hbar), .exp :global(.hbin:focus-visible .hbar) { fill: var(--blue); }
+  .exp :global(.hbin.is-on .hbar) { fill: var(--accent); }
+  .exp :global(.hbin.is-off .hbar) { fill: var(--ink-3); }
+  .exp :global(.hbin) { outline: none; }
+  .exp :global(.hpin) { fill: var(--accent); }
+  .exp :global(.hbase) { stroke: var(--ink); }
+
+  .ds { border-top: 1px solid var(--ink); max-width: 62ch; }
+  .ds > div { display: grid; grid-template-columns: 14ch 1fr; gap: 12px; padding-block: 9px; border-bottom: 1px solid var(--rule); font-size: 15px; line-height: 1.45; }
+
+  .arch__scroll { overflow-x: auto; }
+  .arch__svg { min-width: 760px; width: 100%; height: auto; }
+  .ab { fill: var(--paper); stroke: var(--ink); }
+  .ab--key { fill: var(--ink); }
+  .ab--key + .ab-t, .ab--key ~ .ab-t, .ab--key ~ .ab-s { fill: var(--paper); }
+  .ab--todo { stroke-dasharray: 4 3; stroke: var(--ink-3); }
+  .ab-t { font-family: var(--f-text); font-size: 15px; font-weight: 600; fill: var(--ink); }
+  .ab-t--mono { font-family: var(--f-mono); font-size: 13px; font-weight: 500; }
+  .ab-s { font-family: var(--f-mono); font-size: 11px; fill: var(--ink-2); }
+  .ab-s--todo { fill: var(--accent); }
+  .ar { stroke: var(--ink); stroke-width: 1.2; }
+
+  .res { width: 100%; max-width: 760px; border-collapse: collapse; }
+  .res th, .res td { text-align: left; padding: 12px 12px 12px 0; border-bottom: 1px solid var(--rule); font-size: 15px; font-weight: 400; }
+  .res thead th { border-bottom: 1px solid var(--ink); padding-block: 8px; }
+  .res tbody th { font-weight: 550; }
+  code { font-family: var(--f-mono); font-size: 0.88em; background: var(--paper-2); padding: 1px 4px; }
+
+  @media (max-width: 640px) {
+    .exp__ctrl--end { margin-left: 0; }
+    .exp__ctrls { gap: var(--s-2); }
+    .arch__scroll { margin-inline: calc(var(--margin) * -1); padding-inline: var(--margin); }
+  }
+</style>
+
+<style>
+  .fd-band { background: #fafafa; border-block: 1px solid var(--ink); }
+  .fd-band__head { display: flex; justify-content: space-between; gap: var(--s-2); padding-block: 12px; border-bottom: 1px solid var(--rule); }
+  .fd-band__foot { padding-block: var(--s-3); }
+  .nbfig { margin-top: var(--s-2); }
+  .nbfig img { width: 100%; height: auto; background: #fff; border: 1px solid var(--rule); }
+  .nbfig--half { max-width: 760px; }
+  .kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--gutter); border-top: 1px solid var(--ink); }
+  .kpis > div { display: flex; flex-direction: column; gap: 4px; padding-top: 12px; }
+  .kpi__v { font-family: var(--f-display); font-size: clamp(36px, 4vw, 60px); font-weight: 600; letter-spacing: -0.04em; line-height: 1; }
+  .res caption { text-align: left; padding-bottom: 8px; }
+  @media (max-width: 1024px) {
+      .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: var(--s-3); }
+  }
+</style>

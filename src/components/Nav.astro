@@ -1,0 +1,135 @@
+---
+import { site } from '../data/site';
+import { href, pick, switchPath, type Lang } from '../i18n';
+interface Props { section: string; lang: Lang }
+const { section, lang } = Astro.props;
+const t = (fr: string, en: string) => (lang === 'fr' ? fr : en);
+const links = [
+  { hash: 'profil', label: t('Profil', 'About') },
+  { hash: 'travaux', label: t('Travaux', 'Work') },
+  { hash: 'labo', label: t('Laboratoire', 'Lab') },
+  { hash: 'contact', label: 'Contact' },
+];
+const other: Lang = lang === 'fr' ? 'en' : 'fr';
+const otherPath = switchPath(Astro.url.pathname, other);
+---
+<header class="nav">
+  <div class="wrap nav__bar">
+    <a class="nav__id" href={href('home', lang)} aria-label={`${site.name} — ${t('accueil', 'home')}`}>
+      <span class="nav__name">{site.name}</span>
+      {site.availability.available && (
+        <span class="nav__avail meta"><span class="dot" aria-hidden="true"></span>{pick(site.availability.label, lang)}</span>
+      )}
+    </a>
+    <div class="nav__right">
+      <nav aria-label={t('Navigation principale', 'Main navigation')}>
+        <ul class="nav__links">
+          {links.map((l) => (
+            <li><a data-nav href={href('home', lang, l.hash)}>{l.label}</a></li>
+          ))}
+          <li><a class="nav__cv" href={site.contact.cv} download="Matteo-Louet-CV.pdf" aria-label={t('Télécharger le CV (PDF)', 'Download the CV (PDF)')}>CV&nbsp;↓</a></li>
+        </ul>
+      </nav>
+      <div class="nav__lang meta" role="group" aria-label={t('Langue', 'Language')}>
+        <a href={lang === 'fr' ? Astro.url.pathname : otherPath} hreflang="fr" lang="fr" aria-current={lang === 'fr' ? 'true' : undefined} data-lang-link="fr">FR</a>
+        <span aria-hidden="true">/</span>
+        <a href={lang === 'en' ? Astro.url.pathname : otherPath} hreflang="en" lang="en" aria-current={lang === 'en' ? 'true' : undefined} data-lang-link="en">EN</a>
+      </div>
+    </div>
+  </div>
+  <div class="wrap nav__folio meta meta--ink2" aria-hidden="true">
+    <span>{pick(site.publication, lang)}</span>
+    <span class="nav__rh" data-running-head>{section}</span>
+    <span class="nav__issue">{site.issue} · {pick(site.issueDate, lang)} · {site.location}</span>
+  </div>
+</header>
+
+<script>
+  // La bascule de langue conserve l'ancre courante (#travaux, #labo…)
+  document.querySelectorAll<HTMLAnchorElement>('[data-lang-link]').forEach((a) =>
+    a.addEventListener('click', () => {
+      if (location.hash && !a.hasAttribute('aria-current')) a.href = a.href.split('#')[0] + location.hash;
+    })
+  );
+</script>
+
+<style>
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: var(--paper);
+    border-bottom: 1px solid var(--ink);
+  }
+  .nav__bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-3);
+    height: 48px;
+  }
+  .nav__id {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    text-decoration: none;
+  }
+  .nav__name {
+    font-family: var(--f-display);
+    font-weight: 650;
+    font-size: 17px;
+    letter-spacing: -0.02em;
+  }
+  .nav__avail { display: inline-flex; align-items: center; gap: 6px; color: var(--ink-2); }
+  .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--accent);
+    transform: translateY(-1px);
+  }
+  .nav__right { display: flex; align-items: center; gap: clamp(16px, 2.4vw, 36px); }
+  .nav__links { display: flex; gap: clamp(14px, 2.2vw, 32px); }
+  .nav__links a {
+    text-decoration: none;
+    font-size: 14px;
+    letter-spacing: -0.005em;
+    padding-block: 4px;
+    border-bottom: 1px solid transparent;
+    transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease);
+  }
+  .nav__links a:hover { color: var(--accent); }
+  .nav__links a[aria-current] { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .nav__cv { color: var(--accent) !important; }
+  .nav__lang { display: flex; gap: 6px; align-items: center; color: var(--ink-3); padding-left: clamp(12px, 1.6vw, 24px); border-left: 1px solid var(--rule); }
+  .nav__lang a { text-decoration: none; color: var(--ink-2); padding-block: 4px; transition: color var(--dur) var(--ease); }
+  .nav__lang a:hover { color: var(--accent); }
+  .nav__lang a[aria-current] { color: var(--ink); border-bottom: 1px solid var(--ink); }
+
+  .nav__folio {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: var(--s-2);
+    padding-block: 6px 7px;
+    border-top: 1px solid var(--rule);
+  }
+  .nav__rh { color: var(--ink); text-align: center; min-width: 14ch; }
+  .nav__issue { text-align: right; }
+
+  @media (max-width: 640px) {
+    .nav__avail { display: none; }
+    .nav__bar { height: 44px; }
+    .nav__right { gap: 10px; }
+    .nav__links { gap: 10px; }
+    .nav__links a { font-size: 13px; }
+    .nav__lang { padding-left: 10px; }
+    .nav__folio { grid-template-columns: 1fr auto; }
+    .nav__folio > span:first-child { display: none; }
+    .nav__rh { text-align: left; }
+  }
+  @media (max-width: 420px) {
+    .nav__name { font-size: 15px; }
+    .nav__links { gap: 8px; }
+    .nav__links a { font-size: 12px; }
+    .nav__links li:nth-child(3) { display: none; } /* « Laboratoire » : reste accessible au défilement */
+  }
+</style>

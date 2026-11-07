@@ -1,0 +1,252 @@
+---
+/**
+ * Étude de cas — Study Planner (FR / EN).
+ * Captures : application réelle lancée en local. Animation : requête et prompt exacts du code,
+ * algorithme addWeekToCalendar porté à l'identique. Aucune réponse du modèle n'est inventée.
+ */
+import CaseStudy from '../layouts/CaseStudy.astro';
+import CaseSection from '../components/CaseSection.astro';
+import type { Lang } from '../i18n';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const t = (fr: string, en: string) => (lang === 'fr' ? fr : en);
+const REPO = 'https://github.com/MatteoLouet/Projet-web-ING-1-BDML-';
+const img = (f: string) => `/images/planner/${f}.png`;
+const cap = t('Capture de l’application lancée en local.', 'Screenshot of the app running locally.');
+
+const facts = [
+  { k: t('Cadre', 'Setting'), v: t('Projet web, ING 1 Big Data & ML', 'Web project, ING 1 Big Data & ML') },
+  { k: 'Front-end', v: 'React 19 · TypeScript · Vite' },
+  { k: 'Back-end', v: 'Node · Express · dotenv' },
+  { k: t('Modèle', 'Model'), v: 'Llama 3.3 70B (Groq API)' },
+  { k: t('Constats', 'Findings'), v: t('4 points relevés en le relançant', '4 issues found when running it again') },
+];
+---
+<CaseStudy slug="planner" lang={lang} kicker={t('Développement web · IA générative', 'Web development · Generative AI')} facts={facts}>
+  <figure slot="figure" class="pl" data-planner data-lang={lang} aria-labelledby="pl-title">
+    <div class="fig-head">
+      <span class="meta"><span class="accent">Fig. 1</span>&nbsp;&nbsp;<span id="pl-title">{t('D’un objectif à un emploi du temps', 'From a goal to a timetable')}</span></span>
+      <span class="meta meta--ink2">{t('Requête et algorithme réels · aucun appel à l’IA', 'Real request and algorithm · no AI call')}</span>
+    </div>
+    <p class="fig-notice pl__notice">{t(
+      'Saisissez un objectif : la figure construit la requête et le prompt exactement comme le code de l’application, puis montre leur trajet. Aucun appel n’est fait au modèle depuis ce site : la réponse n’est pas simulée.',
+      'Type a goal: the figure builds the request and the prompt exactly as the app’s code does, then shows their journey. No call is made to the model from this site: the reply is not simulated.'
+    )}</p>
+
+    <div class="pl__grid">
+      <div class="pl__form">
+        <label class="meta meta--ink2" for="pl-t">{t('Que veux-tu apprendre ?', 'What do you want to learn?')}</label>
+        <input id="pl-t" class="pl__input" data-title value={t('Apprendre Rust', 'Learn Rust')} />
+        <label class="meta meta--ink2" for="pl-l">{t('Niveau', 'Level')}</label>
+        <select id="pl-l" class="pl__input" data-level>
+          <option value="beginner">{t('Débutant', 'Beginner')}</option>
+          <option value="intermediate">{t('Intermédiaire', 'Intermediate')}</option>
+          <option value="advanced">{t('Avancé', 'Advanced')}</option>
+        </select>
+        <label class="meta meta--ink2" for="pl-h">{t('Heures par semaine', 'Hours per week')} : <span data-hours-out></span></label>
+        <input id="pl-h" type="range" min="1" max="40" value="6" data-hours class="pl__range" />
+        <button type="button" class="pl__send meta" data-send>{t('Envoyer la requête', 'Send the request')}</button>
+      </div>
+
+      <div class="pl__flow">
+        <div class="pl__lanes">
+          <div class="pl__lane" data-lane><b>{t('Navigateur', 'Browser')}</b><span>React · fetch()</span></div>
+          <div class="pl__lane" data-lane><b>Express :3001</b><span>POST /api/generate-plan</span></div>
+          <div class="pl__lane" data-lane><b>Groq</b><span>llama-3.3-70b-versatile</span></div>
+          <span class="pl__wire" aria-hidden="true"><i class="pl__packet" data-packet></i></span>
+        </div>
+        <p class="pl__step meta" data-step aria-live="polite">{t('En attente', 'Waiting')}</p>
+        <div class="pl__code">
+          <div>
+            <p class="meta meta--ink2">{t('Corps envoyé par le navigateur', 'Body sent by the browser')}</p>
+            <pre data-body></pre>
+          </div>
+          <div>
+            <p class="meta meta--ink2">{t('Prompt construit par Express (texte exact du code)', 'Prompt built by Express (exact text from the code)')}</p>
+            <pre data-prompt class="pl__prompt"></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pl__calwrap">
+      <div class="fig-head">
+        <span class="meta"><span class="accent">Fig. 1b</span>&nbsp;&nbsp;{t('« Ajouter au calendrier » : l’algorithme de rangement', '“Add to calendar”: the scheduling algorithm')}</span>
+        <span class="tag-demo">{t('Tâches d’exemple', 'Example tasks')}</span>
+      </div>
+      <p class="fig-notice">{t(
+        'Le code répartit les tâches d’une semaine du lundi au vendredi, à partir de 9 h, avec 30 minutes de pause entre deux tâches, sans dépasser 19 h. Changez le nombre et la durée des tâches : celles qui ne tiennent pas sont ignorées sans prévenir.',
+        'The code spreads a week’s tasks from Monday to Friday, starting at 9 am, with a 30-minute break between tasks, never past 7 pm. Change the number and length of tasks: those that do not fit are silently dropped.'
+      )}</p>
+      <div class="pl__calctrls">
+        <label class="meta meta--ink2">{t('Tâches', 'Tasks')} <b data-ntasks-out></b><input type="range" min="1" max="20" value="8" data-ntasks /></label>
+        <label class="meta meta--ink2">{t('Durée de chaque tâche', 'Length of each task')} <b data-dur-out></b><input type="range" min="0.5" max="5" step="0.5" value="2" data-dur /></label>
+        <p class="pl__calsum" data-calsum aria-live="polite"></p>
+      </div>
+      <div class="pl__cal" data-cal></div>
+    </div>
+
+    <figcaption class="fig-source">{lang === 'fr' ? (
+      <><strong>Méthode :</strong> le corps de requête et le prompt reprennent mot pour mot <code>src/App.tsx</code> et <code>server/index.ts</code> ; l’algorithme de la Fig. 1b est un portage ligne à ligne de <code>addWeekToCalendar</code>. Les tâches de la Fig. 1b sont des exemples : dans l’application, elles viennent de la réponse du modèle.</>
+    ) : (
+      <><strong>Method:</strong> the request body and the prompt reproduce <code>src/App.tsx</code> and <code>server/index.ts</code> word for word; the algorithm in Fig. 1b is a line-by-line port of <code>addWeekToCalendar</code>. The tasks in Fig. 1b are examples: in the app, they come from the model’s reply.</>
+    )}</figcaption>
+  </figure>
+
+  <CaseSection n="01" title={t('Contexte', 'Context')} id="contexte">
+    {lang === 'fr' ? (
+      <>
+        <h3>Transformer « je veux apprendre X » en heures réservées dans la semaine.</h3>
+        <p>Projet de développement web de première année de cycle ingénieur : une application qui combine un emploi du temps classique et un assistant. On décrit un objectif d’apprentissage, son niveau et le temps disponible ; un modèle de langage propose un plan sur 4 semaines, et chaque semaine peut être versée dans l’emploi du temps en un clic.</p>
+      </>
+    ) : (
+      <>
+        <h3>Turning “I want to learn X” into hours booked in the week.</h3>
+        <p>A first-year engineering web development project: an app that combines a regular timetable with an assistant. You describe a learning goal, your level and the time available; a language model proposes a 4-week plan, and each week can be poured into the timetable in one click.</p>
+      </>
+    )}
+    <figure class="nbfig">
+      <img src={img('emploi-du-temps')} alt={t('Emploi du temps de l’application avec trois événements', 'The app’s timetable with three events')} loading="lazy" />
+      <figcaption class="fig-source"><span class="accent">Fig. 2</span> {t('L’emploi du temps, avec trois événements saisis pour la capture.', 'The timetable, with three events entered for the screenshot.')} <em>{cap}</em></figcaption>
+    </figure>
+  </CaseSection>
+
+  <CaseSection n="02" title="Architecture" id="architecture">
+    {lang === 'fr' ? (
+      <>
+        <h3>Un petit serveur pour ne jamais exposer la clé.</h3>
+        <ul class="bul">
+          <li><strong>Front-end React</strong> : deux vues (emploi du temps, objectifs), des formulaires et des fenêtres modales ; l’état est géré avec <code>useState</code>.</li>
+          <li><strong>Proxy Vite</strong> : en développement, les appels à <code>/api</code> sont redirigés vers le serveur Express sur le port 3001.</li>
+          <li><strong>Back-end Express</strong> : une seule route, <code>POST /api/generate-plan</code>. La clé Groq est lue dans un fichier <code>.env</code> et n’arrive jamais dans le navigateur.</li>
+          <li><strong>Appel au modèle</strong> : Llama 3.3 70B via l’API Groq, avec un message système (« tu réponds uniquement en JSON ») et <code>response_format: json_object</code> pour garantir une réponse exploitable par <code>JSON.parse</code>.</li>
+        </ul>
+      </>
+    ) : (
+      <>
+        <h3>A small server so the key is never exposed.</h3>
+        <ul class="bul">
+          <li><strong>React front end</strong>: two views (timetable, goals), forms and modals; state is handled with <code>useState</code>.</li>
+          <li><strong>Vite proxy</strong>: in development, calls to <code>/api</code> are forwarded to the Express server on port 3001.</li>
+          <li><strong>Express back end</strong>: a single route, <code>POST /api/generate-plan</code>. The Groq key is read from a <code>.env</code> file and never reaches the browser.</li>
+          <li><strong>Model call</strong>: Llama 3.3 70B through the Groq API, with a system message (“you only answer in JSON”) and <code>response_format: json_object</code> to guarantee a reply <code>JSON.parse</code> can use.</li>
+        </ul>
+      </>
+    )}
+    <div class="nbgrid">
+      <figure class="nbfig">
+        <img src={img('nouvel-objectif')} alt={t('Formulaire de nouvel objectif', 'New goal form')} loading="lazy" />
+        <figcaption class="fig-source"><span class="accent">Fig. 3</span> {t('Le formulaire d’objectif : sujet, niveau, heures par semaine.', 'The goal form: topic, level, hours per week.')} <em>{cap}</em></figcaption>
+      </figure>
+      <figure class="nbfig">
+        <img src={img('objectifs')} alt={t('Carte d’objectif dont le titre est invisible', 'Goal card whose title is invisible')} loading="lazy" />
+        <figcaption class="fig-source"><span class="accent">Fig. 4</span> {t('La carte créée pour « Apprendre Rust » : le titre est bien là, mais blanc sur blanc.', 'The card created for “Learn Rust”: the title is there, but white on white.')} <em>{cap}</em></figcaption>
+      </figure>
+    </div>
+  </CaseSection>
+
+  <CaseSection n="03" title={t('Constats', 'Findings')} id="constats">
+    {lang === 'fr' ? (
+      <>
+        <h3>Ce que l’on voit en relançant l’application.</h3>
+        <ul class="bul">
+          <li><strong>Rien n’est sauvegardé</strong> : le code lit et écrit dans <code>window.storage</code>, qui n’existe pas dans un navigateur. Le chargement échoue (l’erreur s’affiche dans la console) et chaque sauvegarde échoue en silence. <code>localStorage</code> suffirait.</li>
+          <li><strong>Titre invisible</strong> : les cartes d’objectif héritent de la couleur de texte blanche du gabarit Vite (<code>rgba(255, 255, 255, 0.87)</code>) sur un fond blanc ; le bouton « Générer plan IA » écrit en vert vif sur turquoise.</li>
+          <li><strong>Types plus ambitieux que le prompt</strong> : les interfaces TypeScript décrivent des jalons, des conseils, des difficultés… que le prompt ne demande jamais. Seuls <code>overview.approach</code> et les semaines sont réellement produits.</li>
+          <li><strong>Tâches perdues</strong> : quand une journée dépasse 19 h, les tâches restantes sont ignorées sans message (Fig. 1b, avec 20 tâches de 3 h).</li>
+        </ul>
+      </>
+    ) : (
+      <>
+        <h3>What you see when running the app again.</h3>
+        <ul class="bul">
+          <li><strong>Nothing is saved</strong>: the code reads and writes <code>window.storage</code>, which does not exist in a browser. Loading fails (the error shows in the console) and every save fails silently. <code>localStorage</code> would do.</li>
+          <li><strong>Invisible title</strong>: goal cards inherit the white text colour of the Vite template (<code>rgba(255, 255, 255, 0.87)</code>) on a white background; the “Générer plan IA” button is bright green on turquoise.</li>
+          <li><strong>Types more ambitious than the prompt</strong>: the TypeScript interfaces describe milestones, tips, difficulty… that the prompt never asks for. Only <code>overview.approach</code> and the weeks are actually produced.</li>
+          <li><strong>Lost tasks</strong>: when a day goes past 7 pm, the remaining tasks are dropped without a message (Fig. 1b, with 20 three-hour tasks).</li>
+        </ul>
+      </>
+    )}
+  </CaseSection>
+
+  <CaseSection n="04" title={t('Réflexion', 'Reflection')} id="reflexion">
+    {lang === 'fr' ? (
+      <>
+        <h3>Une bonne architecture, une finition à reprendre.</h3>
+        <p>Le choix le plus solide du projet est structurel : un serveur intermédiaire qui garde la clé, un format de réponse contraint, un découpage clair entre interface et appel au modèle. Les défauts relevés sont des défauts de finition — persistance, contraste, validation de la réponse — qui se corrigent en quelques lignes.</p>
+        <p><strong>Pour aller plus loin :</strong> valider la réponse du modèle avant de l’afficher (un schéma <code>zod</code>), sauvegarder dans <code>localStorage</code>, prévenir l’utilisateur quand des tâches ne tiennent pas dans la semaine, et aligner le prompt sur les types.</p>
+      </>
+    ) : (
+      <>
+        <h3>A sound architecture, a finish to rework.</h3>
+        <p>The project’s strongest choice is structural: an intermediate server that keeps the key, a constrained reply format, a clear split between the interface and the model call. The issues found are finishing issues — persistence, contrast, validating the reply — each fixed in a few lines.</p>
+        <p><strong>Next steps:</strong> validate the model’s reply before showing it (a <code>zod</code> schema), save to <code>localStorage</code>, warn the user when tasks do not fit in the week, and align the prompt with the types.</p>
+      </>
+    )}
+    <p><a class="link link-arrow" href={REPO} rel="noopener">{t('Code sur GitHub', 'Code on GitHub')} <span class="arr" aria-hidden="true">↗</span></a></p>
+  </CaseSection>
+</CaseStudy>
+
+<script>
+  import { mountPlanner } from '../viz/planner-flow';
+  const root = document.querySelector<HTMLElement>('[data-planner]');
+  if (root) mountPlanner(root);
+</script>
+
+<style>
+  .pl__notice { margin-bottom: var(--s-3); }
+  .pl__grid { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: var(--s-5); align-items: start; }
+  .pl__form { display: flex; flex-direction: column; gap: 6px; border-top: 1px solid var(--ink); padding-top: 10px; }
+  .pl__input { font: inherit; font-size: 16px; border: 0; border-bottom: 2px solid var(--ink); background: transparent; padding: 6px 0; margin-bottom: 10px; color: var(--ink); }
+  .pl__input:focus { outline: none; border-bottom-color: var(--accent); }
+  .pl__range { accent-color: var(--accent); margin-bottom: 14px; }
+  .pl__send { background: var(--ink); color: var(--paper); border: 0; padding: 10px 14px 9px; cursor: pointer; align-self: flex-start; }
+  .pl__send:hover:not(:disabled) { background: var(--accent); }
+  .pl__send:disabled { opacity: 0.6; cursor: default; }
+  .pl__lanes { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--gutter); padding-bottom: 26px; }
+  .pl__lane { border: 1px solid var(--ink); padding: 10px 12px; display: flex; flex-direction: column; gap: 2px; background: var(--paper); transition: background var(--dur) var(--ease), color var(--dur) var(--ease); }
+  .pl__lane b { font-family: var(--f-display); font-size: 16px; font-weight: 600; }
+  .pl__lane span { font-family: var(--f-mono); font-size: 10.5px; color: var(--ink-2); }
+  .pl__lane.is-on { background: var(--ink); color: var(--paper); }
+  .pl__lane.is-on span { color: var(--paper); opacity: 0.75; }
+  .pl__wire { position: absolute; left: calc(100% / 6); right: calc(100% / 6); bottom: 10px; height: 1px; background: var(--ink-3); }
+  .pl__packet { position: absolute; top: -6px; left: 0; width: 13px; height: 13px; margin-left: -6px; background: var(--accent); border-radius: 50%; }
+  .pl__step { min-height: 1.4em; margin-bottom: var(--s-2); }
+  .pl__code { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: var(--gutter); }
+  .pl__code pre { font-family: var(--f-mono); font-size: 11.5px; line-height: 1.55; background: var(--ink); color: var(--paper); padding: 10px 12px; white-space: pre-wrap; word-break: break-word; margin: 6px 0 0; min-height: 120px; }
+  .pl__prompt :global(mark) { background: var(--accent); color: var(--paper); padding: 0 2px; }
+
+  .pl__calwrap { margin-top: var(--s-6); }
+  .pl__calctrls { display: flex; flex-wrap: wrap; gap: var(--s-2) var(--s-5); align-items: center; margin: var(--s-2) 0; }
+  .pl__calctrls label { display: flex; align-items: center; gap: 10px; }
+  .pl__calctrls b { color: var(--ink); min-width: 3ch; }
+  .pl__calctrls input { accent-color: var(--accent); width: 160px; }
+  .pl__calsum { font-size: 14px; margin-left: auto; }
+  .pl__cal { position: relative; display: grid; grid-template-columns: 34px repeat(5, minmax(0, 1fr)); gap: 4px; border-top: 1px solid var(--ink); padding-top: 26px; }
+  .pl__cal :global(.pl-hours) { position: relative; height: 260px; }
+  .pl__cal :global(.pl-hours span) { position: absolute; left: 0; font-family: var(--f-mono); font-size: 10px; color: var(--ink-3); transform: translateY(-6px); }
+  .pl__cal :global(.pl-day) { position: relative; }
+  .pl__cal :global(.pl-dname) { position: absolute; top: -22px; font-family: var(--f-mono); font-size: 10.5px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-2); }
+  .pl__cal :global(.pl-col) { position: relative; height: 260px; background: repeating-linear-gradient(to bottom, var(--rule) 0 1px, transparent 1px 26px); }
+  .pl__cal :global(.pl-ev) { position: absolute; left: 2px; right: 2px; padding: 3px 5px; overflow: hidden; color: var(--paper); font-size: 11px; line-height: 1.2; background: var(--ink); }
+  .pl__cal :global(.pl-ev b) { display: block; font-weight: 600; }
+  .pl__cal :global(.pl-ev span) { font-family: var(--f-mono); font-size: 9.5px; opacity: 0.8; }
+  .pl__cal :global(.pl-ev--1) { background: var(--blue); }
+  .pl__cal :global(.pl-ev--2) { background: var(--green); }
+  .pl__cal :global(.pl-ev--3) { background: var(--accent); }
+  .pl__cal :global(.pl-ev--4) { background: #8a7a3a; }
+
+  .nbfig { margin-top: var(--s-2); }
+  .nbfig img { width: 100%; height: auto; border: 1px solid var(--rule); background: #fff; }
+  .nbgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-4) var(--gutter); }
+
+  @media (max-width: 1024px) {
+    .pl__grid, .pl__code, .nbgrid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 640px) {
+    .pl__lane span { font-size: 9px; }
+    .pl__calsum { margin-left: 0; }
+    .pl__cal { overflow-x: auto; grid-template-columns: 30px repeat(5, minmax(90px, 1fr)); }
+  }
+</style>

@@ -1,0 +1,380 @@
+---
+/**
+ * Étude de cas — Prévision de charge électrique (FR / EN).
+ * Sources : notebook « Prévision de charge électrique.ipynb » (résultats et figures),
+ * données RTE éCO2mix préparées par scripts/prepare_eco2mix.py (animation Fig. 1).
+ */
+import CaseStudy from '../layouts/CaseStudy.astro';
+import CaseSection from '../components/CaseSection.astro';
+import elec from '../data/elec.json';
+import type { Lang } from '../i18n';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const t = (fr: string, en: string) => (lang === 'fr' ? fr : en);
+const n = (v: number, d = 0) => v.toLocaleString(lang === 'fr' ? 'fr-FR' : 'en-GB', { minimumFractionDigits: d, maximumFractionDigits: d });
+const REPO = 'https://github.com/MatteoLouet/Pr-vision-de-charge-lectrique-';
+const img = (f: string) => `/images/elec/${f}.png`;
+const cap = t('Graphique du notebook.', 'Notebook chart.');
+const mean = elec.meta.mean;
+
+const facts = [
+  { k: t('Données', 'Data'), v: t('RTE éCO2mix régional, 2013 – 2026, pas de 30 min', 'RTE éCO2mix regional, 2013 – 2026, 30-min steps') },
+  { k: 'Question', v: t('Consommation nationale à J+1', 'National demand one day ahead') },
+  { k: t('Modèle retenu', 'Chosen model'), v: t('Forêt aléatoire', 'Random forest') },
+  { k: t('Erreur (test)', 'Error (test)'), v: t(`MAE ${n(1238.47)} MW (≈ 2,3 %)`, `MAE ${n(1238.47)} MW (≈ 2.3%)`) },
+  { k: 'Stack', v: 'Python · pandas · scikit-learn · Open-Meteo' },
+  { k: t('Livrable', 'Deliverable'), v: t('Notebook d’analyse et de modélisation', 'Analysis & modelling notebook') },
+];
+
+const DAYS = [
+  { key: 'winter', fr: 'Mardi d’hiver', en: 'Winter Tuesday' },
+  { key: 'sunday', fr: 'Dimanche', en: 'Sunday' },
+  { key: 'christmas', fr: 'Noël', en: 'Christmas' },
+  { key: 'summer', fr: '1er juillet', en: '1 July' },
+  { key: 'peak', fr: 'Record 2018', en: '2018 record' },
+  { key: 'covid', fr: 'Confinement', en: 'Lockdown' },
+  { key: 'low', fr: 'Minimum', en: 'Minimum' },
+];
+const dayDate = (k: string) => {
+  const d = elec.days.find((x) => x.key === k)!;
+  return new Date(d.date + 'T12:00:00').toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+};
+
+// Étapes de modélisation (tableau récapitulatif, cellules 100 et 105 du notebook)
+const steps = [
+  { fr: 'Arbre · historique + calendrier', en: 'Tree · history + calendar', mae: 1622.04, rmse: 2365.31 },
+  { fr: '+ météo (12 points Open-Meteo)', en: '+ weather (12 Open-Meteo points)', mae: 1470.69, rmse: 2118.82 },
+  { fr: '+ jours fériés', en: '+ public holidays', mae: 1410.72, rmse: 1968.93 },
+  { fr: '+ vacances scolaires (A, B, C)', en: '+ school holidays (A, B, C)', mae: 1411.95, rmse: 1971.52 },
+  { fr: 'Forêt aléatoire · toutes variables', en: 'Random forest · all features', mae: 1238.47, rmse: 1726.31, best: true },
+];
+const first = [
+  { fr: 'Arbre de décision', en: 'Decision tree', mae: 1618.51, rmse: 2355.82, best: true },
+  { fr: 'KNN (k = 5)', en: 'KNN (k = 5)', mae: 1704.32, rmse: 2443.78 },
+  { fr: 'SVR (SVM)', en: 'SVR (SVM)', mae: 2351.84, rmse: 3202.18 },
+];
+const MAXE = 2400;
+const BW = 620, LBL = 240, BH = 26, BG = 12;
+const bx = (v: number) => (v / MAXE) * (BW - LBL - 60);
+---
+<CaseStudy slug="consommation" lang={lang} kicker={t('Machine learning · Énergie', 'Machine learning · Energy')} facts={facts}>
+  <figure slot="figure" class="gr" data-replay data-lang={lang} aria-labelledby="gr-title">
+    <div class="fig-head">
+      <span class="meta"><span class="accent">Fig. 1</span>&nbsp;&nbsp;<span id="gr-title">{t('Rejouer une journée du réseau électrique', 'Replay a day on the power grid')}</span></span>
+      <span class="meta meta--ink2">RTE éCO2mix</span>
+    </div>
+    <p class="fig-notice gr__notice">{t(
+      'La prévision du lendemain est connue la veille : elle est tracée d’avance, en pointillés. La consommation réelle se dessine ensuite demi-heure par demi-heure, pendant que les 12 régions s’allument selon leur niveau de consommation. Choisissez une journée.',
+      'The next-day forecast is known the day before, so it is drawn in advance as a dotted line. Actual demand then draws itself half-hour by half-hour while the 12 regions light up according to their demand level. Pick a day.'
+    )}</p>
+
+    <div class="gr__ctrls">
+      <div class="seg gr__days" role="group" aria-label={t('Journée', 'Day')}>
+        {DAYS.map((d) => (
+          <button type="button" data-day={d.key} aria-pressed="false">
+            <span>{t(d.fr, d.en)}</span><span class="gr__date">{dayDate(d.key)}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+
+    <div class="gr__stage">
+      <div class="gr__left">
+        <div class="gr__clock">
+          <span class="gr__time tnum" data-clock>23:30</span>
+          <span class="gr__total tnum" data-total>—</span>
+          <span class="gr__gap meta" data-gap></span>
+        </div>
+        <div class="gr__map" data-map></div>
+        <p class="gr__maplegend small muted">{t('Teinte et barre : consommation de la région rapportée à son niveau de référence (99,9e centile de 2013 – 2026)', 'Tint and bar: the region’s demand relative to its reference level (99.9th percentile, 2013 – 2026)')}</p>
+      </div>
+      <div class="gr__right">
+        <div data-chart class="gr__chart"></div>
+        <div class="gr__player">
+          <button type="button" class="gr__play meta" data-play aria-pressed="false">{t('Lecture', 'Play')}</button>
+          <input type="range" min="0" max="47" step="1" value="47" data-scrub class="gr__scrub" aria-label={t('Heure de la journée', 'Time of day')} />
+        </div>
+        <ul class="gr__legend small" aria-label={t('Légende', 'Legend')}>
+          <li><i class="lg-real"></i>{t('consommation réelle', 'actual demand')}</li>
+          <li data-legend-pred><i class="lg-pred"></i>{t('prévision du modèle de base (connue la veille)', 'baseline model forecast (known the day before)')}</li>
+          <li><i class="lg-gap"></i>{t('écart', 'gap')}</li>
+        </ul>
+        <p class="gr__summary meta" data-summary aria-live="polite"></p>
+      </div>
+    </div>
+
+    <figcaption class="fig-source">{lang === 'fr' ? (
+      <><strong>Source :</strong> RTE éCO2mix, données régionales consolidées et définitives (12 régions métropolitaines, hors Corse). <strong>Prévision :</strong> le modèle de base du notebook (arbre de décision sur la consommation de la veille et de la semaine précédente, l’heure, le jour et le mois), reproduit à l’identique — MAE de test {n(elec.meta.baseline.mae, 2)} MW, comme dans le notebook. Elle n’existe que pour la période de test (depuis le 9 décembre 2023) ; le modèle final, plus précis, utilise en plus la météo et les jours fériés.</>
+    ) : (
+      <><strong>Source:</strong> RTE éCO2mix, consolidated regional data (12 mainland regions, Corsica excluded). <strong>Forecast:</strong> the notebook’s baseline model (decision tree on the previous day’s and previous week’s demand, hour, weekday and month), reproduced exactly — test MAE {n(elec.meta.baseline.mae, 2)} MW, as in the notebook. It only exists for the test period (from 9 December 2023); the final, more accurate model also uses weather and public holidays.</>
+    )}</figcaption>
+  </figure>
+
+  <CaseSection n="01" title={t('Contexte', 'Context')} id="contexte">
+    {lang === 'fr' ? (
+      <>
+        <h3>Le réseau doit produire à chaque instant ce que la France consomme.</h3>
+        <p>L’électricité se stocke mal : il faut prévoir la demande pour planifier la production. La question du projet : <strong>peut-on prévoir la consommation électrique française du lendemain avec précision, et que gagne-t-on en ajoutant la météo et le calendrier à une base simple&nbsp;?</strong></p>
+        <p>Projet personnel, mené uniquement sur des données ouvertes : RTE éCO2mix, Open-Meteo, le calendrier des jours fériés (Etalab) et celui des vacances scolaires (Éducation nationale).</p>
+      </>
+    ) : (
+      <>
+        <h3>The grid has to produce, at every moment, what France consumes.</h3>
+        <p>Electricity is hard to store: demand has to be forecast to plan production. The project’s question: <strong>can France’s electricity demand for the next day be forecast accurately, and what do weather and calendar add to a simple baseline?</strong></p>
+        <p>A personal project, built only on open data: RTE éCO2mix, Open-Meteo, the public-holiday calendar (Etalab) and the school-holiday calendar (French Ministry of Education).</p>
+      </>
+    )}
+  </CaseSection>
+
+  <CaseSection n="02" title={t('Données', 'Data')} id="donnees">
+    {lang === 'fr' ? (
+      <>
+        <h3>13 ans, 12 régions, une mesure toutes les 30 minutes.</h3>
+        <dl class="ds">
+          <div><dt class="meta meta--ink2">Période</dt><dd>1er janvier 2013 → 31 août 2026, soit 239 568 créneaux de 30 minutes</dd></div>
+          <div><dt class="meta meta--ink2">Série nationale</dt><dd>Somme des 12 régions à chaque instant ; seulement 2 créneaux manquants, ignorés</dd></div>
+          <div><dt class="meta meta--ink2">Piège</dt><dd>Les changements d’heure : au passage à l’heure d’été, les créneaux 02:00 et 02:30 se superposent à 03:00 et 03:30 en UTC. La série est reconstruite en heure locale pour supprimer ces faux doublons</dd></div>
+          <div><dt class="meta meta--ink2">Ordre de grandeur</dt><dd>Moyenne {n(mean)} MW, de 29 124 MW à {n(elec.meta.max)} MW (28 février 2018)</dd></div>
+          <div><dt class="meta meta--ink2">Valeur aberrante</dt><dd>En préparant la Fig. 1, un pic isolé de 12 354 MW en Centre-Val de Loire le 23 août 2026 à 18 h, plus de trois fois le niveau habituel de la région. Il ne change presque rien à la série nationale, mais il faussait l’échelle de la carte : celle-ci utilise donc le 99,9e centile de chaque région</dd></div>
+          <div><dt class="meta meta--ink2">Météo</dt><dd>Open-Meteo, 12 points représentatifs (un par région), moyennés chaque heure puis interpolés à la demi-heure : température, ressentie, humidité, précipitations, vent, nébulosité</dd></div>
+        </dl>
+      </>
+    ) : (
+      <>
+        <h3>13 years, 12 regions, one reading every 30 minutes.</h3>
+        <dl class="ds">
+          <div><dt class="meta meta--ink2">Period</dt><dd>1 January 2013 → 31 August 2026: 239,568 half-hour slots</dd></div>
+          <div><dt class="meta meta--ink2">National series</dt><dd>Sum of the 12 regions at each instant; only 2 missing slots, ignored</dd></div>
+          <div><dt class="meta meta--ink2">Pitfall</dt><dd>Daylight saving: when clocks go forward, the 02:00 and 02:30 slots collide with 03:00 and 03:30 in UTC. The series is rebuilt in local time to remove these false duplicates</dd></div>
+          <div><dt class="meta meta--ink2">Scale</dt><dd>Mean {n(mean)} MW, from 29,124 MW to {n(elec.meta.max)} MW (28 February 2018)</dd></div>
+          <div><dt class="meta meta--ink2">Outlier</dt><dd>While preparing Fig. 1, an isolated 12,354 MW spike in Centre-Val de Loire on 23 August 2026 at 6 pm, over three times the region’s usual level. It barely changes the national series, but it skewed the map’s scale, so the map uses each region’s 99.9th percentile instead</dd></div>
+          <div><dt class="meta meta--ink2">Weather</dt><dd>Open-Meteo, 12 representative points (one per region), averaged hourly then interpolated to the half-hour: temperature, feels-like, humidity, precipitation, wind, cloud cover</dd></div>
+        </dl>
+      </>
+    )}
+    <figure class="nbfig">
+      <img src={img('serie-complete')} alt={t('Consommation électrique nationale de 2013 à 2026', 'National electricity demand from 2013 to 2026')} loading="lazy" />
+      <figcaption class="fig-source"><span class="accent">Fig. 2</span> {t('Treize hivers, treize étés : la saisonnalité domine tout le reste.', 'Thirteen winters, thirteen summers: seasonality dominates everything else.')} <em>{cap}</em></figcaption>
+    </figure>
+  </CaseSection>
+
+  <CaseSection n="03" title={t('Exploration', 'Exploration')} id="exploration">
+    <h3>{t('Trois rythmes superposés : l’année, la semaine, la journée.', 'Three overlapping rhythms: the year, the week, the day.')}</h3>
+    <div class="nbgrid">
+      <figure class="nbfig">
+        <img src={img('moyenne-mois')} alt={t('Consommation moyenne par mois', 'Mean demand by month')} loading="lazy" />
+        <figcaption class="fig-source"><span class="accent">Fig. 3</span> {t('Janvier consomme environ 60 % de plus qu’août : le chauffage électrique.', 'January uses about 60% more than August: electric heating.')} <em>{cap}</em></figcaption>
+      </figure>
+      <figure class="nbfig">
+        <img src={img('semaine-weekend')} alt={t('Profil horaire, jours ouvrés et week-ends', 'Hourly profile, weekdays and weekends')} loading="lazy" />
+        <figcaption class="fig-source"><span class="accent">Fig. 4</span> {t('En semaine, une montée rapide le matin, un pic vers midi (~60 000 MW) et un second vers 19 h ; le week-end, tout se décale et s’abaisse.', 'On weekdays, a sharp morning rise, a peak around noon (~60,000 MW) and another around 7 pm; at weekends everything shifts later and lower.')} <em>{cap}</em></figcaption>
+      </figure>
+      <figure class="nbfig">
+        <img src={img('hiver-ete')} alt={t('Profil horaire, hiver et été', 'Hourly profile, winter and summer')} loading="lazy" />
+        <figcaption class="fig-source"><span class="accent">Fig. 5</span> {t('Même forme, autre niveau : l’hiver ajoute environ 20 000 MW à toute heure, et son pic du soir, vers 19 h, devient le plus haut de la journée.', 'Same shape, another level: winter adds about 20,000 MW at every hour, and its evening peak, around 7 pm, becomes the highest of the day.')} <em>{cap}</em></figcaption>
+      </figure>
+      <figure class="nbfig">
+        <img src={img('regions-annees')} alt={t('Évolution annuelle de la consommation par région', 'Yearly demand by region')} loading="lazy" />
+        <figcaption class="fig-source"><span class="accent">Fig. 6</span> {t('Par région, une tendance à la baisse et deux creux communs, en 2020 et en 2023 — années de la crise sanitaire et de la sobriété énergétique.', 'By region, a downward trend and two shared dips, in 2020 and 2023 — the years of the pandemic and of energy-saving measures.')} <em>{cap}</em></figcaption>
+      </figure>
+    </div>
+  </CaseSection>
+
+  <CaseSection n="04" title={t('Modélisation', 'Modelling')} id="modelisation">
+    {lang === 'fr' ? (
+      <>
+        <h3>Partir d’une base simple, puis n’ajouter que ce qui fait baisser l’erreur.</h3>
+        <ul class="bul">
+          <li><strong>Variables de base</strong> : la consommation de la veille et de la semaine précédente au même créneau, l’heure, le jour de la semaine, le mois, un indicateur de week-end.</li>
+          <li><strong>Découpage chronologique</strong> : 80 % des données pour apprendre (jusqu’au 9 décembre 2023), les 20 % suivantes pour tester — jamais de mélange entre passé et futur.</li>
+          <li><strong>Trois premiers modèles</strong> comparés sur ces variables ; l’arbre de décision l’emporte et sert de référence pour mesurer l’apport de chaque nouvelle source.</li>
+          <li><strong>Ajouts successifs</strong> : météo, jours fériés, vacances scolaires par zone, puis passage à une forêt aléatoire (100 arbres, profondeur 12).</li>
+        </ul>
+      </>
+    ) : (
+      <>
+        <h3>Start from a simple baseline, then only add what lowers the error.</h3>
+        <ul class="bul">
+          <li><strong>Base features</strong>: demand at the same slot the day before and the week before, hour, weekday, month and a weekend flag.</li>
+          <li><strong>Chronological split</strong>: 80% of the data to learn (up to 9 December 2023), the next 20% to test — past and future are never mixed.</li>
+          <li><strong>Three first models</strong> compared on these features; the decision tree wins and becomes the reference to measure each new source.</li>
+          <li><strong>Successive additions</strong>: weather, public holidays, school holidays by zone, then a switch to a random forest (100 trees, depth 12).</li>
+        </ul>
+      </>
+    )}
+
+    <figure class="steps" aria-labelledby="steps-title">
+      <div class="fig-head">
+        <span class="meta"><span class="accent">Fig. 7</span>&nbsp;&nbsp;<span id="steps-title">{t('Ce que chaque ajout fait gagner — erreur absolue moyenne sur la période de test', 'What each addition gains — mean absolute error on the test period')}</span></span>
+        <span class="meta meta--ink2">MAE, MW</span>
+      </div>
+      <p class="steps__sub meta meta--ink2">{t('A · Premier tour, variables de base', 'A · First round, base features')}</p>
+      <svg viewBox={`0 0 ${BW} ${first.length * (BH + BG)}`} class="steps__svg" role="img" aria-label={first.map((s) => `${t(s.fr, s.en)} ${n(s.mae, 2)} MW`).join(', ')}>
+        {first.map((s, i) => (
+          <g transform={`translate(0,${i * (BH + BG)})`}>
+            <text x={LBL - 10} y={BH / 2 + 4} text-anchor="end" class:list={['steps__l', { 'is-best': s.best }]}>{t(s.fr, s.en)}</text>
+            <rect x={LBL} y="0" width={bx(s.mae)} height={BH} class:list={['steps__bar', { 'is-best': s.best }]} />
+            <text x={LBL + bx(s.mae) + 8} y={BH / 2 + 4} class="steps__v tnum">{n(s.mae)}</text>
+          </g>
+        ))}
+      </svg>
+      <p class="steps__sub meta meta--ink2">{t('B · Ajouts successifs', 'B · Successive additions')}</p>
+      <svg viewBox={`0 0 ${BW} ${steps.length * (BH + BG)}`} class="steps__svg" role="img" aria-label={steps.map((s) => `${t(s.fr, s.en)} ${n(s.mae, 2)} MW`).join(', ')}>
+        {steps.map((s, i) => {
+          const prev = i ? steps[i - 1].mae : null;
+          const d = prev !== null ? s.mae - prev : null;
+          return (
+            <g transform={`translate(0,${i * (BH + BG)})`}>
+              <text x={LBL - 10} y={BH / 2 + 4} text-anchor="end" class:list={['steps__l', { 'is-best': s.best }]}>{t(s.fr, s.en)}</text>
+              <rect x={LBL} y="0" width={bx(s.mae)} height={BH} class:list={['steps__bar', { 'is-best': s.best }]} />
+              <text x={LBL + bx(s.mae) + 8} y={BH / 2 + 4} class="steps__v tnum">{n(s.mae)}{d !== null && <tspan class:list={['steps__d', { 'is-up': d > 0 }]} dx="8">{d > 0 ? '+' : '−'}{n(Math.abs(d))}</tspan>}</text>
+            </g>
+          );
+        })}
+      </svg>
+      <figcaption class="fig-source">{lang === 'fr' ? (
+        <><strong>Source :</strong> tableaux récapitulatifs du notebook (cellules 62, 100 et 105). La série B démarre deux semaines plus tard que la série A (alignement avec les jours fériés), d’où un écart de 3,5 MW entre les deux arbres de base.</>
+      ) : (
+        <><strong>Source:</strong> the notebook’s summary tables (cells 62, 100 and 105). Series B starts two weeks after series A (alignment with public holidays), hence a 3.5 MW gap between the two baseline trees.</>
+      )}</figcaption>
+    </figure>
+  </CaseSection>
+
+  <CaseSection n="05" title={t('Résultats', 'Results')} id="resultats">
+    <h3>{t('Une forêt aléatoire à 2,3 % d’erreur moyenne.', 'A random forest at 2.3% mean error.')}</h3>
+    <div class="kpis">
+      <div><span class="kpi__v tnum">{n(1238)}</span><span class="meta meta--ink2">MAE · MW</span><span class="small muted">{t(`≈ ${n((1238.47 / mean) * 100, 1)} % de la consommation moyenne`, `≈ ${n((1238.47 / mean) * 100, 1)}% of mean demand`)}</span></div>
+      <div><span class="kpi__v tnum">{n(1726)}</span><span class="meta meta--ink2">RMSE · MW</span><span class="small muted">{t('pénalise davantage les grosses erreurs', 'weighs large errors more')}</span></div>
+      <div><span class="kpi__v tnum">−{n(((1622.04 - 1238.47) / 1622.04) * 100)}&nbsp;%</span><span class="meta meta--ink2">{t('vs. base', 'vs. baseline')}</span><span class="small muted">{t('d’erreur par rapport à l’arbre de base', 'less error than the baseline tree')}</span></div>
+      <div><span class="kpi__v tnum">−{n(((1622.04 - 1470.69) / 1622.04) * 100, 1)}&nbsp;%</span><span class="meta meta--ink2">{t('grâce à la météo', 'from weather')}</span><span class="small muted">{t('le plus gros apport d’une source externe', 'the largest gain from an external source')}</span></div>
+    </div>
+    {lang === 'fr' ? (
+      <ul class="bul">
+        <li><strong>La météo</strong> réduit l’erreur de 9,3 % : la température explique une part des besoins de chauffage et de climatisation.</li>
+        <li><strong>Les jours fériés</strong> la réduisent encore de 4,1 % : ces jours-là ressemblent à des dimanches, ce que le calendrier seul ne dit pas.</li>
+        <li><strong>Les vacances scolaires</strong> n’apportent rien à cet arbre (+1,2 MW) : l’information est sans doute déjà portée par la date et la consommation passée, et leur effet varie selon les zones.</li>
+        <li><strong>La forêt aléatoire</strong> gagne encore 12 % sur l’arbre, avec les mêmes variables.</li>
+      </ul>
+    ) : (
+      <ul class="bul">
+        <li><strong>Weather</strong> cuts the error by 9.3%: temperature explains part of heating and cooling needs.</li>
+        <li><strong>Public holidays</strong> cut it by a further 4.1%: those days look like Sundays, which the calendar alone does not say.</li>
+        <li><strong>School holidays</strong> add nothing to this tree (+1.2 MW): the information is probably already carried by the date and past demand, and their effect varies by zone.</li>
+        <li><strong>The random forest</strong> gains another 12% over the tree, with the same features.</li>
+      </ul>
+    )}
+  </CaseSection>
+
+  <CaseSection n="06" title={t('Réflexion', 'Reflection')} id="reflexion">
+    {lang === 'fr' ? (
+      <>
+        <h3>Un bon score de laboratoire, pas encore une prévision opérationnelle.</h3>
+        <ul class="bul">
+          <li><strong>Météo observée, pas prévue</strong> : le modèle utilise la météo réellement mesurée. En conditions réelles, à J+1, il faudrait la prévision météo de la veille, moins précise.</li>
+          <li><strong>La veille au même créneau</strong> n’est pas toujours connue au moment de prévoir : une prévision émise à midi ignore la consommation de l’après-midi. Le gain réel sera un peu plus faible.</li>
+          <li><strong>Un seul découpage de test</strong> : il faudrait valider sur plusieurs périodes (validation glissante), dont des hivers rigoureux.</li>
+        </ul>
+        <p><strong>Suite prévue :</strong> se comparer à la prévision publiée par RTE, ajouter des moyennes glissantes, tester un gradient boosting, puis automatiser la mise à jour des données.</p>
+      </>
+    ) : (
+      <>
+        <h3>A good lab score, not yet an operational forecast.</h3>
+        <ul class="bul">
+          <li><strong>Observed weather, not forecast weather</strong>: the model uses measured weather. In real conditions, one day ahead, it would need the previous day’s weather forecast, which is less accurate.</li>
+          <li><strong>The same slot the day before</strong> is not always known at forecast time: a forecast issued at noon cannot see the afternoon. The real gain will be slightly lower.</li>
+          <li><strong>A single test split</strong>: it should be validated on several periods (rolling validation), including harsh winters.</li>
+        </ul>
+        <p><strong>Next steps:</strong> compare with the forecast published by RTE, add rolling averages, try gradient boosting, then automate the data refresh.</p>
+      </>
+    )}
+    <p><a class="link link-arrow" href={REPO} rel="noopener">{t('Code et notebook sur GitHub', 'Code and notebook on GitHub')} <span class="arr" aria-hidden="true">↗</span></a></p>
+  </CaseSection>
+</CaseStudy>
+
+<script>
+  import { mountGridReplay } from '../viz/grid-replay';
+  import data from '../data/elec.json';
+  const root = document.querySelector<HTMLElement>('[data-replay]');
+  if (root) mountGridReplay(root, data as never);
+</script>
+
+<style>
+  .gr__notice { margin-bottom: var(--s-3); }
+  .gr__ctrls { padding-bottom: var(--s-2); border-bottom: 1px solid var(--rule); }
+  .gr__days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 1px; background: var(--ink); width: 100%; }
+  .gr__days button { border: 0 !important; background: var(--paper); display: flex; flex-direction: column; gap: 2px; align-items: flex-start; padding: 8px 10px 7px; text-align: left; }
+  .gr__days button[aria-pressed='true'] { background: var(--ink); color: var(--paper); }
+  .gr__date { font-size: 9.5px; opacity: 0.65; letter-spacing: 0.04em; }
+  .gr__stage { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: var(--s-5); margin-top: var(--s-3); align-items: start; }
+  .gr__clock { display: flex; flex-direction: column; gap: 2px; border-top: 1px solid var(--ink); padding-top: 10px; margin-bottom: var(--s-3); }
+  .gr__time { font-family: var(--f-display); font-size: clamp(44px, 5vw, 72px); font-weight: 600; letter-spacing: -0.04em; line-height: 0.95; }
+  .gr__total { font-family: var(--f-display); font-size: 22px; font-weight: 550; letter-spacing: -0.02em; }
+  .gr__gap { color: var(--ink-2); min-height: 1.3em; }
+  .gr__map :global(svg) { width: 100%; max-width: 300px; height: auto; display: block; }
+  .gr__map :global(.gr-tile) { stroke: var(--paper); stroke-width: 1; transition: fill 120ms linear; }
+  .gr__map :global(.gr-tilebar) { fill: var(--ink); opacity: 0.35; transition: width 120ms linear; }
+  .gr__map :global(.gr-code) { font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.06em; fill: var(--ink); }
+  .gr__map :global(.gr-val) { font-family: var(--f-mono); font-size: 11px; fill: var(--ink); font-variant-numeric: tabular-nums; }
+  .gr__map :global(.is-hot ~ .gr-code), .gr__map :global(.is-hot ~ .gr-val) { fill: var(--paper); }
+  .gr__maplegend { margin-top: 8px; max-width: 300px; }
+  .gr__chart :global(svg) { width: 100%; height: auto; display: block; }
+  .gr__chart :global(.gr-grid) { stroke: var(--rule); stroke-dasharray: 2 3; }
+  .gr__chart :global(.gr-record) { stroke: var(--ink-3); stroke-dasharray: 6 4; }
+  .gr__chart :global(.gr-real) { fill: none; stroke: var(--ink); stroke-width: 2.2; stroke-linejoin: round; }
+  .gr__chart :global(.gr-pred) { fill: none; stroke: var(--blue); stroke-width: 1.6; stroke-dasharray: 4 3; }
+  .gr__chart :global(.gr-gaparea) { fill: var(--accent); fill-opacity: 0.16; }
+  .gr__chart :global(.gr-cursor) { stroke: var(--accent); stroke-width: 1; }
+  .gr__chart :global(.gr-dot) { fill: var(--accent); stroke: var(--paper); stroke-width: 2; }
+  .gr__player { display: flex; align-items: center; gap: var(--s-2); margin-top: 8px; }
+  .gr__play { background: var(--ink); color: var(--paper); border: 0; padding: 8px 14px 7px; cursor: pointer; min-width: 9ch; }
+  .gr__play:hover { background: var(--accent); }
+  .gr__scrub { flex: 1; accent-color: var(--accent); }
+  .gr__legend { display: flex; flex-wrap: wrap; gap: 6px 16px; color: var(--ink-2); margin-top: 8px; }
+  .gr__legend i { display: inline-block; width: 18px; height: 0; vertical-align: middle; margin-right: 6px; border-top: 2px solid var(--ink); }
+  .gr__legend .lg-pred { border-top: 2px dashed var(--blue); }
+  .gr__legend .lg-gap { height: 9px; border: 0; background: color-mix(in srgb, var(--accent) 22%, transparent); }
+  .gr__summary { margin-top: var(--s-2); min-height: 1.3em; color: var(--ink); }
+
+  .ds { border-top: 1px solid var(--ink); max-width: 62ch; }
+  .ds > div { display: grid; grid-template-columns: 14ch 1fr; gap: 12px; padding-block: 9px; border-bottom: 1px solid var(--rule); font-size: 15px; line-height: 1.45; }
+  .nbfig { margin-top: var(--s-2); }
+  .nbfig img { width: 100%; height: auto; background: #fff; border: 1px solid var(--rule); }
+  .nbgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-4) var(--gutter); }
+  .nbgrid .nbfig:last-child { grid-column: 1 / -1; max-width: 760px; margin-inline: auto; width: 100%; }
+
+  .steps { max-width: 820px; }
+  .steps__sub { margin: var(--s-2) 0 8px; }
+  .steps__svg { width: 100%; height: auto; }
+  .steps__l { font-size: 13px; fill: var(--ink-2); }
+  .steps__l.is-best { fill: var(--ink); font-weight: 600; }
+  .steps__bar { fill: var(--ink-3); }
+  .steps__bar.is-best { fill: var(--accent); }
+  .steps__v { font-family: var(--f-mono); font-size: 12px; fill: var(--ink); }
+  .steps__d { fill: var(--green); }
+  .steps__d.is-up { fill: var(--accent); }
+
+  .kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--gutter); border-top: 1px solid var(--ink); }
+  .kpis > div { display: flex; flex-direction: column; gap: 4px; padding-top: 12px; }
+  .kpi__v { font-family: var(--f-display); font-size: clamp(32px, 3.6vw, 54px); font-weight: 600; letter-spacing: -0.04em; line-height: 1; }
+
+  @media (max-width: 1024px) {
+    .gr__stage { grid-template-columns: 1fr; }
+    .gr__left { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--gutter); align-items: start; }
+    .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: var(--s-3); }
+  }
+  @media (max-width: 640px) {
+    .gr__days { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .gr__stage { display: flex; flex-direction: column; gap: var(--s-3); }
+    .gr__left { display: contents; }
+    .gr__clock { order: 1; margin-bottom: 0; }
+    .gr__right { order: 2; width: 100%; }
+    .gr__map { order: 3; }
+    .gr__maplegend { order: 4; margin-top: -12px; }
+    .gr__map :global(svg) { max-width: 220px; }
+    .gr__chart { overflow-x: auto; margin-inline: calc(var(--margin) * -1); padding-inline: var(--margin); }
+    .gr__chart :global(svg) { min-width: 560px; }
+    .nbgrid { grid-template-columns: 1fr; }
+    .ds > div { grid-template-columns: 1fr; gap: 2px; }
+  }
+</style>

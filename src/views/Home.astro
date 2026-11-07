@@ -1,0 +1,21 @@
+---
+/** Page d'accueil, partagée par / (fr) et /en/ (en). */
+import Base from '../layouts/Base.astro';
+import Hero from '../components/Hero.astro';
+import Work from '../components/Work.astro';
+import Lab from '../components/Lab.astro';
+import About from '../components/About.astro';
+import Skills from '../components/Skills.astro';
+import Contact from '../components/Contact.astro';
+import type { Lang } from '../i18n';
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+---
+<Base lang={lang}>
+  <Hero lang={lang} />
+  <About lang={lang} />
+  <Work lang={lang} />
+  <Lab lang={lang} />
+  <Skills lang={lang} />
+  <Contact lang={lang} />
+</Base>

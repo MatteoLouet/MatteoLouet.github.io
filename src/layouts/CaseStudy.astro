@@ -1,0 +1,104 @@
+---
+/**
+ * Gabarit d'étude de cas — réutilisable pour chaque projet, en FR et EN.
+ * Slots : `bleed` (pleine largeur) ou `figure` (la visualisation, affichée tôt),
+ * puis le contenu par défaut (sections <CaseSection>). Métadonnées : src/data/projects.ts.
+ */
+import Base from './Base.astro';
+import { projects } from '../data/projects';
+import { href, pick, type Lang } from '../i18n';
+
+interface Props {
+  slug: string;
+  kicker: string;
+  facts: { k: string; v: string; todo?: boolean }[];
+  lang: Lang;
+}
+const { slug, kicker, facts, lang } = Astro.props;
+const t = (fr: string, en: string) => (lang === 'fr' ? fr : en);
+const p = projects.find((x) => x.slug === slug)!;
+const i = projects.indexOf(p);
+const next = projects.slice(i + 1).concat(projects.slice(0, i)).find((x) => x.caseStudy) ?? null;
+const title = pick(p.title, lang);
+const study = t('Étude de cas', 'Case study');
+---
+<Base lang={lang} title={`${title} — ${study} · Mattéo Louet`} description={pick(p.dek, lang)} section={`${study} ${p.n}`}>
+  <article class="cs">
+    <header class="wrap cs__head">
+      <nav class="cs__crumbs meta meta--ink2" aria-label={t('Fil d’Ariane', 'Breadcrumb')}>
+        <a href={href('home', lang, 'travaux')}>← {t('Travaux', 'Work')}</a><span aria-hidden="true">/</span><span>{study} {p.n}</span>
+      </nav>
+      <div class="g12 cs__top">
+        <p class="meta cs__kicker"><span class="accent">{p.n}</span> — {kicker}</p>
+        <h1 class="cs__title">{title}</h1>
+        <p class="lead cs__dek">{pick(p.dek, lang)}</p>
+        <dl class="cs__facts">
+          {facts.map((f) => (
+            <div><dt class="meta meta--ink2">{f.k}</dt><dd>{f.todo ? <span class="todo">{f.v}</span> : f.v}</dd></div>
+          ))}
+        </dl>
+      </div>
+    </header>
+
+    {Astro.slots.has('bleed') && <div class="cs__bleed"><slot name="bleed" /></div>}
+    {Astro.slots.has('figure') && <div class="wrap cs__figure"><slot name="figure" /></div>}
+
+    <div class="wrap cs__body">
+      <slot />
+    </div>
+
+    <footer class="wrap cs__foot">
+      <a class="cs__back" href={href('home', lang, 'travaux')}>
+        <span class="meta meta--ink2">{t('Retour', 'Back')}</span>
+        <span class="h3">{t('Tous les travaux', 'All work')}</span>
+      </a>
+      {next && next.slug !== slug && next.caseStudy && (
+        <a class="cs__next" href={href(next.caseStudy, lang)}>
+          <span class="meta meta--ink2">{t('Étude suivante', 'Next case study')}</span>
+          <span class="h3">{pick(next.title, lang)} →</span>
+        </a>
+      )}
+    </footer>
+  </article>
+</Base>
+
+<style>
+  .cs__head { padding-top: var(--s-4); }
+  .cs__crumbs { display: flex; gap: 10px; }
+  .cs__crumbs a { text-decoration: none; }
+  .cs__crumbs a:hover { color: var(--accent); }
+  .cs__top { margin-top: var(--s-6); row-gap: var(--s-4); align-items: end; }
+  .cs__kicker { grid-column: 1 / -1; }
+  .cs__title {
+    grid-column: 1 / span 10;
+    font-family: var(--f-display);
+    font-size: clamp(42px, 6.4vw, 108px);
+    line-height: 0.94;
+    letter-spacing: -0.045em;
+    font-weight: 650;
+    view-transition-name: case-title;
+  }
+  .cs__dek { grid-column: 1 / span 6; max-width: 34em; }
+  .cs__facts { grid-column: 8 / -1; border-top: 1px solid var(--ink); }
+  .cs__facts > div { display: grid; grid-template-columns: 12ch 1fr; gap: 10px; padding-block: 8px; border-bottom: 1px solid var(--rule); font-size: 14px; }
+  .cs__figure, .cs__bleed { margin-top: var(--s-7); }
+  .cs__body { margin-top: var(--s-8); }
+  .cs__foot {
+    margin-top: var(--s-8);
+    padding-bottom: var(--s-6);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--gutter);
+  }
+  .cs__foot a { text-decoration: none; border-top: 3px solid var(--ink); padding-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+  .cs__foot a:hover .h3 { color: var(--accent); }
+  .cs__next { text-align: right; }
+  @media (max-width: 1024px) {
+    .cs__title { grid-column: 1 / -1; }
+    .cs__dek, .cs__facts { grid-column: 1 / -1; }
+  }
+  @media (max-width: 640px) {
+    .cs__foot { grid-template-columns: 1fr; }
+    .cs__next { text-align: left; }
+  }
+</style>

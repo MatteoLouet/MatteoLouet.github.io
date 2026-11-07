@@ -1,0 +1,388 @@
+---
+/**
+ * Vignettes de projets — SVG calculés au build, zéro JS côté client.
+ * Chacune parle la grammaire visuelle de son sujet.
+ * Seule « degradation » utilise un jeu de données (démo C-MAPSS, étiqueté) ;
+ * les autres sont des figures illustratives du principe, pas des résultats.
+ */
+import type { FigureKey } from '../../data/projects';
+import { rng } from '../../lib/rng';
+import cmapss from '../../data/cmapss.json';
+import elec from '../../data/elec.json';
+
+import type { Lang } from '../../i18n';
+interface Props { kind: FigureKey; label: string; lang: Lang }
+const { kind, label, lang } = Astro.props;
+const tr = (fr: string, en: string) => (lang === 'fr' ? fr : en);
+const FAIL = tr('panne', 'failure');
+const r = rng(kind.length * 7919 + 17);
+const f1 = (n: number) => n.toFixed(1);
+const line = (pts: [number, number][]) => 'M' + pts.map(([x, y]) => `${f1(x)},${f1(y)}`).join('L');
+
+/* ---------------- 1. Dégradation (C-MAPSS démo) ---------------- */
+let deg: any = null;
+if (kind === 'degradation') {
+  const W = 800, H = 470, m = { l: 8, r: 8, t: 16, b: 34 };
+  const sid = 's4';
+  const units = cmapss.units.slice(0, 36).map((u) => (u.series as Record<string, number[]>)[sid]);
+  const xmin = -300;
+  const all = units.flat();
+  const ymin = Math.min(...all), ymax = Math.max(...all);
+  const x = (d: number) => m.l + ((d - xmin) / -xmin) * (W - m.l - m.r);
+  const y = (v: number) => m.t + (1 - (v - ymin) / (ymax - ymin)) * (H - m.t - m.b);
+  const smooth = (a: number[], k = 7) => a.map((_, i) => {
+    const s = a.slice(Math.max(0, i - k), i + k + 1);
+    return s.reduce((p, c) => p + c, 0) / s.length;
+  });
+  const paths = units.map((raw) => {
+    const vals = smooth(raw, 4);
+    const L = vals.length;
+    return line(vals.map((v, i) => [x(Math.max(i + 1 - L, xmin)), y(v)] as [number, number]).filter((_, i) => i + 1 - L >= xmin));
+  });
+  // médiane par cycle-avant-panne
+  const med: [number, number][] = [];
+  for (let d = xmin; d <= 0; d++) {
+    const vs = units.map((v) => v[v.length - 1 + d]).filter((v) => v !== undefined).sort((a, b) => a - b);
+    if (vs.length >= 5) med.push([d, vs[Math.floor(vs.length / 2)]]);
+  }
+  const medS = smooth(med.map((p) => p[1]), 6);
+  const hi = units[7];
+  const hiS = smooth(hi, 5);
+  deg = {
+    W, H, m,
+    paths,
+    median: line(med.map((p, i) => [x(p[0]), y(medS[i])])),
+    hi: line(hiS.map((v, i) => [x(i + 1 - hi.length), y(v)] as [number, number]).filter((p) => p[0] >= m.l)),
+    ticks: [-300, -250, -200, -150, -100, -50, 0].map((d) => ({ x: x(d), label: d === 0 ? FAIL : String(d) })),
+  };
+}
+
+/* ---------------- 2. Petits multiples (RTE éCO2mix, jour du record national) ---------------- */
+let mult: any = null;
+if (kind === 'multiples') {
+  const W = 720, H = 450, cols = 4, rows = 3, gx = 18, gy = 30;
+  const pw = (W - gx * (cols - 1)) / cols, ph = (H - gy * rows) / rows;
+  const day = elec.days.find((d) => d.key === 'peak')!;
+  const CODES: Record<string, string> = { 'Auvergne-Rhône-Alpes': 'ARA', 'Bourgogne-Franche-Comté': 'BFC', Bretagne: 'BRE', 'Centre-Val de Loire': 'CVL', 'Grand Est': 'GES', 'Hauts-de-France': 'HDF', Normandie: 'NOR', 'Nouvelle-Aquitaine': 'NAQ', Occitanie: 'OCC', 'Pays de la Loire': 'PDL', "Provence-Alpes-Côte d'Azur": 'PAC', 'Île-de-France': 'IDF' };
+  const panels = elec.regions.map((r, i) => {
+    const vals = (day.regions as Record<string, (number | null)[]>)[r].map((v) => v ?? 0);
+    // chaque région à sa propre échelle sur la journée (on compare des formes, pas des niveaux)
+    const lo = Math.min(...vals), hi = Math.max(...vals);
+    const cx = (i % cols) * (pw + gx), cy = Math.floor(i / cols) * (ph + gy) + 18;
+    const pts: [number, number][] = vals.map((v, k) => [cx + (k / 47) * pw, cy + ph - (0.08 + 0.84 * (v - lo) / (hi - lo || 1)) * ph]);
+    return { cx, cy, label: CODES[r] ?? r, d: line(pts), area: line(pts) + `L${f1(cx + pw)},${f1(cy + ph)}L${f1(cx)},${f1(cy + ph)}Z`, hi: r === 'Île-de-France' };
+  });
+  mult = { W, H, pw, ph, panels };
+}
+
+/* ---------------- 3. Schéma relationnel ---------------- */
+const schema = kind === 'schema' ? {
+  W: 600, H: 440,
+  tables: [
+    { id: 'entite', x: 14, y: 22, name: 'ENTITE', f: [['id_entite', 'PK'], ['nom', ''], ['type', '']] },
+    { id: 'auditeur', x: 14, y: 272, name: 'AUDITEUR', f: [['id_auditeur', 'PK'], ['nom', ''], ['service', '']] },
+    { id: 'audit', x: 222, y: 136, name: 'AUDIT', f: [['id_audit', 'PK'], ['date', ''], ['id_entite', 'FK'], ['id_auditeur', 'FK']], hi: true },
+    { id: 'constat', x: 432, y: 40, name: 'CONSTAT', f: [['id_constat', 'PK'], ['id_audit', 'FK'], ['id_critere', 'FK'], ['niveau', '']] },
+    { id: 'critere', x: 432, y: 290, name: 'CRITERE', f: [['id_critere', 'PK'], ['libelle', ''], ['poids', '']] },
+  ],
+  links: [
+    'M168,52 H195 V181 H222', 'M168,302 H195 V203 H222',
+    'M376,159 H404 V93 H432', 'M510,290 V156',
+  ],
+} : null;
+
+/* ---------------- 4. Matrice TF-IDF ---------------- */
+let mat: any = null;
+if (kind === 'matrix') {
+  const terms = lang === 'fr'
+    ? ['donnée', 'moteur', 'panne', 'capteur', 'région', 'requête', 'message', 'chemin']
+    : ['data', 'engine', 'failure', 'sensor', 'region', 'query', 'message', 'path'];
+  const nd = 30, W = 1000, H = 300, lx = 96, cw = (W - lx) / nd, ch = H / terms.length;
+  const q = 21;
+  const cells = [];
+  for (let t = 0; t < terms.length; t++) {
+    for (let d = 0; d < nd; d++) {
+      const p = r();
+      const w = p > 0.62 ? (p - 0.62) / 0.38 : 0;
+      const boost = d === q && (t === 1 || t === 2 || t === 3) ? 0.75 + r() * 0.25 : w;
+      if (boost > 0.05) {
+        const s = Math.max(3, Math.sqrt(boost) * Math.min(cw, ch) * 0.78);
+        cells.push({ x: lx + d * cw + (cw - s) / 2, y: t * ch + (ch - s) / 2, s, q: d === q });
+      }
+    }
+  }
+  mat = { W, H, lx, cw, ch, terms, cells, qx: lx + q * cw };
+}
+
+/* ---------------- 5. Chemin optimal (Dijkstra réel sur une grille de coûts) ---------------- */
+let path: any = null;
+if (kind === 'path') {
+  const C = 15, R = 10, s = 40, W = C * s, H = R * s;
+  const cost: number[][] = [], block: boolean[][] = [];
+  for (let j = 0; j < R; j++) {
+    cost.push([]); block.push([]);
+    for (let i = 0; i < C; i++) {
+      const v = 0.5 + 0.5 * Math.sin(i * 0.55 + 1.3) * Math.cos(j * 0.7 - 0.4);
+      cost[j].push(1 + v * 6);
+      block[j].push(r() < 0.13 && !(i === 0 && j === R - 1) && !(i === C - 1 && j === 0));
+    }
+  }
+  const start = [0, R - 1], goal = [C - 1, 0];
+  const dist = new Map<string, number>(), prev = new Map<string, string>();
+  const key = (i: number, j: number) => `${i},${j}`;
+  const q: [number, number, number][] = [[0, start[0], start[1]]];
+  dist.set(key(start[0], start[1]), 0);
+  while (q.length) {
+    q.sort((a, b) => a[0] - b[0]);
+    const [d, i, j] = q.shift()!;
+    if (i === goal[0] && j === goal[1]) break;
+    if (d > (dist.get(key(i, j)) ?? Infinity)) continue;
+    for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const ni = i + di, nj = j + dj;
+      if (ni < 0 || nj < 0 || ni >= C || nj >= R || block[nj][ni]) continue;
+      const nd = d + cost[nj][ni];
+      if (nd < (dist.get(key(ni, nj)) ?? Infinity)) {
+        dist.set(key(ni, nj), nd); prev.set(key(ni, nj), key(i, j)); q.push([nd, ni, nj]);
+      }
+    }
+  }
+  const route: [number, number][] = [];
+  let k: string | undefined = key(goal[0], goal[1]);
+  while (k) { const [i, j] = k.split(',').map(Number); route.unshift([i * s + s / 2, j * s + s / 2]); k = prev.get(k); }
+  const cells = [];
+  for (let j = 0; j < R; j++) for (let i = 0; i < C; i++)
+    cells.push({ x: i * s, y: j * s, o: block[j][i] ? 1 : (cost[j][i] - 1) / 6 * 0.32, b: block[j][i] });
+  path = { W, H, s, cells, d: line(route), a: route[0], z: route[route.length - 1], ok: route.length > 1 };
+}
+
+/* ---------------- 7. Planner : l'algorithme addWeekToCalendar sur une semaine d'exemple ---------------- */
+let plan: any = null;
+if (kind === 'planner') {
+  const W = 720, H = 430, top = 34, left = 44, colW = (W - left) / 5, hourH = (H - top - 6) / 10;
+  const hours = [2, 1.5, 1, 2, 1, 1.5, 2, 1, 1.5, 1];
+  const perDay = Math.ceil(hours.length / 5);
+  const blocks: any[] = [];
+  for (let d = 0; d < 5; d++) {
+    let cur = 9 * 60;
+    hours.slice(d * perDay, d * perDay + perDay).forEach((h, k) => {
+      const m = Math.round(h * 60);
+      if (cur + m > 19 * 60) return;
+      blocks.push({ x: left + d * colW + 4, y: top + ((cur - 540) / 60) * hourH, w: colW - 8, h: (m / 60) * hourH, c: d });
+      cur += m + 30;
+    });
+  }
+  const days = lang === 'fr' ? ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven'] : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+  plan = { W, H, top, left, colW, hourH, blocks, days };
+}
+
+/* ---------------- 8. Mémoire : un CDATAFRAME, ses colonnes et leurs tampons ---------------- */
+let mem: any = null;
+if (kind === 'memory') {
+  const W = 720, H = 430;
+  const cols = [0, 1, 2].map((c) => ({ x: 250, y: 30 + c * 130, cells: 5 + c * 3 }));
+  mem = { W, H, cols };
+}
+
+/* ---------------- 6. Diagramme de séquence ---------------- */
+const seq = kind === 'sequence' ? {
+  W: 600, H: 420,
+  actors: [{ x: 80, n: tr('Appareil A', 'Device A') }, { x: 300, n: tr('Serveur', 'Server') }, { x: 520, n: tr('Appareil B', 'Device B') }],
+  msgs: [
+    { a: 80, b: 300, y: 110, t: tr('connexion', 'connect') },
+    { a: 520, b: 300, y: 150, t: tr('connexion', 'connect') },
+    { a: 80, b: 300, y: 215, t: 'message', hi: true },
+    { a: 300, b: 520, y: 255, t: tr('diffusion', 'broadcast'), hi: true },
+    { a: 520, b: 300, y: 320, t: tr('accusé', 'ack') },
+    { a: 300, b: 80, y: 360, t: tr('reçu', 'received') },
+  ],
+} : null;
+---
+<div class="pf" role="img" aria-label={label}>
+  {deg && (
+    <svg viewBox={`0 0 ${deg.W} ${deg.H}`} preserveAspectRatio="xMidYMid meet">
+      {deg.ticks.map((t: any) => (
+        <g>
+          <line class="g12" x1={t.x} x2={t.x} y1={deg.m.t} y2={deg.H - deg.m.b} />
+          <text class="ax-label" x={t.x} y={deg.H - 12} text-anchor={t.label === FAIL ? 'end' : 'middle'}>{t.label}</text>
+        </g>
+      ))}
+      {deg.paths.map((d: string) => <path class="thin" d={d} />)}
+      <path class="median" d={deg.median} />
+      <path class="hi" d={deg.hi} />
+      <text class="ax-label" x={deg.m.l + 4} y={deg.m.t + 10}>{tr('T50 · température sortie turbine BP (°R)', 'T50 · LPT outlet temperature (°R)')}</text>
+      <line class="fail" x1={deg.W - deg.m.r} x2={deg.W - deg.m.r} y1={deg.m.t} y2={deg.H - deg.m.b} />
+    </svg>
+  )}
+
+  {mult && (
+    <svg viewBox={`0 0 ${mult.W} ${mult.H}`}>
+      {mult.panels.map((p: any) => (
+        <g>
+          <text class="ax-label" x={p.cx} y={p.cy - 6}>{p.label}</text>
+          <path class:list={['area', { 'area--hi': p.hi }]} d={p.area} />
+          <path class:list={['curve', { hi: p.hi }]} d={p.d} />
+          <line class="base" x1={p.cx} x2={p.cx + mult.pw} y1={p.cy + mult.ph} y2={p.cy + mult.ph} />
+        </g>
+      ))}
+    </svg>
+  )}
+
+  {schema && (
+    <svg viewBox={`0 0 ${schema.W} ${schema.H}`}>
+      {schema.links.map((d) => <path class="link-line" d={d} />)}
+      {schema.tables.map((t) => (
+        <g transform={`translate(${t.x},${t.y})`}>
+          <rect class:list={['tbl', { 'tbl--hi': t.hi }]} width="154" height={28 + t.f.length * 22} />
+          <rect class:list={['tbl-head', { 'tbl-head--hi': t.hi }]} width="154" height="28" />
+          <text class="tbl-name" x="10" y="18.5">{t.name}</text>
+          {t.f.map(([n, k], i) => (
+            <g>
+              <text class="tbl-f" x="10" y={45 + i * 22}>{n}</text>
+              {k && <text class:list={['tbl-k', { 'tbl-k--pk': k === 'PK' }]} x="144" y={45 + i * 22} text-anchor="end">{k}</text>}
+            </g>
+          ))}
+        </g>
+      ))}
+    </svg>
+  )}
+
+  {mat && (
+    <svg viewBox={`0 0 ${mat.W} ${mat.H}`}>
+      <rect class="qcol" x={mat.qx} y="0" width={mat.cw} height={mat.H} />
+      {mat.terms.map((t: string, i: number) => (
+        <g>
+          <line class="base soft" x1={mat.lx} x2={mat.W} y1={(i + 1) * mat.ch} y2={(i + 1) * mat.ch} />
+          <text class="ax-label" x="0" y={i * mat.ch + mat.ch / 2 + 4}>{t}</text>
+        </g>
+      ))}
+      {mat.cells.map((c: any) => <rect class:list={['cell', { 'cell--q': c.q }]} x={c.x} y={c.y} width={c.s} height={c.s} />)}
+    </svg>
+  )}
+
+  {path && (
+    <svg viewBox={`0 0 ${path.W} ${path.H}`}>
+      {path.cells.map((c: any) => (
+        <rect class:list={['pcell', { 'pcell--b': c.b }]} x={c.x + 1} y={c.y + 1} width={path.s - 2} height={path.s - 2} style={c.b ? '' : `fill-opacity:${c.o.toFixed(2)}`} />
+      ))}
+      {path.ok && <path class="route" d={path.d} />}
+      <rect class="endpoint" x={path.a[0] - 7} y={path.a[1] - 7} width="14" height="14" />
+      <circle class="endpoint endpoint--z" cx={path.z[0]} cy={path.z[1]} r="8" />
+    </svg>
+  )}
+
+  {plan && (
+    <svg viewBox={`0 0 ${plan.W} ${plan.H}`}>
+      {plan.days.map((d: string, i: number) => <text class="ax-label" x={plan.left + i * plan.colW + plan.colW / 2} y="18" text-anchor="middle">{d}</text>)}
+      {[9, 11, 13, 15, 17, 19].map((h) => (
+        <g>
+          <line class="g12" x1={plan.left} x2={plan.W} y1={plan.top + (h - 9) * plan.hourH} y2={plan.top + (h - 9) * plan.hourH} />
+          <text class="ax-label" x={plan.left - 8} y={plan.top + (h - 9) * plan.hourH + 4} text-anchor="end">{h}h</text>
+        </g>
+      ))}
+      {plan.blocks.map((b: any) => <rect class:list={['pblock', `pblock--${b.c}`]} x={b.x} y={b.y} width={b.w} height={b.h} />)}
+    </svg>
+  )}
+
+  {mem && (
+    <svg viewBox={`0 0 ${mem.W} ${mem.H}`}>
+      <rect class="tbl" x="10" y="150" width="150" height="120" />
+      <rect class="tbl-head" x="10" y="150" width="150" height="26" />
+      <text class="tbl-name" x="20" y="167">CDATAFRAME</text>
+      <text class="tbl-f" x="20" y="198">tab_val</text>
+      <text class="tbl-f" x="20" y="222">taille_physique</text>
+      <text class="tbl-f" x="20" y="246">taille_logique</text>
+      {mem.cols.map((c: any, i: number) => (
+        <g>
+          <path class="link-line" d={`M160,${188 + i * 4} C205,${188 + i * 4} 205,${c.y + 20} ${c.x},${c.y + 20}`} />
+          <rect class="tbl" x={c.x} y={c.y} width="120" height="70" />
+          <rect class="tbl-head" x={c.x} y={c.y} width="120" height="22" />
+          <text class="tbl-name" x={c.x + 8} y={c.y + 15}>COLUMN</text>
+          <text class="tbl-f" x={c.x + 8} y={c.y + 40}>valeurs</text>
+          <text class="tbl-f" x={c.x + 8} y={c.y + 60}>titre</text>
+          <path class="link-line" d={`M${c.x + 120},${c.y + 36} H${c.x + 150}`} />
+          {Array.from({ length: 16 }, (_, k) => (
+            <rect class:list={['mcell', { 'mcell--on': k < c.cells }]} x={c.x + 150 + k * 19} y={c.y + 26} width="17" height="17" />
+          ))}
+          <path class="link-line link-line--hi" d={`M${c.x + 120},${c.y + 56} C${c.x + 200},${c.y + 56} ${c.x + 200},405 ${c.x + 230},405`} />
+        </g>
+      ))}
+      <rect class="tbl tbl--hi" x="480" y="390" width="220" height="30" />
+      <text class="tbl-f" x="490" y="410">"col_CABCDEFGHIJ…"</text>
+    </svg>
+  )}
+
+  {seq && (
+    <svg viewBox={`0 0 ${seq.W} ${seq.H}`}>
+      <defs>
+        <marker id="arr" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L8,4 L0,8 z" class="arrhead" /></marker>
+        <marker id="arr-hi" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L8,4 L0,8 z" class="arrhead arrhead--hi" /></marker>
+      </defs>
+      {seq.actors.map((a) => (
+        <g>
+          <rect class="actor" x={a.x - 62} y="22" width="124" height="34" />
+          <text class="tbl-name" x={a.x} y="44" text-anchor="middle">{a.n}</text>
+          <line class="lifeline" x1={a.x} x2={a.x} y1="56" y2={seq.H - 10} />
+        </g>
+      ))}
+      {seq.msgs.map((mg) => (
+        <g>
+          <line class:list={['msg', { 'msg--hi': mg.hi }]} x1={mg.a} x2={mg.b + (mg.b > mg.a ? -2 : 2)} y1={mg.y} y2={mg.y} marker-end={mg.hi ? 'url(#arr-hi)' : 'url(#arr)'} />
+          <text class="ax-label" x={(mg.a + mg.b) / 2} y={mg.y - 7} text-anchor="middle">{mg.t}</text>
+        </g>
+      ))}
+    </svg>
+  )}
+</div>
+
+<style>
+  .pf { background: var(--paper-2); padding: clamp(14px, 2.4vw, 32px); }
+  .pf svg { width: 100%; height: auto; overflow: visible; }
+
+  .g12 { stroke: var(--rule); stroke-width: 1; }
+  .thin { fill: none; stroke: var(--ink); stroke-opacity: 0.16; stroke-width: 1; }
+  .median { fill: none; stroke: var(--ink); stroke-width: 2.2; }
+  .hi { fill: none; stroke: var(--accent); stroke-width: 2.2; }
+  .fail { stroke: var(--ink); stroke-width: 1.5; }
+
+  .area { fill: var(--ink); fill-opacity: 0.06; }
+  .area--hi { fill: var(--accent); fill-opacity: 0.12; }
+  .curve { fill: none; stroke: var(--ink); stroke-width: 1.4; }
+  .base { stroke: var(--ink); stroke-width: 1; }
+  .base.soft { stroke: var(--rule); }
+
+  .tbl { fill: var(--paper); stroke: var(--ink); }
+  .tbl--hi { stroke: var(--accent); stroke-width: 1.5; }
+  .tbl-head { fill: var(--ink); }
+  .tbl-head--hi { fill: var(--accent); }
+  .tbl-name { font-family: var(--f-mono); font-size: 12px; letter-spacing: 0.06em; fill: var(--paper); }
+  .tbl-f { font-family: var(--f-mono); font-size: 12px; fill: var(--ink); }
+  .tbl-k { font-family: var(--f-mono); font-size: 10px; fill: var(--ink-2); }
+  .tbl-k--pk { fill: var(--accent); }
+  .link-line { fill: none; stroke: var(--ink); stroke-width: 1.2; }
+
+  .qcol { fill: var(--accent); fill-opacity: 0.08; }
+  .cell { fill: var(--ink); }
+  .cell--q { fill: var(--accent); }
+
+  .pcell { fill: var(--blue); }
+  .pcell--b { fill: var(--ink); }
+  .route { fill: none; stroke: var(--accent); stroke-width: 4; stroke-linejoin: round; stroke-linecap: square; }
+  .endpoint { fill: var(--paper); stroke: var(--ink); stroke-width: 2; }
+  .endpoint--z { stroke: var(--accent); }
+
+  .actor { fill: var(--ink); }
+  .pblock { fill: var(--ink); fill-opacity: 0.85; }
+  .pblock--1 { fill: var(--blue); }
+  .pblock--2 { fill: var(--green); }
+  .pblock--3 { fill: var(--accent); }
+  .pblock--4 { fill: var(--yellow); fill-opacity: 1; }
+  .mcell { fill: var(--paper); stroke: var(--ink-3); }
+  .mcell--on { fill: var(--ink); stroke: var(--ink); }
+  .link-line--hi { stroke: var(--accent); stroke-dasharray: 3 3; }
+  .seq-name { fill: var(--paper); }
+  .lifeline { stroke: var(--ink-3); stroke-dasharray: 3 4; }
+  .msg { stroke: var(--ink); stroke-width: 1.3; }
+  .msg--hi { stroke: var(--accent); stroke-width: 2; }
+  .arrhead { fill: var(--ink); }
+  .arrhead--hi { fill: var(--accent); }
+</style>

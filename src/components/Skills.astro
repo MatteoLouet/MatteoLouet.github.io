@@ -1,0 +1,67 @@
+---
+import { skills } from '../data/skills';
+import { pick, type Lang } from '../i18n';
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const t = (fr: string, en: string) => (lang === 'fr' ? fr : en);
+---
+<section class="section skills" id="competences" data-section={t('Compétences', 'Skills')} aria-labelledby="skills-title">
+  <div class="wrap">
+    <header class="sec-head g12">
+      <p class="meta sec-num"><span class="accent">05</span> — {t('Compétences', 'Skills')}</p>
+      <h2 class="h2 sec-title" id="skills-title">{lang === 'fr' ? <Fragment>Par domaine,<br />pas par logo.</Fragment> : <Fragment>By field,<br />not by logo.</Fragment>}</h2>
+      <div class="sk__legend small">
+        <p class="meta meta--ink2">{t('Où je la pratique', 'Where I use it')}</p>
+        <p><i class="ctx ctx--pro" aria-hidden="true"></i> {t('En entreprise', 'At work')}</p>
+        <p><i class="ctx ctx--aca" aria-hidden="true"></i> {t('En formation / projets', 'In studies / projects')}</p>
+        <p class="muted">{t('Sans marque : contexte non précisé', 'No mark: context not specified')}</p>
+      </div>
+    </header>
+
+    <div class="sk__grid">
+      {skills.map((g) => (
+        <section class="sk reveal" aria-labelledby={`sk-${g.n}`}>
+          <h3 class="sk__h" id={`sk-${g.n}`}><span class="tnum accent">{g.n}</span>{pick(g.domain, lang)}</h3>
+          <ul>
+            {g.items.map((s) => (
+              <li>
+                <span class="sk__name">{pick(s.name, lang)}{s.detail && <span class="muted"> · {pick(s.detail, lang)}</span>}</span>
+                <span class="sk__ctx">
+                  {s.ctx.includes('pro') && <i class="ctx ctx--pro" title={t('En entreprise', 'At work')}><span class="sr-only">{t('en entreprise', 'at work')}</span></i>}
+                  {s.ctx.includes('aca') && <i class="ctx ctx--aca" title={t('En formation / projets', 'In studies / projects')}><span class="sr-only">{t('en formation', 'in studies')}</span></i>}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .sk__legend { grid-column: 11 / -1; display: flex; flex-direction: column; gap: 3px; padding-top: 4px; }
+  .sk__legend .meta { margin-bottom: 4px; }
+  .ctx { display: inline-block; width: 9px; height: 9px; border: 1.5px solid var(--ink); vertical-align: 0; margin-right: 4px; }
+  .ctx--pro { background: var(--ink); }
+  .ctx--aca { background: transparent; border-radius: 50%; }
+
+  .sk__grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--s-6) var(--gutter);
+  }
+  .sk { border-top: 1px solid var(--ink); padding-top: 10px; }
+  .sk__h { display: flex; gap: 14px; align-items: baseline; font-family: var(--f-display); font-size: 21px; font-weight: 600; letter-spacing: -0.015em; margin-bottom: 10px; }
+  .sk__h .num { font-size: 12px; }
+  .sk li { display: flex; justify-content: space-between; gap: 12px; padding-block: 7px; border-bottom: 1px solid var(--rule); font-size: 15px; }
+  .sk__ctx { white-space: nowrap; }
+
+  @media (max-width: 1024px) {
+    .sk__legend { grid-column: 1 / -1; flex-direction: row; flex-wrap: wrap; gap: 6px 18px; }
+    .sk__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 640px) {
+    .sk__grid { grid-template-columns: 1fr; gap: var(--s-5); }
+  }
+</style>

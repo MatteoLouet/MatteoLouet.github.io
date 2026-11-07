@@ -1,0 +1,247 @@
+---
+/**
+ * Étude de cas — RoverRun (FR / EN).
+ * Données : sorties réelles du programme C (scripts/roverrun/harness.c) sur une carte de démo.
+ */
+import CaseStudy from '../layouts/CaseStudy.astro';
+import CaseSection from '../components/CaseSection.astro';
+import rover from '../data/rover.json';
+import type { Lang } from '../i18n';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const t = (fr: string, en: string) => (lang === 'fr' ? fr : en);
+const n = (v: number, d = 0) => v.toLocaleString(lang === 'fr' ? 'fr-FR' : 'en-GB', { minimumFractionDigits: d, maximumFractionDigits: d });
+const REPO = 'https://github.com/MatteoLouet/RoverRun';
+const b = rover.batch;
+const pct = (v: number) => n((v / b.total) * 100, 1);
+
+const facts = [
+  { k: t('Cadre', 'Setting'), v: t('Projet S3, EFREI Paris', 'Semester-3 project, EFREI Paris') },
+  { k: t('Équipe', 'Team'), v: 'Anthime L’Herminé, Mathis Petit, Mattéo Louet' },
+  { k: 'Stack', v: t('C · arbres n-aires · files · piles', 'C · n-ary trees · queues · stacks') },
+  { k: t('Taille', 'Size'), v: t('≈ 1 300 lignes, 12 fichiers', '≈ 1,300 lines, 12 files') },
+  { k: t('Mesure', 'Measured'), v: t(`${pct(b.arrived)} % d’arrivées sur ${n(b.total)} essais`, `${pct(b.arrived)}% arrivals over ${n(b.total)} runs`) },
+];
+const RUNS = [
+  { key: 'east', fr: 'Départ nord-est', en: 'North-east start' },
+  { key: 'south', fr: 'Départ sud-ouest', en: 'South-west start' },
+  { key: 'corner', fr: 'Départ sud-est', en: 'South-east start' },
+  { key: 'west', fr: 'Départ nord-ouest', en: 'North-west start' },
+];
+const SOILS = [
+  { c: 'rv-s0', fr: 'Base', en: 'Base', cost: '0' },
+  { c: 'rv-s1', fr: 'Plaine', en: 'Plain', cost: '1' },
+  { c: 'rv-s2', fr: 'Erg — mouvements affaiblis', en: 'Erg — weakened moves', cost: '2' },
+  { c: 'rv-s3', fr: 'Reg — 4 mouvements seulement', en: 'Reg — only 4 moves', cost: '4' },
+  { c: 'rv-s4', fr: 'Crevasse — interdite', en: 'Crevasse — forbidden', cost: '10 000' },
+];
+const bar = [
+  { k: 'arrived', fr: 'Base atteinte', en: 'Base reached', v: b.arrived },
+  { k: 'crash', fr: 'Plantage mémoire', en: 'Memory crash', v: b.crash },
+  { k: 'lost', fr: 'Perdu (40 phases)', en: 'Lost (40 phases)', v: b.lost },
+];
+---
+<CaseStudy slug="roverrun" lang={lang} kicker={t('Algorithmique · C', 'Algorithms · C')} facts={facts}>
+  <figure slot="figure" class="rv" data-rover data-lang={lang} aria-labelledby="rv-title">
+    <div class="fig-head">
+      <span class="meta"><span class="accent">Fig. 1</span>&nbsp;&nbsp;<span id="rv-title">{t('Le rover cherche la base, phase par phase', 'The rover looks for the base, phase by phase')}</span></span>
+      <span class="tag-demo">{t('Carte de démo · sorties réelles du programme', 'Demo map · real program output')}</span>
+    </div>
+    <p class="fig-notice rv__notice">{t(
+      'À chaque phase, le rover tire 5 mouvements au hasard et construit l’arbre de toutes les suites de 3 d’entre eux. Chaque point est une feuille de l’arbre — une position d’arrivée possible — avec son coût jusqu’à la base. Le rover exécute la suite qui mène au point le moins cher, puis recommence.',
+      'At each phase the rover draws 5 random moves and builds the tree of every sequence of 3 of them. Each dot is a leaf of the tree — a possible landing position — with its cost to the base. The rover runs the sequence leading to the cheapest dot, then starts again.'
+    )}</p>
+    <div class="rv__ctrls">
+      <div class="seg rv__runs" role="group" aria-label={t('Trajet', 'Run')}>
+        {RUNS.map((r, i) => <button type="button" data-run={r.key} aria-pressed={i === 0 ? 'true' : 'false'}>{t(r.fr, r.en)}</button>)}
+      </div>
+      <div class="rv__btns">
+        <button type="button" class="rv__btn meta" data-play aria-pressed="false">{t('Lecture', 'Play')}</button>
+        <button type="button" class="rv__btn rv__btn--ghost meta" data-next>{t('Phase suivante', 'Next phase')}</button>
+      </div>
+    </div>
+    <div class="rv__stage">
+      <div class="rv__map" data-map></div>
+      <div class="rv__side">
+        <p class="rv__phase" data-phase aria-live="polite"></p>
+        <p class="meta meta--ink2">{t('Mouvements tirés', 'Moves drawn')}</p>
+        <ul class="rv__draws" data-draws></ul>
+        <p class="meta meta--ink2 rv__leafinfo" data-leafinfo></p>
+        <p class="rv__best small" data-bestinfo aria-live="polite"></p>
+        <ul class="rv__legend small">
+          {SOILS.map((s) => <li><i class={s.c}></i>{t(s.fr, s.en)} <span class="muted tnum">· {s.cost}</span></li>)}
+        </ul>
+      </div>
+    </div>
+    <figcaption class="fig-source">{lang === 'fr' ? (
+      <><strong>Données :</strong> sorties du programme C du dépôt, exécuté sans modification par un petit harnais qui enregistre chaque phase (tirages, feuilles, branche retenue). <strong>Carte :</strong> carte de démonstration de 12 × 9 cases dessinée pour cette page — la carte du cours appelée par le programme n’est pas dans le dépôt. Les chiffres sur les cases sont les coûts jusqu’à la base calculés par le programme.</>
+    ) : (
+      <><strong>Data:</strong> output of the repository’s C program, run unmodified by a small harness that records each phase (draws, leaves, chosen branch). <strong>Map:</strong> a 12 × 9 demo map drawn for this page — the course map the program loads is not in the repository. The numbers on the cells are the costs to the base computed by the program.</>
+    )}</figcaption>
+  </figure>
+
+  <CaseSection n="01" title={t('Contexte', 'Context')} id="contexte">
+    {lang === 'fr' ? (
+      <>
+        <h3>Ramener un rover à sa base sur un terrain qui le contrarie.</h3>
+        <p>Le sujet du semestre 3 : un rover (MARC) est perdu sur une carte faite de plaines, d’ergs, de regs et de crevasses. À chaque phase, il ne dispose que de 5 mouvements tirés au hasard et ne peut en jouer que 3. Il doit choisir la meilleure combinaison, rejouer, et atteindre la base sans tomber dans une crevasse.</p>
+        <p>Le squelette fourni (carte, localisation, mouvements, files) venait de l’enseignant ; notre travail, à trois, était l’arbre de décision et le guidage (<code>tree.h</code>, <code>tree.c</code>).</p>
+      </>
+    ) : (
+      <>
+        <h3>Bringing a rover back to base on terrain that fights it.</h3>
+        <p>The semester-3 brief: a rover (MARC) is lost on a map of plains, ergs, regs and crevasses. At each phase it only gets 5 randomly drawn moves and may play 3 of them. It has to pick the best combination, play it, and reach the base without falling into a crevasse.</p>
+        <p>The provided skeleton (map, localisation, moves, queues) came from the teacher; our work, as a team of three, was the decision tree and the guidance (<code>tree.h</code>, <code>tree.c</code>).</p>
+      </>
+    )}
+  </CaseSection>
+
+  <CaseSection n="02" title={t('Algorithme', 'Algorithm')} id="algorithme">
+    {lang === 'fr' ? (
+      <>
+        <h3>Une carte de coûts, un arbre de 60 feuilles, un minimum.</h3>
+        <ul class="bul">
+          <li><strong>Carte de coûts</strong> : un parcours en largeur (file) part de la base et donne à chaque case son coût d’accès, selon le sol traversé (plaine 1, erg 2, reg 4, crevasse 10 000).</li>
+          <li><strong>Tirage</strong> : 5 mouvements selon des probabilités fixées (avancer 10 m 22 %, tourner à gauche ou à droite 21 % chacun, demi-tour 7 %…).</li>
+          <li><strong>Arbre n-aire</strong> : la racine a 5 fils, chacun 4, chacun 3 — soit jusqu’à 5 × 4 × 3 = 60 suites ordonnées. Une branche est coupée si elle sort de la carte ou entre dans une crevasse.</li>
+          <li><strong>Règles de terrain</strong> : sur un erg, chaque mouvement est affaibli (avancer de 20 m n’avance que de 10 m, tourner ne fait rien) ; sur un reg, seuls 4 mouvements sont possibles.</li>
+          <li><strong>Choix</strong> : parmi les feuilles, celle dont la case d’arrivée a le plus petit coût ; le rover joue ses 3 mouvements. Quand le coût vaut 0, il est à la base.</li>
+        </ul>
+      </>
+    ) : (
+      <>
+        <h3>A cost map, a 60-leaf tree, a minimum.</h3>
+        <ul class="bul">
+          <li><strong>Cost map</strong>: a breadth-first search (queue) starts from the base and gives every cell its access cost, depending on the soil crossed (plain 1, erg 2, reg 4, crevasse 10,000).</li>
+          <li><strong>Draw</strong>: 5 moves with fixed probabilities (forward 10 m 22%, turn left or right 21% each, U-turn 7%…).</li>
+          <li><strong>N-ary tree</strong>: the root has 5 children, each has 4, each 3 — up to 5 × 4 × 3 = 60 ordered sequences. A branch is cut if it leaves the map or enters a crevasse.</li>
+          <li><strong>Terrain rules</strong>: on an erg every move is weakened (forward 20 m only moves 10 m, turning does nothing); on a reg only 4 moves are possible.</li>
+          <li><strong>Choice</strong>: among the leaves, the one whose landing cell has the lowest cost; the rover plays its 3 moves. When the cost is 0, it is home.</li>
+        </ul>
+      </>
+    )}
+  </CaseSection>
+
+  <CaseSection n="03" title={t('Mesures', 'Measurements')} id="mesures">
+    <h3>{t(`${n(b.total)} essais : ${pct(b.arrived)} % d’arrivées, ${pct(b.crash)} % de plantages.`, `${n(b.total)} runs: ${pct(b.arrived)}% arrivals, ${pct(b.crash)}% crashes.`)}</h3>
+    <p>{t(
+      'Le guidage est aléatoire : le même départ ne donne jamais deux fois le même trajet. Pour mesurer sa fiabilité, il a été relancé 100 fois depuis 8 points de départ de la carte de démo, avec 100 graines différentes.',
+      'Guidance is random: the same start never gives the same route twice. To measure its reliability, it was run 100 times from 8 starting points on the demo map, with 100 different seeds.'
+    )}</p>
+    <figure class="rv-bar" aria-labelledby="rvbar-title">
+      <div class="fig-head">
+        <span class="meta"><span class="accent">Fig. 2</span>&nbsp;&nbsp;<span id="rvbar-title">{t('Issue des 800 guidages', 'Outcome of the 800 guidance runs')}</span></span>
+        <span class="meta meta--ink2">{t('Mesure', 'Measured')}</span>
+      </div>
+      <div class="rv-bar__track" role="img" aria-label={bar.map((x) => `${t(x.fr, x.en)} ${x.v}`).join(', ')}>
+        {bar.map((x) => <span class={`rv-bar__seg rv-bar__seg--${x.k}`} style={`flex:${x.v}`}></span>)}
+      </div>
+      <ul class="rv-bar__legend">
+        {bar.map((x) => <li><i class={`rv-bar__seg--${x.k}`}></i><span class="tnum">{x.v}</span> {t(x.fr, x.en)} <span class="muted">· {pct(x.v)}{t(' %', '%')}</span></li>)}
+      </ul>
+      <figcaption class="fig-source">{t(`Quand il arrive, le rover met ${b.phasesMedian} phases en médiane (au plus ${b.phasesMax}). Le plantage dépend du point de départ : 0 % depuis le centre-est, jusqu’à 25 % depuis le coin nord-est.`, `When it arrives, the rover takes a median of ${b.phasesMedian} phases (at most ${b.phasesMax}). Crashes depend on the start: 0% from the centre-east, up to 25% from the north-east corner.`)}</figcaption>
+    </figure>
+  </CaseSection>
+
+  <CaseSection n="04" title={t('Le bogue', 'The bug')} id="bogue">
+    {lang === 'fr' ? (
+      <>
+        <h3>Un débordement de mémoire caché dans <code>supp_mouv</code>.</h3>
+        <p>AddressSanitizer pointe la ligne 68 de <code>tree.c</code> : <code>supp_mouv</code> écrit hors du tableau qu’elle vient d’allouer. Deux causes s’additionnent :</p>
+        <ul class="bul">
+          <li><strong>Mouvements en double</strong> : si le tirage contient deux fois le même mouvement, <code>supp_mouv</code> les retire tous les deux, alors que le niveau suivant croit n’en avoir retiré qu’un et lit une case de trop.</li>
+          <li><strong>Sol reg</strong> : sur un reg, le nombre de fils est forcé à 4 sans que le tableau de mouvements soit raccourci d’autant.</li>
+        </ul>
+        <p>Le programme survit souvent à ce débordement, ce qui l’a rendu invisible pendant le projet ; il plante dans un essai sur dix. La correction tient en deux lignes : retirer une seule occurrence, et ne pas modifier <code>nb_fils</code> sans recopier le tableau.</p>
+      </>
+    ) : (
+      <>
+        <h3>A memory overflow hidden in <code>supp_mouv</code>.</h3>
+        <p>AddressSanitizer points to line 68 of <code>tree.c</code>: <code>supp_mouv</code> writes past the array it has just allocated. Two causes add up:</p>
+        <ul class="bul">
+          <li><strong>Duplicate moves</strong>: if the draw contains the same move twice, <code>supp_mouv</code> removes both, while the next level believes only one was removed and reads one cell too many.</li>
+          <li><strong>Reg soil</strong>: on a reg the number of children is forced to 4 without shortening the moves array accordingly.</li>
+        </ul>
+        <p>The program often survives this overflow, which kept it invisible during the project; it crashes in one run out of ten. The fix is two lines: remove a single occurrence, and never change <code>nb_fils</code> without copying the array.</p>
+      </>
+    )}
+  </CaseSection>
+
+  <CaseSection n="05" title={t('Réflexion', 'Reflection')} id="reflexion">
+    {lang === 'fr' ? (
+      <>
+        <h3>Un glouton à courte vue, mais lisible.</h3>
+        <ul class="bul">
+          <li><strong>Glouton</strong> : le rover choisit la meilleure position à 3 mouvements, sans tenir compte de son orientation à l’arrivée. Il peut se retrouver dos à la base et perdre une phase à se retourner.</li>
+          <li><strong>Coût en mémoire</strong> : chaque nœud alloue son propre tableau de mouvements et sa file de chemin, sans jamais les libérer.</li>
+          <li><strong>Tester tôt avec des outils</strong> : AddressSanitizer et une campagne de quelques centaines d’essais révèlent ce bogue en quelques secondes — c’est ainsi qu’il a été trouvé, en relisant le code pour ce portfolio.</li>
+        </ul>
+      </>
+    ) : (
+      <>
+        <h3>A short-sighted greedy search, but a readable one.</h3>
+        <ul class="bul">
+          <li><strong>Greedy</strong>: the rover picks the best position 3 moves ahead, ignoring its orientation on arrival. It can end up facing away from the base and lose a phase turning around.</li>
+          <li><strong>Memory cost</strong>: every node allocates its own moves array and path queue, and never frees them.</li>
+          <li><strong>Test early, with tools</strong>: AddressSanitizer and a campaign of a few hundred runs reveal this bug in seconds — which is how it was found, while re-reading the code for this portfolio.</li>
+        </ul>
+      </>
+    )}
+    <p><a class="link link-arrow" href={REPO} rel="noopener">{t('Code sur GitHub', 'Code on GitHub')} <span class="arr" aria-hidden="true">↗</span></a></p>
+  </CaseSection>
+</CaseStudy>
+
+<script>
+  import { mountRover } from '../viz/rover-replay';
+  import data from '../data/rover.json';
+  const root = document.querySelector<HTMLElement>('[data-rover]');
+  if (root) mountRover(root, data as never);
+</script>
+
+<style>
+  .rv__notice { margin-bottom: var(--s-3); }
+  .rv__ctrls { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--s-2); align-items: center; padding-bottom: var(--s-2); border-bottom: 1px solid var(--rule); }
+  .rv__btns { display: flex; gap: 8px; }
+  .rv__btn { background: var(--ink); color: var(--paper); border: 1px solid var(--ink); padding: 8px 14px 7px; cursor: pointer; }
+  .rv__btn:hover { background: var(--accent); border-color: var(--accent); }
+  .rv__btn--ghost { background: transparent; color: var(--ink); }
+  .rv__stage { display: grid; grid-template-columns: minmax(0, 8fr) minmax(0, 4fr); gap: var(--s-5); margin-top: var(--s-3); align-items: start; }
+  .rv__map :global(svg) { width: 100%; height: auto; display: block; }
+  .rv__map :global(.rv-cell) { stroke: var(--paper); stroke-width: 2; }
+  .rv__map :global(.rv-s0), .rv__legend .rv-s0 { fill: var(--accent); background: var(--accent); }
+  .rv__map :global(.rv-s1), .rv__legend .rv-s1 { fill: var(--paper-2); background: var(--paper-2); }
+  .rv__map :global(.rv-s2), .rv__legend .rv-s2 { fill: color-mix(in srgb, var(--yellow) 55%, var(--paper)); background: color-mix(in srgb, var(--yellow) 55%, var(--paper)); }
+  .rv__map :global(.rv-s3), .rv__legend .rv-s3 { fill: color-mix(in srgb, var(--green) 45%, var(--paper)); background: color-mix(in srgb, var(--green) 45%, var(--paper)); }
+  .rv__map :global(.rv-s4), .rv__legend .rv-s4 { fill: var(--ink); background: var(--ink); }
+  .rv__map :global(.rv-cost) { font-family: var(--f-mono); font-size: 9px; fill: var(--ink-3); }
+  .rv__map :global(.rv-trail) { fill: none; stroke: var(--ink); stroke-width: 2; stroke-dasharray: 2 5; stroke-linecap: round; }
+  .rv__map :global(.rv-best) { fill: none; stroke: var(--accent); stroke-width: 3; stroke-linejoin: round; }
+  .rv__map :global(.rv-leaf circle) { fill: var(--paper); stroke: var(--blue); stroke-width: 1.5; }
+  .rv__map :global(.rv-leaf text) { font-family: var(--f-mono); font-size: 8.5px; fill: var(--blue); }
+  .rv__map :global(.rv-leaf.is-best circle) { fill: var(--accent); stroke: var(--accent); }
+  .rv__map :global(.rv-leaf.is-best text) { fill: var(--paper); }
+  .rv__map :global(.rv-rover) { transition: transform 420ms var(--ease); }
+  .rv__map :global(.rv-body) { fill: var(--ink); }
+  .rv__map :global(.rv-nose) { fill: var(--paper); }
+  @media (prefers-reduced-motion: reduce) { .rv__map :global(.rv-rover) { transition: none; } }
+  .rv__phase { font-family: var(--f-display); font-size: 28px; font-weight: 600; letter-spacing: -0.02em; border-top: 1px solid var(--ink); padding-top: 10px; margin-bottom: var(--s-2); }
+  .rv__draws { display: grid; gap: 4px; margin: 6px 0 var(--s-2); }
+  .rv__draws :global(li) { display: grid; grid-template-columns: 4ch 1fr; gap: 10px; font-size: 14px; padding-block: 4px; border-bottom: 1px solid var(--rule); }
+  .rv__draws :global(b) { font-family: var(--f-mono); font-size: 12px; font-weight: 500; color: var(--accent); }
+  .rv__best { margin-top: 8px; min-height: 3em; }
+  .rv__best :global(.rv-none) { color: var(--ink-3); font-style: italic; }
+  .rv__legend { margin-top: var(--s-3); display: grid; gap: 4px; color: var(--ink-2); }
+  .rv__legend i { display: inline-block; width: 12px; height: 12px; margin-right: 8px; vertical-align: -1px; }
+
+  .rv-bar { max-width: 820px; }
+  .rv-bar__track { display: flex; height: 28px; gap: 2px; }
+  .rv-bar__seg { display: block; }
+  .rv-bar__seg--arrived { background: var(--ink); }
+  .rv-bar__seg--crash { background: var(--accent); }
+  .rv-bar__seg--lost { background: var(--ink-3); }
+  .rv-bar__legend { display: flex; flex-wrap: wrap; gap: 6px 24px; margin-top: 10px; font-size: 14px; }
+  .rv-bar__legend i { display: inline-block; width: 12px; height: 12px; margin-right: 6px; vertical-align: -1px; }
+
+  @media (max-width: 1024px) { .rv__stage { grid-template-columns: 1fr; } }
+</style>

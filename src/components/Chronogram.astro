@@ -1,0 +1,304 @@
+---
+/**
+ * Fig. 0 — Parcours (chronogramme).
+ * Rendu en HTML positionné en % (net à toutes les tailles, sans JS).
+ * Le script ajoute : règle de lecture qui suit le curseur + infobulles.
+ */
+import { timeline, timelineRange, type TimelineItem } from '../data/timeline';
+import { pick, type Lang } from '../i18n';
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const tr = (fr: string, en: string) => (lang === 'fr' ? fr : en);
+
+const toM = (s: string) => {
+  const [y, m] = s.split('-').map(Number);
+  return y * 12 + (m - 1);
+};
+const now = new Date();
+const nowM = now.getFullYear() * 12 + now.getMonth();
+const from = toM(timelineRange.from);
+const to = toM(timelineRange.to);
+const span = to - from;
+const pct = (m: number) => ((m - from) / span) * 100;
+
+// Rangées choisies à la main pour éviter les collisions d'étiquettes
+const rows: Record<string, number> = {
+  bac: 0, prepa: 1, ingenieur: 1,
+  mcarthur: 0, ferme: 0, lacoste: 0, granja: 1, armees: 0,
+};
+
+const lanes = [
+  { key: 'formation', label: tr('Formation', 'Education') },
+  { key: 'experience', label: tr('Expérience', 'Experience') },
+] as const;
+
+const years: number[] = [];
+for (let y = Math.ceil(from / 12); y * 12 <= to; y++) years.push(y);
+
+const item = (t: TimelineItem) => {
+  const s = toM(t.start);
+  const e = t.end === 'now' ? nowM : t.end ? toM(t.end) : null;
+  return {
+    ...t,
+    title: pick(t.title, lang),
+    label: pick(t.label, lang),
+    note: t.note ? pick(t.note, lang) : undefined,
+    left: pct(s),
+    width: e !== null ? Math.max(pct(e) - pct(s), 0.6) : 0,
+    point: e === null,
+    row: rows[t.id] ?? 0,
+    future: t.end && t.end !== 'now' && toM(t.end) > nowM ? pct(nowM) : null,
+  };
+};
+const monthNames = lang === 'fr'
+  ? ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.']
+  : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+---
+<figure class="chrono" aria-labelledby="fig0-title">
+  <div class="fig-head">
+    <span class="meta"><span class="accent">Fig. 0</span>&nbsp;&nbsp;<span id="fig0-title">{tr('Parcours', 'Path')}, {Math.ceil(from / 12)} – {Math.floor(to / 12)}</span></span>
+    <span class="meta meta--ink2 chrono__hint">{tr('Survolez pour lire une date', 'Hover to read a date')}</span>
+  </div>
+
+  <div class="chrono__scroll">
+    <div class="chrono__plot" data-from={from} data-span={span} data-months={JSON.stringify(monthNames)} data-approx={tr('approx.', 'approx.')}>
+      <div class="chrono__axis" aria-hidden="true">
+        {years.map((y) => (
+          <span class="chrono__year tnum" style={`left:${pct(y * 12)}%`}>{y}</span>
+        ))}
+      </div>
+
+      <div class="chrono__grid" aria-hidden="true">
+        {years.map((y) => <span style={`left:${pct(y * 12)}%`}></span>)}
+      </div>
+
+      <div class="chrono__now" style={`left:${pct(nowM)}%`} aria-hidden="true">
+        <span class="meta">{tr('Aujourd’hui', 'Today')}</span>
+      </div>
+
+      {lanes.map((lane) => (
+        <div class="chrono__lane">
+          <span class="chrono__lane-label meta meta--ink2">{lane.label}</span>
+          <ul class="chrono__rows">
+            {[0, 1].map((r) => (
+              <li class="chrono__row">
+                {timeline.filter((t) => t.lane === lane.key).map(item).filter((t) => t.row === r).map((t) => (
+                  <button
+                    type="button"
+                    class:list={['chrono__item', { 'is-point': t.point, 'is-current': t.current }]}
+                    style={`left:${t.left}%;${t.point ? '' : `width:${t.width}%`}`}
+                    data-title={t.title}
+                    data-org={t.org}
+                    data-label={t.label}
+                    data-note={t.note ?? ''}
+                    data-approx={t.approx ? '1' : ''}
+                    aria-label={`${t.title}, ${t.org}, ${t.label}${t.note ? '. ' + t.note : ''}`}
+                  >
+                    <span class="chrono__label">
+                      <span class="chrono__t">{t.org.split(',')[0]}</span>
+                      <span class="chrono__s">{t.title}</span>
+                    </span>
+                    <span class="chrono__bar" aria-hidden="true">
+                      {t.future !== null && (
+                        <span class="chrono__future" style={`left:${((t.future - t.left) / t.width) * 100}%`}></span>
+                      )}
+                    </span>
+                  </button>
+                ))}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+
+      <div class="chrono__cursor" aria-hidden="true"><span class="meta"></span></div>
+      <div class="tip" role="presentation"></div>
+    </div>
+  </div>
+
+  <figcaption class="fig-source">
+    {lang === 'fr' ? (
+      <><strong>Source :</strong> CV de Mattéo Louet. Les périodes indiquées à l’année sont placées de septembre à juin (année scolaire) ; la partie hachurée du cycle ingénieur est à venir.</>
+    ) : (
+      <><strong>Source:</strong> Mattéo Louet’s CV. Periods given as years are drawn from September to June (school year); the hatched part of the engineering degree is still to come.</>
+    )}
+    <span class="chrono__legend"><i class="lg lg--bar"></i> {tr('période', 'period')} <i class="lg lg--pt"></i> {tr('ponctuel', 'one-off')} <i class="lg lg--cur"></i> {tr('en cours', 'ongoing')}</span>
+  </figcaption>
+</figure>
+
+<script>
+  document.querySelectorAll<HTMLElement>('.chrono__plot').forEach((plot) => {
+    const from = Number(plot.dataset.from);
+    const span = Number(plot.dataset.span);
+    const months: string[] = JSON.parse(plot.dataset.months || '[]');
+    const cursor = plot.querySelector<HTMLElement>('.chrono__cursor')!;
+    const cursorLabel = cursor.querySelector('span')!;
+    const tip = plot.querySelector<HTMLElement>('.tip')!;
+
+    const showCursor = (x: number) => {
+      const r = plot.getBoundingClientRect();
+      const f = Math.min(Math.max(x / r.width, 0), 1);
+      const m = Math.round(from + f * span);
+      cursor.style.transform = `translateX(${f * r.width}px)`;
+      cursorLabel.textContent = `${months[m % 12]} ${Math.floor(m / 12)}`;
+      cursor.classList.add('is-on');
+    };
+    plot.addEventListener('pointermove', (e) => {
+      if (e.pointerType === 'touch') return;
+      showCursor(e.clientX - plot.getBoundingClientRect().left);
+    });
+    plot.addEventListener('pointerleave', () => cursor.classList.remove('is-on'));
+
+    const showTip = (btn: HTMLElement) => {
+      const d = btn.dataset;
+      tip.innerHTML = `<span class="meta">${d.label}${d.approx ? ' · approx.' : ''}</span><strong>${d.title}</strong><br>${d.org}${d.note ? `<br><span style="color:#b9b6ae">${d.note}</span>` : ''}`;
+      const pr = plot.getBoundingClientRect();
+      const br = btn.querySelector('.chrono__bar')!.getBoundingClientRect();
+      let left = br.left - pr.left;
+      left = Math.min(left, pr.width - 250);
+      tip.style.left = `${Math.max(left, 0)}px`;
+      tip.style.top = `${br.bottom - pr.top + 10}px`;
+      tip.classList.add('is-on');
+    };
+    const hideTip = () => tip.classList.remove('is-on');
+    plot.querySelectorAll<HTMLElement>('.chrono__item').forEach((btn) => {
+      btn.addEventListener('pointerenter', () => showTip(btn));
+      btn.addEventListener('pointerleave', hideTip);
+      btn.addEventListener('focus', () => showTip(btn));
+      btn.addEventListener('blur', hideTip);
+      btn.addEventListener('click', () => showTip(btn));
+    });
+  });
+</script>
+
+<style>
+  .chrono__scroll {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+  }
+  .chrono__plot {
+    position: relative;
+    min-width: 760px;
+    padding-top: 28px;
+    padding-bottom: 6px;
+    cursor: crosshair;
+  }
+  .chrono__axis { position: absolute; inset: 0 0 auto 0; height: 20px; }
+  .chrono__year {
+    position: absolute;
+    top: 0;
+    font-size: 11px;
+    color: var(--ink-2);
+    transform: translateX(4px);
+  }
+  .chrono__grid span {
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 1px;
+    background: var(--rule);
+  }
+  .chrono__now {
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 0;
+    border-left: 1px solid var(--accent);
+    z-index: 1;
+  }
+  .chrono__now .meta {
+    position: absolute;
+    bottom: -18px;
+    left: -1px;
+    transform: translateX(-50%);
+    color: var(--accent);
+    white-space: nowrap;
+    font-size: 10px;
+  }
+  .chrono__lane {
+    position: relative;
+    border-top: 1px solid var(--ink);
+    padding-top: 6px;
+  }
+  .chrono__lane + .chrono__lane { margin-top: 10px; }
+  .chrono__lane-label {
+    position: absolute;
+    right: 0;
+    top: 6px;
+    background: var(--paper);
+    padding-left: 6px;
+    z-index: 2;
+  }
+  .chrono__row { position: relative; height: 50px; }
+  .chrono__item {
+    position: absolute;
+    top: 6px;
+    height: 40px;
+    min-width: 10px;
+    padding: 0;
+    border: 0;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+    z-index: 2;
+  }
+  .chrono__label {
+    display: flex;
+    flex-direction: column;
+    white-space: nowrap;
+    line-height: 1.15;
+    pointer-events: none;
+  }
+  .chrono__t { font-size: 13px; font-weight: 550; letter-spacing: -0.01em; }
+  .chrono__s { font-size: 11px; color: var(--ink-2); }
+  .chrono__bar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 8px;
+    background: var(--ink);
+    transition: background var(--dur) var(--ease);
+  }
+  .chrono__future {
+    position: absolute;
+    top: 0; bottom: 0; right: 0;
+    background: repeating-linear-gradient(-45deg, var(--paper) 0 2px, transparent 2px 4px);
+  }
+  .chrono__item.is-point .chrono__bar { width: 8px; right: auto; }
+  .chrono__item.is-current .chrono__bar { background: var(--accent); }
+  .chrono__item:hover .chrono__bar,
+  .chrono__item:focus-visible .chrono__bar { background: var(--blue); }
+  .chrono__item:focus-visible { outline-offset: 4px; }
+
+  .chrono__cursor {
+    position: absolute;
+    top: 0; bottom: 0; left: 0;
+    width: 0;
+    border-left: 1px dashed var(--ink);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 3;
+  }
+  .chrono__cursor.is-on { opacity: 1; }
+  .chrono__cursor .meta {
+    position: absolute;
+    top: -1px;
+    left: 4px;
+    background: var(--ink);
+    color: var(--paper);
+    padding: 3px 5px 2px;
+    white-space: nowrap;
+    font-size: 10px;
+  }
+  .chrono .fig-source { margin-top: var(--s-4); }
+  .chrono__legend { display: inline-flex; gap: 8px; align-items: center; margin-left: 6px; white-space: nowrap; }
+  .lg { display: inline-block; height: 7px; background: var(--ink); vertical-align: middle; margin-left: 4px; }
+  .lg--bar { width: 18px; }
+  .lg--pt { width: 7px; }
+  .lg--cur { width: 18px; background: var(--accent); }
+
+  @media (hover: none) { .chrono__hint { display: none; } }
+  @media (max-width: 760px) {
+    .chrono__scroll { margin-inline: calc(var(--margin) * -1); padding-inline: var(--margin); }
+  }
+</style>

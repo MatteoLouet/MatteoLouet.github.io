@@ -1,0 +1,194 @@
+---
+/**
+ * Étude de cas — CDataframe (FR / EN).
+ * Données : sortie réelle du programme (compilé et exécuté tel quel) et suite rand() réelle.
+ */
+import CaseStudy from '../layouts/CaseStudy.astro';
+import CaseSection from '../components/CaseSection.astro';
+import cdf from '../data/cdataframe.json';
+import type { Lang } from '../i18n';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const t = (fr: string, en: string) => (lang === 'fr' ? fr : en);
+const REPO = 'https://github.com/MatteoLouet/Projet_C';
+
+const facts = [
+  { k: t('Cadre', 'Setting'), v: t('Projet S1, EFREI Paris', 'Semester-1 project, EFREI Paris') },
+  { k: t('Équipe', 'Team'), v: 'Anthime L’Herminé, Mattéo Louet' },
+  { k: 'Stack', v: t('C · malloc / realloc · pointeurs', 'C · malloc / realloc · pointers') },
+  { k: t('Taille', 'Size'), v: t('334 lignes, 5 fichiers', '334 lines, 5 files') },
+  { k: t('Constats', 'Findings'), v: t('2 bogues reproduits', '2 bugs reproduced') },
+];
+---
+<CaseStudy slug="cdataframe" lang={lang} kicker={t('Structures de données · C', 'Data structures · C')} facts={facts}>
+  <figure slot="figure" class="cm" data-cdf data-lang={lang} aria-labelledby="cm-title">
+    <div class="fig-head">
+      <span class="meta"><span class="accent">Fig. 1</span>&nbsp;&nbsp;<span id="cm-title">{t('Le dataframe en mémoire', 'The dataframe in memory')}</span></span>
+      <span class="meta meta--ink2">{t('Simulation fidèle au code C', 'Faithful simulation of the C code')}</span>
+    </div>
+    <p class="fig-notice cm__notice">{t(
+      'Un dataframe, c’est un tableau de pointeurs vers des colonnes, et chaque colonne un tableau d’entiers qui grandit par réallocation. L’état de départ reproduit l’exécution réelle : 3 colonnes de 5 valeurs. Ajoutez des colonnes, ou remplissez-en une de 300 valeurs pour voir le débordement.',
+      'A dataframe is an array of pointers to columns, and each column an array of integers that grows by reallocation. The starting state reproduces the real run: 3 columns of 5 values. Add columns, or fill one with 300 values to see the overflow.'
+    )}</p>
+    <div class="cm__ctrls">
+      <button type="button" class="cm__btn meta" data-add>{t('+ Colonne (5 valeurs)', '+ Column (5 values)')}</button>
+      <button type="button" class="cm__btn cm__btn--bad meta" data-big>{t('+ Colonne de 300 valeurs', '+ Column of 300 values')}</button>
+      <button type="button" class="cm__btn cm__btn--ghost meta" data-reset>{t('Vider', 'Clear')}</button>
+      <span class="cm__log meta" data-log aria-live="polite"></span>
+    </div>
+    <div class="cm__stage">
+      <div class="cm__mem" data-mem></div>
+      <div class="cm__outwrap">
+        <p class="meta meta--ink2">{t('Ce que le programme affiche', 'What the program prints')}</p>
+        <pre class="cm__out" data-out aria-live="polite"></pre>
+      </div>
+    </div>
+    <figcaption class="fig-source">{lang === 'fr' ? (
+      <><strong>Méthode :</strong> le programme du dépôt a été compilé et exécuté sans modification ; la simulation reproduit sa logique et utilise la même suite <code>rand()</code>. Sa sortie de départ est identique, octet pour octet, à celle du vrai programme (ci-dessous). Les débordements ont été confirmés avec AddressSanitizer.</>
+    ) : (
+      <><strong>Method:</strong> the repository’s program was compiled and run unmodified; the simulation reproduces its logic and uses the same <code>rand()</code> sequence. Its starting output is byte-for-byte identical to the real program’s (below). The overflows were confirmed with AddressSanitizer.</>
+    )}</figcaption>
+  </figure>
+
+  <CaseSection n="01" title={t('Contexte', 'Context')} id="contexte">
+    {lang === 'fr' ? (
+      <>
+        <h3>Recoder, en C, ce que pandas fait en une ligne.</h3>
+        <p>Projet du premier semestre, en binôme : écrire un « CDataframe », une structure de colonnes d’entiers avec création, insertion, affichage, recherche de valeurs et petits comptages (occurrences, valeurs supérieures ou inférieures à un seuil). Pas de bibliothèque : seulement <code>malloc</code>, <code>realloc</code>, <code>free</code> et des pointeurs.</p>
+        <p>C’est un projet de débutant, et c’est ce qui le rend intéressant ici : il montre où se cachent les difficultés qu’un outil comme pandas fait disparaître.</p>
+      </>
+    ) : (
+      <>
+        <h3>Rewriting in C what pandas does in one line.</h3>
+        <p>A first-semester project, in pairs: write a “CDataframe”, a structure of integer columns with creation, insertion, display, value lookup and small counts (occurrences, values above or below a threshold). No library: only <code>malloc</code>, <code>realloc</code>, <code>free</code> and pointers.</p>
+        <p>It is a beginner’s project, and that is what makes it interesting here: it shows where the difficulties that a tool like pandas makes disappear are hiding.</p>
+      </>
+    )}
+  </CaseSection>
+
+  <CaseSection n="02" title={t('Structure', 'Structure')} id="structure">
+    {lang === 'fr' ? (
+      <>
+        <h3>Deux structures, deux tailles chacune.</h3>
+        <ul class="bul">
+          <li><strong><code>COLUMN</code></strong> : un titre, un tableau d’entiers, une taille physique (le nombre de valeurs) et une taille logique (la capacité).</li>
+          <li><strong><code>CDATAFRAME</code></strong> : un tableau de pointeurs vers des colonnes, avec les mêmes deux tailles.</li>
+          <li><strong>Croissance par blocs</strong> : quand la colonne est pleine, on agrandit de 256 cases d’un coup plutôt qu’une par une — le principe des tableaux dynamiques.</li>
+          <li><strong>Fonctions</strong> : <code>create_column</code>, <code>insert_value</code>, <code>delete_column</code>, <code>print_col</code>, <code>nbr_occu</code>, <code>position</code>, <code>nbr_sup</code>, <code>nbr_inf</code>, puis le remplissage et l’affichage du dataframe, complet ou partiel.</li>
+        </ul>
+      </>
+    ) : (
+      <>
+        <h3>Two structures, two sizes each.</h3>
+        <ul class="bul">
+          <li><strong><code>COLUMN</code></strong>: a title, an integer array, a physical size (the number of values) and a logical size (the capacity).</li>
+          <li><strong><code>CDATAFRAME</code></strong>: an array of pointers to columns, with the same two sizes.</li>
+          <li><strong>Growth in blocks</strong>: when a column is full, it grows by 256 cells at once rather than one by one — the principle of dynamic arrays.</li>
+          <li><strong>Functions</strong>: <code>create_column</code>, <code>insert_value</code>, <code>delete_column</code>, <code>print_col</code>, <code>nbr_occu</code>, <code>position</code>, <code>nbr_sup</code>, <code>nbr_inf</code>, then filling and displaying the dataframe, fully or partially.</li>
+        </ul>
+      </>
+    )}
+  </CaseSection>
+
+  <CaseSection n="03" title={t('Exécution', 'Run')} id="execution">
+    <h3>{t('La sortie réelle du programme.', 'The program’s real output.')}</h3>
+    <p>{t('Compilé avec clang et lancé avec les réponses « 3 colonnes » et « 5 valeurs » :', 'Compiled with clang and run with the answers “3 columns” and “5 values”:')}</p>
+    <pre class="cm__transcript">{cdf.transcript}</pre>
+    <p>{lang === 'fr'
+      ? <Fragment>Les comptages sont justes (2 valeurs supérieures à 5, 1 inférieure à 10). Mais les trois en-têtes de colonnes sont identiques et beaucoup trop longs : <code>col_CABCDEFGHIJKLMNOPQRSTUVWXYZ</code>.</Fragment>
+      : <Fragment>The counts are right (2 values above 5, 1 below 10). But all three column headers are identical and far too long: <code>col_CABCDEFGHIJKLMNOPQRSTUVWXYZ</code>.</Fragment>}</p>
+  </CaseSection>
+
+  <CaseSection n="04" title={t('Deux bogues', 'Two bugs')} id="bogues">
+    {lang === 'fr' ? (
+      <>
+        <h3>Un pointeur partagé et une réallocation qui ne grandit pas.</h3>
+        <ul class="bul">
+          <li><strong>Les titres</strong> : chaque colonne garde un <em>pointeur</em> vers le même tampon <code>titre_col</code>, au lieu d’une copie. Toutes les colonnes affichent donc le dernier titre écrit. Pire, ce tampon fait 5 octets (<code>"col_"</code> plus le <code>'\0'</code>) : écrire la lettre en position 4 efface la fin de chaîne, et l’affichage continue dans la chaîne <code>num</code> voisine. Correction : <code>strdup</code> du titre, et un tampon plus grand.</li>
+          <li><strong>La capacité</strong> : <code>insert_value</code> augmente la capacité déclarée de 256, mais réalloue toujours <code>256 * sizeof(int)</code>. La 257ᵉ valeur s’écrit hors de la mémoire allouée — AddressSanitizer le signale à la ligne 26 de <code>column.c</code>. Correction : <code>realloc(col-&gt;valeurs, col-&gt;taille_logique * sizeof(int))</code>.</li>
+          <li><strong>Plus discret</strong> : l’affichage teste <code>valeur == '\0'</code> pour repérer une case vide, si bien qu’un vrai 0 s’afficherait « NULL » ; et une colonne plus courte que les autres est lue au-delà de sa fin.</li>
+        </ul>
+      </>
+    ) : (
+      <>
+        <h3>A shared pointer and a reallocation that does not grow.</h3>
+        <ul class="bul">
+          <li><strong>Titles</strong>: each column keeps a <em>pointer</em> to the same <code>titre_col</code> buffer instead of a copy, so every column shows the last title written. Worse, that buffer is 5 bytes (<code>"col_"</code> plus <code>'\0'</code>): writing the letter at index 4 erases the terminator, and printing runs on into the neighbouring <code>num</code> string. Fix: <code>strdup</code> the title, and a larger buffer.</li>
+          <li><strong>Capacity</strong>: <code>insert_value</code> raises the declared capacity by 256 but always reallocates <code>256 * sizeof(int)</code>. The 257th value is written outside allocated memory — AddressSanitizer flags line 26 of <code>column.c</code>. Fix: <code>realloc(col-&gt;valeurs, col-&gt;taille_logique * sizeof(int))</code>.</li>
+          <li><strong>More subtle</strong>: the display tests <code>value == '\0'</code> to spot an empty cell, so a real 0 would print as “NULL”; and a column shorter than the others is read past its end.</li>
+        </ul>
+      </>
+    )}
+  </CaseSection>
+
+  <CaseSection n="05" title={t('Réflexion', 'Reflection')} id="reflexion">
+    {lang === 'fr' ? (
+      <>
+        <h3>Ce que ce projet m’a appris sur les outils que j’utilise aujourd’hui.</h3>
+        <p>Quand pandas ajoute une ligne, il fait ce que ce projet faisait à la main : réserver de la place d’avance, recopier, garder deux tailles cohérentes. Les deux bogues sont des erreurs classiques — confondre un pointeur et une copie, oublier de faire grandir l’allocation avec la capacité — et ils ne se voient pas sur de petits exemples : le programme « marche » avec 5 valeurs.</p>
+        <p>Ils ont été mis au jour en relisant le code pour ce portfolio, avec AddressSanitizer. La leçon : écrire d’abord un test qui insère 1 000 valeurs.</p>
+      </>
+    ) : (
+      <>
+        <h3>What this project taught me about the tools I use today.</h3>
+        <p>When pandas appends a row, it does what this project did by hand: reserve space in advance, copy, keep two sizes consistent. Both bugs are classic mistakes — confusing a pointer with a copy, forgetting to grow the allocation with the capacity — and neither shows on small examples: the program “works” with 5 values.</p>
+        <p>They surfaced while re-reading the code for this portfolio, with AddressSanitizer. The lesson: first write a test that inserts 1,000 values.</p>
+      </>
+    )}
+    <p><a class="link link-arrow" href={REPO} rel="noopener">{t('Code sur GitHub', 'Code on GitHub')} <span class="arr" aria-hidden="true">↗</span></a></p>
+  </CaseSection>
+</CaseStudy>
+
+<script>
+  import { mountCdf } from '../viz/cdf-memory';
+  import data from '../data/cdataframe.json';
+  const root = document.querySelector<HTMLElement>('[data-cdf]');
+  if (root) mountCdf(root, data);
+</script>
+
+<style>
+  .cm__notice { margin-bottom: var(--s-3); }
+  .cm__ctrls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding-bottom: var(--s-2); border-bottom: 1px solid var(--rule); }
+  .cm__btn { background: var(--ink); color: var(--paper); border: 1px solid var(--ink); padding: 8px 14px 7px; cursor: pointer; }
+  .cm__btn:hover { background: var(--accent); border-color: var(--accent); }
+  .cm__btn--bad { background: transparent; color: var(--accent); border-color: var(--accent); }
+  .cm__btn--bad:hover { color: var(--paper); }
+  .cm__btn--ghost { background: transparent; color: var(--ink); }
+  .cm__log { color: var(--ink-2); margin-left: 8px; }
+  .cm__stage { display: grid; grid-template-columns: minmax(0, 8fr) minmax(0, 4fr); gap: var(--s-5); margin-top: var(--s-3); align-items: start; }
+  .cm__mem { display: grid; grid-template-columns: 180px 1fr; gap: var(--s-3); align-items: start; }
+  .cm__mem :global(.cm-df), .cm__mem :global(.cm-col) { border: 1px solid var(--ink); background: var(--paper); font-family: var(--f-mono); font-size: 11px; }
+  .cm__mem :global(.cm-h) { background: var(--ink); color: var(--paper); padding: 5px 8px; letter-spacing: 0.06em; }
+  .cm__mem :global(.cm-f) { display: flex; justify-content: space-between; gap: 8px; padding: 4px 8px; border-top: 1px solid var(--rule); }
+  .cm__mem :global(.cm-f b) { font-weight: 500; }
+  .cm__mem :global(.cm-slots i) { font-style: normal; color: var(--ink-2); margin-left: 3px; }
+  .cm__mem :global(.cm-slots i.is-new) { color: var(--accent); }
+  .cm__mem :global(.cm-ptr) { color: var(--accent); }
+  .cm__mem :global(.cm-cols) { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: var(--s-2); }
+  .cm__mem :global(.cm-col.is-new) { border-color: var(--accent); }
+  .cm__mem :global(.cm-buf) { display: flex; gap: 3px; padding: 8px; border-top: 1px solid var(--rule); align-items: flex-start; }
+  .cm__mem :global(.cm-grid) { display: grid; grid-template-columns: repeat(16, 1fr); gap: 1px; width: 128px; outline: 1px solid var(--ink-3); outline-offset: 1px; }
+  .cm__mem :global(.cm-grid i) { display: block; aspect-ratio: 1; background: var(--paper-2); }
+  .cm__mem :global(.cm-grid i.on) { background: var(--ink); }
+  .cm__mem :global(.cm-over) { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; width: 32px; }
+  .cm__mem :global(.cm-over i) { display: block; aspect-ratio: 1; background: var(--accent); }
+  .cm__mem :global(.cm-cap) { display: flex; flex-direction: column; gap: 2px; padding: 0 8px 8px; color: var(--ink-2); }
+  .cm__mem :global(.is-bad) { color: var(--accent); }
+  .cm__mem :global(.cm-title) { grid-column: 1 / -1; border-top: 1px solid var(--ink); padding-top: 8px; }
+  .cm__mem :global(.cm-title .cm-cap) { padding: 0 0 6px; font-family: var(--f-mono); font-size: 11px; }
+  .cm__mem :global(.cm-bytes) { display: flex; flex-wrap: wrap; gap: 2px; font-family: var(--f-mono); font-size: 11px; }
+  .cm__mem :global(.cm-bytes i) { font-style: normal; width: 20px; height: 22px; display: grid; place-items: center; border: 1px solid var(--ink); }
+  .cm__mem :global(.cm-bytes i.is-bad) { border-color: var(--accent); background: var(--accent); color: var(--paper); }
+  .cm__mem :global(.cm-bytes i.cm-num) { border-color: var(--rule); color: var(--ink-2); }
+  .cm__mem :global(.cm-gap) { width: 8px; }
+  .cm__out, .cm__transcript { font-family: var(--f-mono); font-size: 12px; line-height: 1.6; background: var(--ink); color: var(--paper); padding: 12px 14px; overflow-x: auto; white-space: pre; tab-size: 8; margin: 6px 0 0; }
+  .cm__transcript { max-width: min(760px, 100%); }
+  .cm__mem, .cm__outwrap { min-width: 0; }
+  @media (max-width: 1024px) {
+    .cm__stage { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 640px) {
+    .cm__mem { grid-template-columns: 1fr; }
+  }
+</style>

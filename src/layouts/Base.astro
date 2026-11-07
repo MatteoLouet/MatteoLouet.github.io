@@ -1,0 +1,92 @@
+---
+import '../styles/global.css';
+import Nav from '../components/Nav.astro';
+import { site } from '../data/site';
+import { langFromPath, pick, switchPath, type Lang } from '../i18n';
+
+interface Props {
+  title?: string;
+  description?: string;
+  section?: string; // running head initial
+  lang?: Lang;
+}
+const lang: Lang = Astro.props.lang ?? langFromPath(Astro.url.pathname);
+const {
+  title = pick(site.seo.title, lang),
+  description = pick(site.seo.description, lang),
+  section = lang === 'fr' ? 'Sommaire' : 'Contents',
+} = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const altFr = new URL(switchPath(Astro.url.pathname, 'fr'), Astro.site);
+const altEn = new URL(switchPath(Astro.url.pathname, 'en'), Astro.site);
+---
+<!doctype html>
+<html lang={lang} class="no-js">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="alternate" hreflang="fr" href={altFr} />
+    <link rel="alternate" hreflang="en" href={altEn} />
+    <link rel="alternate" hreflang="x-default" href={altFr} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta name="theme-color" content="#F5F3EE" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:locale" content={lang === 'fr' ? 'fr_FR' : 'en_GB'} />
+    <script is:inline>document.documentElement.classList.remove('no-js');</script>
+    <script type="application/ld+json" set:html={JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'Person',
+      name: site.name,
+      jobTitle: pick(site.role, lang),
+      email: `mailto:${site.contact.email}`,
+      alumniOf: 'EFREI Paris',
+    })} />
+  </head>
+  <body>
+    <a class="skip" href="#contenu">{lang === 'fr' ? 'Aller au contenu' : 'Skip to content'}</a>
+    <Nav section={section} lang={lang} />
+    <main id="contenu">
+      <slot />
+    </main>
+    <script>
+      // Révélations discrètes au défilement + running head
+      const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const els = document.querySelectorAll<HTMLElement>('.reveal');
+      if (reduce || !('IntersectionObserver' in window)) {
+        els.forEach((el) => el.classList.add('is-in'));
+      } else {
+        const io = new IntersectionObserver(
+          (entries) => entries.forEach((e) => {
+            if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); }
+          }),
+          { rootMargin: '0px 0px -8% 0px' }
+        );
+        els.forEach((el) => io.observe(el));
+      }
+
+      const head = document.querySelector<HTMLElement>('[data-running-head]');
+      const sections = document.querySelectorAll<HTMLElement>('[data-section]');
+      if (head && sections.length) {
+        const initial = head.textContent;
+        const so = new IntersectionObserver(
+          (entries) => {
+            const visible = entries.filter((e) => e.isIntersecting);
+            if (!visible.length) return;
+            const top = visible.sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
+            head.textContent = (top.target as HTMLElement).dataset.section || initial;
+            document.querySelectorAll('[data-nav]').forEach((a) =>
+              a.toggleAttribute('aria-current', a.getAttribute('href')?.endsWith('#' + top.target.id) ?? false)
+            );
+          },
+          { rootMargin: '-45% 0px -50% 0px' }
+        );
+        sections.forEach((s) => so.observe(s));
+      }
+    </script>
+  </body>
+</html>
