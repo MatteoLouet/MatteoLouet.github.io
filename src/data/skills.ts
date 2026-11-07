@@ -77,7 +77,7 @@ export const skills: SkillGroup[] = [
 
 export const languages: { name: L; level: L }[] = [
   { name: { fr: 'Français', en: 'French' }, level: { fr: 'Langue maternelle', en: 'Native' } },
-  { name: { fr: 'Anglais', en: 'English' }, level: { fr: 'B2 — Cambridge FCE', en: 'B2 — Cambridge FCE' } },
+  { name: { fr: 'Anglais', en: 'English' }, level: { fr: 'B2, Cambridge FCE', en: 'B2, Cambridge FCE' } },
   { name: { fr: 'Espagnol', en: 'Spanish' }, level: { fr: 'B1', en: 'B1' } },
 ];
 

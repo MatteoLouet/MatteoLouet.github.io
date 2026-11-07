@@ -6,11 +6,15 @@
   /* Couleurs — interface */
   --paper: #f5f3ee;
   --paper-2: #edeae3;      /* fond de figure, très légèrement plus sombre */
+  --paper-3: #e9e5dc;      /* survol des figures */
+  --tip-sub: #b9b6ae;      /* texte secondaire dans les infobulles (fond --ink) */
+  color-scheme: light;
   --ink: #181818;
   --ink-2: #66645f;
-  --ink-3: #9a978f;        /* axes, graduations */
+  --ink-3: #77746c;        /* axes, graduations (4,2:1 sur --paper) */
   --rule: #d8d5ce;
-  --accent: #e45b2b;
+  --accent: #e45b2b;       /* aplats, traits, marques de figure */
+  --accent-ink: #b8441a;   /* même orange assombri pour le texte (4,9:1 sur --paper) */
 
   /* Couleurs — figures */
   --blue: #315c9b;
@@ -23,7 +27,7 @@
   --f-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
 
   /* Échelle typographique (fixe, cf. DIRECTION.md §4) */
-  --t-meta: 11px;
+  --t-meta: 12px;
   --t-small: 13px;
   --t-body: 17px;
   --t-lead: 22px;
@@ -76,4 +80,51 @@
 
 @media (prefers-reduced-motion: reduce) {
   :root { --dur: 0ms; }
+}
+
+/* ------------------------------------------------------------------
+   Mode sombre : suit le système, sauf choix explicite (data-theme sur <html>,
+   posé par le bouton de la barre de navigation et mémorisé dans localStorage).
+------------------------------------------------------------------- */
+:root[data-theme="dark"] {
+  --paper: #151513;
+  --paper-2: #1e1d1a;
+  --paper-3: #26251f;
+  --ink: #ecebe5;
+  --ink-2: #a8a59d;
+  --ink-3: #8a877f;
+  --rule: #363530;
+  --accent: #e8653a;
+  --accent-ink: #f0875d;
+  --blue: #7da3dc;
+  --green: #93ad93;
+  --yellow: #e2c470;
+  --tip-sub: #5f5d57;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #151513;
+    --paper-2: #1e1d1a;
+    --paper-3: #26251f;
+    --ink: #ecebe5;
+    --ink-2: #a8a59d;
+    --ink-3: #8a877f;
+    --rule: #363530;
+    --accent: #e8653a;
+    --accent-ink: #f0875d;
+    --blue: #7da3dc;
+    --green: #93ad93;
+    --yellow: #e2c470;
+    --tip-sub: #5f5d57;
+    color-scheme: dark;
+  }
+}
+/* Zones qui restent toujours claires (le site C-MAPSS intégré, conçu en clair) */
+.theme-light {
+  --paper: #f5f3ee; --paper-2: #edeae3; --paper-3: #e9e5dc;
+  --ink: #181818; --ink-2: #66645f; --ink-3: #77746c; --rule: #d8d5ce;
+  --accent: #e45b2b; --accent-ink: #b8441a; --tip-sub: #b9b6ae;
+  color: var(--ink);
+  color-scheme: light;
 }

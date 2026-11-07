@@ -5,21 +5,15 @@ import { site } from '../data/site';
 interface Props { lang: Lang }
 const { lang } = Astro.props;
 const t = (fr: string, en: string) => (lang === 'fr' ? fr : en);
-const method = [
-  { n: '01', t: t('Cartographier avant de transformer', 'Map before you transform'), d: t('Savoir d’où vient une donnée, qui la produit et qui la consomme : c’est le point de départ de tout flux fiable.', 'Knowing where data comes from, who produces it and who uses it is the starting point of any reliable pipeline.') },
-  { n: '02', t: t('Traiter la donnée sensible avec rigueur', 'Handle sensitive data rigorously'), d: t('En alternance, je manipule des données dont la confidentialité n’est pas négociable. Cela façonne ma manière de concevoir.', 'In my work-study I handle data whose confidentiality is non-negotiable. It shapes the way I design.') },
-  { n: '03', t: t('Un chiffre doit pouvoir se lire', 'A number has to be readable'), d: t('Un tableau de bord ou une figure n’a de valeur que si la personne en face comprend ce qu’elle regarde, et pourquoi.', 'A dashboard or a figure is only worth something if the person reading it understands what they see, and why.') },
-];
 ---
 <section class="section about" id="profil" data-section={t('Profil', 'About')} aria-labelledby="about-title">
   <div class="wrap">
     <header class="sec-head g12">
-      <p class="meta sec-num"><span class="accent">02</span> — {t('Profil', 'About')}</p>
-      <h2 class="h2 sec-title" id="about-title">{lang === 'fr' ? <Fragment>Entre l’école d’ingénieurs<br />et le terrain.</Fragment> : <Fragment>Between engineering school<br />and the field.</Fragment>}</h2>
+      <h2 class="h2 sec-title" id="about-title">{t('Profil', 'About')}</h2>
     </header>
 
     <div class="g12 about__body">
-      <figure class="pcard" style="box-sizing:border-box;width:100%;max-width:200px;margin:0;padding:8px;border:1px solid var(--ink);background:var(--paper);justify-self:start;align-self:start">
+      <figure class="pcard" style="box-sizing:border-box;width:100%;max-width:200px;margin:0;padding:0;border:0;background:none;justify-self:start;align-self:start">
         <img class="pcard__img" src="/images/profil/portrait.jpg?v=3" width="800" height="1000" decoding="async" style="display:block;width:100%;height:auto;aspect-ratio:4/5;object-fit:cover" alt={t('Portrait de Mattéo Louet, en costume sombre et cravate, sur fond gris', 'Portrait of Mattéo Louet in a dark suit and tie, on a grey background')} />
         <figcaption class="pcard__cap meta meta--ink2" style="display:flex;justify-content:space-between;gap:8px;margin-top:8px"><span>Mattéo Louet</span><span>Paris</span></figcaption>
       </figure>
@@ -29,37 +23,25 @@ const method = [
           <>
             <p class="lead">Élève-ingénieur en deuxième année de cycle ingénieur à l’EFREI Paris, en Big Data &amp; Machine Learning, je suis aussi data analyst en alternance au Ministère des Armées.</p>
             <p>Ma formation croise mathématiques, physique et informatique. Mon alternance m’apprend, dans un milieu technique et exigeant, à cartographier des données, à documenter leur lignage, à concevoir des flux ETL avec Talend et à construire des tableaux de bord stratégiques sous Qlik Sense.</p>
-            <p>Avant la donnée, il y a eu une ferme, une usine de teinturerie et un magasin : des terrains où j’ai appris l’organisation (méthode 5S), le travail en équipe et l’attention au détail. Je suis sérieux, et je m’adapte vite.</p>
+            <p>Avant la donnée, j’ai travaillé dans une ferme, une usine de teinturerie et un magasin. J’y ai appris la méthode 5S et le travail en équipe.</p>
           </>
         ) : (
           <>
             <p class="lead">A second-year engineering student at EFREI Paris, specialising in Big Data &amp; Machine Learning, I am also an apprentice data analyst at the French Ministry of the Armed Forces.</p>
             <p>My degree combines mathematics, physics and computer science. My work-study teaches me, in a demanding technical environment, to map data, document its lineage, design ETL flows with Talend and build strategic dashboards in Qlik Sense.</p>
-            <p>Before data, there was a farm, a dye factory and a shop: places where I learned organisation (the 5S method), teamwork and attention to detail. I am serious, and I adapt quickly.</p>
+            <p>Before data, I worked on a farm, in a dye factory and in a shop, where I learned the 5S method and teamwork.</p>
           </>
         )}
       </div>
 
       <dl class="about__sheet">
-        <div><dt class="meta meta--ink2">{t('Langues', 'Languages')}</dt><dd>{languages.map((l) => <span>{pick(l.name, lang)} <span class="muted">— {pick(l.level, lang)}</span></span>)}</dd></div>
+        <div><dt class="meta meta--ink2">{t('Langues', 'Languages')}</dt><dd>{languages.map((l) => <span>{pick(l.name, lang)} <span class="muted">· {pick(l.level, lang)}</span></span>)}</dd></div>
         <div><dt class="meta meta--ink2">{t('Hors écran', 'Off screen')}</dt><dd>{interests.map((i) => <span>{pick(i, lang)}</span>)}</dd></div>
         <div><dt class="meta meta--ink2">{t('Mobilité', 'Mobility')}</dt><dd><span>{t('Permis B', 'Driving licence (B)')}</span></dd></div>
         <div><dt class="meta meta--ink2">CV</dt><dd><a class="link" href={site.contact.cv} download="Matteo-Louet-CV.pdf">{t('Télécharger le CV', 'Download the CV')} (PDF) ↓</a></dd></div>
       </dl>
     </div>
 
-    <div class="g12 about__method">
-      <p class="meta about__mlabel">{t('Méthode', 'Approach')} <span class="todo">[{t('à valider', 'to be confirmed')}]</span></p>
-      <ol class="about__mlist">
-        {method.map((m) => (
-          <li class="reveal">
-            <span class="tnum accent">{m.n}</span>
-            <h3 class="about__mt">{m.t}</h3>
-            <p class="small muted">{m.d}</p>
-          </li>
-        ))}
-      </ol>
-    </div>
   </div>
 </section>
 
@@ -73,23 +55,14 @@ const method = [
   .about__sheet > div { padding-block: 10px 12px; border-bottom: 1px solid var(--rule); }
   .about__sheet dd { display: flex; flex-direction: column; margin-top: 4px; font-size: 14px; line-height: 1.45; }
 
-  .about__method { margin-top: var(--s-8); align-items: start; }
-  .about__mlabel { grid-column: 1 / span 3; border-top: 1px solid var(--ink); padding-top: 10px; }
-  .about__mlist { grid-column: 5 / -1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: var(--gutter); }
-  .about__mlist li { border-top: 1px solid var(--ink); padding-top: 10px; display: flex; flex-direction: column; gap: 10px; }
-  .about__mlist .num { font-size: 12px; }
-  .about__mt { font-family: var(--f-display); font-size: 21px; line-height: 1.15; letter-spacing: -0.015em; font-weight: 600; }
 
   @media (max-width: 1024px) {
     .pcard { grid-column: 1 / span 3; }
     .about__text { grid-column: 4 / -1; }
     .about__sheet { grid-column: 4 / -1; }
-    .about__mlabel { grid-column: 1 / -1; border-top: 0; padding-top: 0; }
-    .about__mlist { grid-column: 1 / -1; }
   }
   @media (max-width: 640px) {
     .pcard { grid-column: 1 / -1; }
     .about__text, .about__sheet { grid-column: 1 / -1; padding-left: 0; }
-    .about__mlist { grid-template-columns: 1fr; row-gap: var(--s-4); }
   }
 </style>

@@ -6,8 +6,9 @@ const { section, lang } = Astro.props;
 const t = (fr: string, en: string) => (lang === 'fr' ? fr : en);
 const links = [
   { hash: 'profil', label: t('Profil', 'About') },
-  { hash: 'travaux', label: t('Travaux', 'Work') },
-  { hash: 'labo', label: t('Laboratoire', 'Lab') },
+  { hash: 'travaux', label: t('Projets', 'Projects') },
+  // Laboratoire : seulement en local, tant que la section est en refonte (voir src/views/Home.astro)
+  ...(import.meta.env.DEV ? [{ hash: 'labo', label: t('Laboratoire', 'Lab') }] : []),
   { hash: 'contact', label: 'Contact' },
 ];
 const other: Lang = lang === 'fr' ? 'en' : 'fr';
@@ -25,11 +26,15 @@ const otherPath = switchPath(Astro.url.pathname, other);
       <nav aria-label={t('Navigation principale', 'Main navigation')}>
         <ul class="nav__links">
           {links.map((l) => (
-            <li><a data-nav href={href('home', lang, l.hash)}>{l.label}</a></li>
+            <li class={l.hash === 'labo' ? 'nav__lab' : undefined}><a data-nav href={href('home', lang, l.hash)}>{l.label}</a></li>
           ))}
           <li><a class="nav__cv" href={site.contact.cv} download="Matteo-Louet-CV.pdf" aria-label={t('Télécharger le CV (PDF)', 'Download the CV (PDF)')}>CV&nbsp;↓</a></li>
         </ul>
       </nav>
+      <button type="button" class="nav__theme" data-theme-toggle aria-pressed="false" aria-label={t('Activer le mode sombre', 'Switch to dark mode')} data-label-dark={t('Activer le mode sombre', 'Switch to dark mode')} data-label-light={t('Activer le mode clair', 'Switch to light mode')}>
+        <svg class="nav__ico nav__ico--moon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M13.5 10.2A6 6 0 0 1 5.8 2.5a6 6 0 1 0 7.7 7.7Z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
+        <svg class="nav__ico nav__ico--sun" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><circle cx="8" cy="8" r="3" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M8 1.2v1.6M8 13.2v1.6M1.2 8h1.6M13.2 8h1.6M3.2 3.2l1.1 1.1M11.7 11.7l1.1 1.1M3.2 12.8l1.1-1.1M11.7 4.3l1.1-1.1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+      </button>
       <div class="nav__lang meta" role="group" aria-label={t('Langue', 'Language')}>
         <a href={lang === 'fr' ? Astro.url.pathname : otherPath} hreflang="fr" lang="fr" aria-current={lang === 'fr' ? 'true' : undefined} data-lang-link="fr">FR</a>
         <span aria-hidden="true">/</span>
@@ -37,14 +42,29 @@ const otherPath = switchPath(Astro.url.pathname, other);
       </div>
     </div>
   </div>
-  <div class="wrap nav__folio meta meta--ink2" aria-hidden="true">
-    <span>{pick(site.publication, lang)}</span>
-    <span class="nav__rh" data-running-head>{section}</span>
-    <span class="nav__issue">{site.issue} · {pick(site.issueDate, lang)} · {site.location}</span>
-  </div>
 </header>
 
 <script>
+  // Bascule clair / sombre : mémorise le choix ; sans choix, le site suit le réglage du système
+  const root = document.documentElement;
+  const btn = document.querySelector<HTMLButtonElement>('[data-theme-toggle]');
+  const mq = matchMedia('(prefers-color-scheme: dark)');
+  const isDark = () => (root.dataset.theme ? root.dataset.theme === 'dark' : mq.matches);
+  const sync = () => {
+    if (!btn) return;
+    const dark = isDark();
+    btn.setAttribute('aria-pressed', String(dark));
+    btn.setAttribute('aria-label', (dark ? btn.dataset.labelLight : btn.dataset.labelDark) || '');
+  };
+  btn?.addEventListener('click', () => {
+    const next = isDark() ? 'light' : 'dark';
+    root.dataset.theme = next;
+    try { localStorage.setItem('theme', next); } catch (e) {}
+    sync();
+  });
+  mq.addEventListener('change', sync);
+  sync();
+
   // La bascule de langue conserve l'ancre courante (#travaux, #labo…)
   document.querySelectorAll<HTMLAnchorElement>('[data-lang-link]').forEach((a) =>
     a.addEventListener('click', () => {
@@ -96,40 +116,44 @@ const otherPath = switchPath(Astro.url.pathname, other);
     border-bottom: 1px solid transparent;
     transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease);
   }
-  .nav__links a:hover { color: var(--accent); }
-  .nav__links a[aria-current] { color: var(--accent); border-bottom-color: var(--accent); }
+  .nav__links a:hover { color: var(--accent-ink); }
+  .nav__links a[aria-current] { color: var(--accent-ink); border-bottom-color: var(--accent-ink); }
 
-  .nav__cv { color: var(--accent) !important; }
+  .nav__cv { color: var(--accent-ink) !important; }
+  .nav__theme {
+    appearance: none; background: none; border: 0; padding: 0; cursor: pointer;
+    width: 32px; height: 32px; display: inline-grid; place-items: center;
+    color: var(--ink-2); transition: color var(--dur) var(--ease);
+  }
+  .nav__theme:hover { color: var(--accent-ink); }
+  .nav__ico { grid-area: 1 / 1; }
+  .nav__ico--sun { display: none; }
+  .nav__theme[aria-pressed="true"] .nav__ico--sun { display: block; }
+  .nav__theme[aria-pressed="true"] .nav__ico--moon { display: none; }
   .nav__lang { display: flex; gap: 6px; align-items: center; color: var(--ink-3); padding-left: clamp(12px, 1.6vw, 24px); border-left: 1px solid var(--rule); }
   .nav__lang a { text-decoration: none; color: var(--ink-2); padding-block: 4px; transition: color var(--dur) var(--ease); }
-  .nav__lang a:hover { color: var(--accent); }
+  .nav__lang a:hover { color: var(--accent-ink); }
   .nav__lang a[aria-current] { color: var(--ink); border-bottom: 1px solid var(--ink); }
 
-  .nav__folio {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    gap: var(--s-2);
-    padding-block: 6px 7px;
-    border-top: 1px solid var(--rule);
-  }
-  .nav__rh { color: var(--ink); text-align: center; min-width: 14ch; }
-  .nav__issue { text-align: right; }
 
   @media (max-width: 640px) {
     .nav__avail { display: none; }
-    .nav__bar { height: 44px; }
+    .nav__bar { height: 48px; }
+    /* cibles tactiles d'au moins 44 px de haut */
+    .nav__links a, .nav__lang a { display: inline-flex; align-items: center; min-height: 44px; padding-block: 0; }
     .nav__right { gap: 10px; }
+    .nav__theme { width: 44px; height: 44px; }
     .nav__links { gap: 10px; }
     .nav__links a { font-size: 13px; }
     .nav__lang { padding-left: 10px; }
-    .nav__folio { grid-template-columns: 1fr auto; }
-    .nav__folio > span:first-child { display: none; }
-    .nav__rh { text-align: left; }
   }
   @media (max-width: 420px) {
     .nav__name { font-size: 15px; }
     .nav__links { gap: 8px; }
     .nav__links a { font-size: 12px; }
-    .nav__links li:nth-child(3) { display: none; } /* « Laboratoire » : reste accessible au défilement */
+    .nav__links .nav__lab { display: none; } /* « Laboratoire » : reste accessible au défilement */
+    .nav__right { gap: 4px; }
+    .nav__theme { width: 36px; }
+    .nav__lang { padding-left: 6px; gap: 4px; }
   }
 </style>

@@ -32,12 +32,17 @@ const altEn = new URL(switchPath(Astro.url.pathname, 'en'), Astro.site);
     <link rel="alternate" hreflang="en" href={altEn} />
     <link rel="alternate" hreflang="x-default" href={altFr} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <meta name="theme-color" content="#F5F3EE" />
+    <meta name="theme-color" content="#F5F3EE" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#151513" media="(prefers-color-scheme: dark)" />
     <meta property="og:type" content="website" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:locale" content={lang === 'fr' ? 'fr_FR' : 'en_GB'} />
-    <script is:inline>document.documentElement.classList.remove('no-js');</script>
+    <script is:inline>
+      document.documentElement.classList.remove('no-js');
+      // Thème choisi par le visiteur (bouton de la navigation), appliqué avant le premier rendu
+      try { var th = localStorage.getItem('theme'); if (th === 'light' || th === 'dark') document.documentElement.dataset.theme = th; } catch (e) {}
+    </script>
     <script type="application/ld+json" set:html={JSON.stringify({
       '@context': 'https://schema.org',
       '@type': 'Person',
@@ -57,6 +62,7 @@ const altEn = new URL(switchPath(Astro.url.pathname, 'en'), Astro.site);
       // Révélations discrètes au défilement + running head
       const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
       const els = document.querySelectorAll<HTMLElement>('.reveal');
+      if (!reduce && 'IntersectionObserver' in window) document.documentElement.classList.add('reveal-on');
       if (reduce || !('IntersectionObserver' in window)) {
         els.forEach((el) => el.classList.add('is-in'));
       } else {
@@ -71,14 +77,14 @@ const altEn = new URL(switchPath(Astro.url.pathname, 'en'), Astro.site);
 
       const head = document.querySelector<HTMLElement>('[data-running-head]');
       const sections = document.querySelectorAll<HTMLElement>('[data-section]');
-      if (head && sections.length) {
-        const initial = head.textContent;
+      if (sections.length) {
+        const initial = head?.textContent ?? '';
         const so = new IntersectionObserver(
           (entries) => {
             const visible = entries.filter((e) => e.isIntersecting);
             if (!visible.length) return;
             const top = visible.sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
-            head.textContent = (top.target as HTMLElement).dataset.section || initial;
+            if (head) head.textContent = (top.target as HTMLElement).dataset.section || initial;
             document.querySelectorAll('[data-nav]').forEach((a) =>
               a.toggleAttribute('aria-current', a.getAttribute('href')?.endsWith('#' + top.target.id) ?? false)
             );

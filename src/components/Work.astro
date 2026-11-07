@@ -30,13 +30,10 @@ const list = projects.map((p) => ({
   url: p.caseStudy ? route(p.caseStudy, lang) : undefined,
 }));
 ---
-<section class="section work" id="travaux" data-section={t('Travaux choisis', 'Selected work')} aria-labelledby="work-title">
+<section class="section work" id="travaux" data-section={t('Projets', 'Projects')} aria-labelledby="work-title">
   <div class="wrap">
     <header class="sec-head g12">
-      <p class="meta sec-num"><span class="accent">03</span> — {t('Travaux choisis', 'Selected work')}</p>
-      <h2 class="h2 sec-title" id="work-title">{lang === 'fr'
-        ? <Fragment>Huit projets,<br />une obsession&nbsp;:<br />la donnée lisible.</Fragment>
-        : <Fragment>Eight projects,<br />one obsession:<br />readable data.</Fragment>}</h2>
+      <h2 class="h2 sec-title" id="work-title">{t('Projets', 'Projects')}</h2>
       <div class="sec-tools">
         <span class="meta meta--ink2" id="view-label">{t('Affichage', 'View')}</span>
         <div class="seg" role="group" aria-labelledby="view-label">
@@ -67,19 +64,18 @@ const list = projects.map((p) => ({
               </figcaption>
             </figure>
             <div class="e__text">
-              <p class="e__meta meta"><span class="e__n tnum">{p.n}</span><span class="meta--ink2">{p.category}</span></p>
               <h3 class="h3 e__title" id={`p-${p.slug}`}>
-                {href ? <a href={href}>{p.title}</a> : p.title}
+                <span class="e__n tnum">{p.n}</span>{href ? <a href={href}>{p.title}</a> : p.title}
               </h3>
               <p class="e__dek">{p.dek}</p>
+              <p class="e__cat small muted">{p.category}</p>
               <ul class="e__stack meta" aria-label={t('Technologies et méthodes', 'Technologies and methods')}>
                 {p.stack.map((s) => <li>{s}</li>)}
-                {p.todo?.map((x) => <li class="todo">[{x} {t('à compléter', 'to be added')}]</li>)}
-              </ul>
+                              </ul>
               {p.team && <p class="e__team small muted">{t('Projet mené', 'Project carried out')} {p.team}</p>}
               <p class="e__ctas">
                 {href ? (
-                  <a class="link link-arrow e__cta" href={href}>{t('Lire l’étude de cas', 'Read the case study')} <span class="arr" aria-hidden="true">→</span></a>
+                  <a class="link link-arrow e__cta" href={href}>{t('Lire l’étude de cas', 'Read the case study')}</a>
                 ) : (
                   <span class="e__cta meta meta--ink2">{t('Étude de cas en préparation', 'Case study in progress')}</span>
                 )}
@@ -114,13 +110,13 @@ const list = projects.map((p) => ({
     </div>
 
     <div class="arch-list">
-      <p class="meta arch-list__h"><span class="accent">03.b</span> — {t('Autres dépôts', 'Other repositories')}</p>
+      <h3 class="arch-list__h">{t('Autres dépôts', 'Other repositories')}</h3>
       <ul>
         {archive.map((a) => (
           <li>
             <a href={a.repo} rel="noopener">
               <span class="arch-list__t">{pick(a.title, lang)} <span aria-hidden="true">↗</span></span>
-              <span class="arch-list__w small muted">{pick(a.what, lang)}{a.team ? ` — ${pick(a.team, lang)}` : ''}</span>
+              <span class="arch-list__w small muted">{pick(a.what, lang)}{a.team ? `, ${pick(a.team, lang)}` : ''}</span>
               <span class="arch-list__s meta">{a.stack}</span>
             </a>
           </li>
@@ -155,8 +151,7 @@ const list = projects.map((p) => ({
     align-items: start;
     margin-bottom: var(--s-7);
   }
-  :global(.sec-num) { grid-column: 1 / span 3; padding-top: 6px; }
-  :global(.sec-title) { grid-column: 4 / span 7; }
+  :global(.sec-title) { grid-column: 1 / span 8; }
   .sec-tools {
     grid-column: 11 / -1;
     display: flex;
@@ -175,7 +170,7 @@ const list = projects.map((p) => ({
   .e { display: grid; gap: var(--s-3); align-content: start; }
   .e__figlink { display: block; }
   .e__fig :global(.pf) { transition: background var(--dur) var(--ease); }
-  .e:hover .e__fig :global(.pf) { background: #e9e5dc; }
+  .e:hover .e__fig :global(.pf) { background: var(--paper-3); }
   .e__cap {
     display: flex;
     justify-content: space-between;
@@ -184,8 +179,9 @@ const list = projects.map((p) => ({
     margin-top: 10px;
   }
   .e__text { display: flex; flex-direction: column; gap: 12px; }
-  .e__meta { display: flex; gap: 14px; align-items: baseline; border-top: 1px solid var(--ink); padding-top: 10px; }
-  .e__n { font-size: 11px; color: var(--accent); }
+  .e__text { border-top: 1px solid var(--ink); padding-top: 12px; }
+  .e__n { display: block; font-size: 12px; font-weight: 400; letter-spacing: 0; color: var(--accent-ink); margin-bottom: 8px; }
+  .e__cat { margin-top: 6px; }
   .e__title a { text-decoration: none; transition: color var(--dur) var(--ease); }
   .e:hover .e__title a, .e__title a:hover { color: var(--accent); }
   .e__dek { color: var(--ink-2); max-width: 46ch; }
@@ -240,7 +236,6 @@ const list = projects.map((p) => ({
   .idx tbody tr:hover { background: var(--paper-2); }
 
   @media (max-width: 1024px) {
-    :global(.sec-num) { grid-column: 1 / -1; }
     :global(.sec-title) { grid-column: 1 / span 5; }
     .sec-tools { grid-column: 1 / -1; flex-direction: row; justify-content: flex-start; align-items: center; }
     .e--feature, .e--band { grid-template-columns: 1fr; }

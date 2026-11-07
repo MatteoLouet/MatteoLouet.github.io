@@ -22,18 +22,17 @@ const next = projects.slice(i + 1).concat(projects.slice(0, i)).find((x) => x.ca
 const title = pick(p.title, lang);
 const study = t('Étude de cas', 'Case study');
 ---
-<Base lang={lang} title={`${title} — ${study} · Mattéo Louet`} description={pick(p.dek, lang)} section={`${study} ${p.n}`}>
+<Base lang={lang} title={`${title} · Mattéo Louet`} description={pick(p.dek, lang)} section={`${study} ${p.n}`}>
   <article class="cs">
     <header class="wrap cs__head">
       <nav class="cs__crumbs meta meta--ink2" aria-label={t('Fil d’Ariane', 'Breadcrumb')}>
-        <a href={href('home', lang, 'travaux')}>← {t('Travaux', 'Work')}</a><span aria-hidden="true">/</span><span>{study} {p.n}</span>
+        <a href={href('home', lang, 'travaux')}>← {t('Projets', 'Projects')}</a><span aria-hidden="true">/</span><span>{study} {p.n}</span>
       </nav>
       <div class="g12 cs__top">
-        <p class="meta cs__kicker"><span class="accent">{p.n}</span> — {kicker}</p>
         <h1 class="cs__title">{title}</h1>
         <p class="lead cs__dek">{pick(p.dek, lang)}</p>
         <dl class="cs__facts">
-          {facts.map((f) => (
+          {[{ k: t('Domaine', 'Field'), v: kicker }, ...facts].map((f: { k: string; v: string; todo?: boolean }) => (
             <div><dt class="meta meta--ink2">{f.k}</dt><dd>{f.todo ? <span class="todo">{f.v}</span> : f.v}</dd></div>
           ))}
         </dl>
@@ -50,7 +49,7 @@ const study = t('Étude de cas', 'Case study');
     <footer class="wrap cs__foot">
       <a class="cs__back" href={href('home', lang, 'travaux')}>
         <span class="meta meta--ink2">{t('Retour', 'Back')}</span>
-        <span class="h3">{t('Tous les travaux', 'All work')}</span>
+        <span class="h3">{t('Tous les projets', 'All projects')}</span>
       </a>
       {next && next.slug !== slug && next.caseStudy && (
         <a class="cs__next" href={href(next.caseStudy, lang)}>
@@ -68,7 +67,6 @@ const study = t('Étude de cas', 'Case study');
   .cs__crumbs a { text-decoration: none; }
   .cs__crumbs a:hover { color: var(--accent); }
   .cs__top { margin-top: var(--s-6); row-gap: var(--s-4); align-items: end; }
-  .cs__kicker { grid-column: 1 / -1; }
   .cs__title {
     grid-column: 1 / span 10;
     font-family: var(--f-display);

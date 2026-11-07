@@ -8,8 +8,7 @@ const t = (fr: string, en: string) => (lang === 'fr' ? fr : en);
 <section class="section skills" id="competences" data-section={t('Compétences', 'Skills')} aria-labelledby="skills-title">
   <div class="wrap">
     <header class="sec-head g12">
-      <p class="meta sec-num"><span class="accent">05</span> — {t('Compétences', 'Skills')}</p>
-      <h2 class="h2 sec-title" id="skills-title">{lang === 'fr' ? <Fragment>Par domaine,<br />pas par logo.</Fragment> : <Fragment>By field,<br />not by logo.</Fragment>}</h2>
+      <h2 class="h2 sec-title" id="skills-title">{t('Compétences', 'Skills')}</h2>
       <div class="sk__legend small">
         <p class="meta meta--ink2">{t('Où je la pratique', 'Where I use it')}</p>
         <p><i class="ctx ctx--pro" aria-hidden="true"></i> {t('En entreprise', 'At work')}</p>

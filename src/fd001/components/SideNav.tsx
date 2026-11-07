@@ -12,7 +12,7 @@ export function SideNav() {
     <>
       <a
         href="#top"
-        className="fd001-fixed fixed top-[92px] left-6 z-30 hidden text-[12px] font-[550] text-ink lg:block"
+        className="fd001-fixed fixed top-[68px] left-6 z-30 hidden text-[12px] font-[550] text-ink lg:block"
       >
         Turbofan <span className="text-faint">·</span> <span className="font-[450] text-dim">FD001</span>
       </a>

@@ -25,9 +25,8 @@ const edgePath = (a: string, b: string) => {
 <section class="section lab" id="labo" data-section={t('Laboratoire', 'Lab')} data-lang={lang} data-ui={JSON.stringify(ui)} data-default-q={pick(defaultQuery, lang)} aria-labelledby="lab-title">
   <div class="wrap">
     <header class="sec-head g12">
-      <p class="meta sec-num"><span class="accent">04</span> — {t('Laboratoire', 'Lab')}</p>
-      <h2 class="h2 sec-title" id="lab-title">{lang === 'fr' ? <Fragment>Deux expériences<br />à manipuler.</Fragment> : <Fragment>Two experiments<br />to play with.</Fragment>}</h2>
-      <p class="lab__intro small muted">{t('Des calculs réels, exécutés dans votre navigateur, sur des données de démonstration. Chaque expérience reprend un geste que je pratique : interroger un corpus, remonter le fil d’une donnée.', 'Real computations, run in your browser, on demo data. Each experiment mirrors something I do: querying a corpus, tracing a piece of data back to its source.')}</p>
+      <h2 class="h2 sec-title" id="lab-title">{t('Laboratoire', 'Lab')}</h2>
+      <p class="lab__intro small muted">{t('Deux calculs exécutés dans votre navigateur sur des données de démonstration : un TF-IDF sur un petit corpus, et le lignage d’une donnée jusqu’à sa source.', 'Two computations run in your browser on demo data: a TF-IDF over a small corpus, and the lineage of a data field back to its source.')}</p>
     </header>
 
     <div class="lab__tabs" role="tablist" aria-label={t('Expériences', 'Experiments')}>
@@ -42,7 +41,7 @@ const edgePath = (a: string, b: string) => {
     <!-- ============ A. TF-IDF ============ -->
     <div class="lab__panel g12" role="tabpanel" id="panel-a" aria-labelledby="tab-a">
       <div class="tf__side">
-        <p class="fig-notice">{lang === 'fr' ? <Fragment>Posez une question : chaque mot est pondéré par sa <em>rareté</em> dans le corpus (IDF), puis la question est comparée à dix courts documents tirés de mon CV. Le document le plus proche devient la réponse — c’est le mécanisme du chatbot du projet&nbsp;04.</Fragment> : <Fragment>Ask a question: each word is weighted by its <em>rarity</em> in the corpus (IDF), then the question is compared with ten short documents drawn from my CV. The closest document becomes the answer — the mechanism behind the chatbot of project&nbsp;04.</Fragment>}</p>
+        <p class="fig-notice">{lang === 'fr' ? <Fragment>Posez une question : chaque mot est pondéré par sa <em>rareté</em> dans le corpus (IDF), puis la question est comparée à dix courts documents tirés de mon CV. Le document le plus proche devient la réponse. C’est le mécanisme du chatbot du projet&nbsp;04.</Fragment> : <Fragment>Ask a question: each word is weighted by its <em>rarity</em> in the corpus (IDF), then the question is compared with ten short documents drawn from my CV. The closest document becomes the answer. This is the mechanism behind the chatbot of project&nbsp;04.</Fragment>}</p>
         <label class="meta tf__label" for="tf-q">{t('Votre question', 'Your question')}</label>
         <div class="tf__field">
           <input id="tf-q" type="text" autocomplete="off" spellcheck="false" value={pick(defaultQuery, lang)} />
@@ -80,7 +79,7 @@ const edgePath = (a: string, b: string) => {
     <!-- ============ B. Lignage ============ -->
     <div class="lab__panel g12" role="tabpanel" id="panel-b" aria-labelledby="tab-b" hidden>
       <div class="lg__side">
-        <p class="fig-notice">{lang === 'fr' ? <Fragment>« D’où vient ce chiffre ? » — c’est la question qu’une cartographie de données doit résoudre. Choisissez un élément : ses <span class="c-up">sources en amont</span> et ses <span class="c-down">usages en aval</span> s’allument.</Fragment> : <Fragment>“Where does this number come from?” — the question data mapping has to answer. Pick an element: its <span class="c-up">upstream sources</span> and <span class="c-down">downstream uses</span> light up.</Fragment>}</p>
+        <p class="fig-notice">{lang === 'fr' ? <Fragment>« D’où vient ce chiffre ? » C’est la question qu’une cartographie de données doit résoudre. Choisissez un élément : ses <span class="c-up">sources en amont</span> et ses <span class="c-down">usages en aval</span> s’allument.</Fragment> : <Fragment>“Where does this number come from?” is the question data mapping has to answer. Pick an element: its <span class="c-up">upstream sources</span> and <span class="c-down">downstream uses</span> light up.</Fragment>}</p>
         <div class="lg__ctrl">
           <span class="meta meta--ink2" id="lg-dir">Direction</span>
           <div class="seg" role="group" aria-labelledby="lg-dir">
@@ -271,8 +270,9 @@ const edgePath = (a: string, b: string) => {
 </script>
 
 <style>
-  .lab__intro { grid-column: 11 / -1; padding-top: 6px; }
-  :global(.lab .sec-title) { grid-column: 4 / span 6; }
+  .lab__intro { padding-top: 10px; }
+  :global(.lab .sec-title) { grid-column: 1 / span 6; }
+  .lab__intro { grid-column: 7 / -1; max-width: 46ch; justify-self: end; }
 
   .lab__tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 1px solid var(--ink); margin-bottom: var(--s-5); }
   .lab__tab {

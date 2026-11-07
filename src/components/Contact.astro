@@ -14,30 +14,24 @@ const links = [
 <section class="section contact" id="contact" data-section="Contact" aria-labelledby="contact-title">
   <div class="wrap">
     <div class="contact__page">
-      <div class="g12 contact__top">
-        <p class="meta sec-num"><span class="accent">06</span> — Contact</p>
-        <p class="meta meta--ink2 contact__end">{t('Dernière page', 'Last page')}</p>
-      </div>
-
       <h2 class="display contact__title" id="contact-title">{lang === 'fr' ? <Fragment>Parlons<br />données.</Fragment> : <Fragment>Let’s talk<br />data.</Fragment>}</h2>
 
       <div class="g12 contact__body">
-        <p class="lead contact__invite">{t('Une alternance, un stage, un projet ou simplement une question sur une figure de ce site : écrivez-moi, je réponds.', 'A work-study position, an internship, a project or just a question about a figure on this site: write to me, I reply.')}</p>
-        <a class="contact__mail" href={`mailto:${site.contact.email}`}>{site.contact.email}<span aria-hidden="true"> ↗</span></a>
+        <p class="lead contact__invite">{t('Pour un stage, un projet ou une question sur une figure de ce site, écrivez-moi par e-mail ou sur LinkedIn.', 'For an internship, a project or a question about a figure on this site, write to me by email or on LinkedIn.')}</p>
+        <a class="contact__mail" href={`mailto:${site.contact.email}`}>{site.contact.email}</a>
         <dl class="contact__list">
           {links.map((l) => (
             <div>
               <dt class="meta meta--ink2">{l.k}</dt>
-              <dd>{l.v ? <a class="link" href={l.href} rel={l.download ? undefined : 'me noopener'} download={l.download ? 'Matteo-Louet-CV.pdf' : undefined}>{l.v.replace(/^https?:\/\/(www\.)?/, '')}</a> : <span class="todo">[{t('lien à compléter', 'link to be added')}]</span>}</dd>
+              <dd>{l.v ? <a class="link" href={l.href} rel={l.download ? undefined : 'me noopener'} download={l.download ? 'Matteo-Louet-CV.pdf' : undefined}>{l.v.replace(/^https?:\/\/(www\.)?/, '')}</a> : null}</dd>
             </div>
           ))}
         </dl>
       </div>
 
-      <footer class="g12 colophon small muted">
-        <p class="colophon__a"><span class="meta">Colophon</span><br />{t('Composé en Inter Tight, Inter et IBM Plex Mono. Construit avec Astro ; figures en SVG et D3, sans traceur ni cookie.', 'Set in Inter Tight, Inter and IBM Plex Mono. Built with Astro; figures in SVG and D3, no trackers, no cookies.')}</p>
-        <p class="colophon__b"><span class="meta">{t('Données', 'Data')}</span><br />{t('Les figures marquées', 'Figures marked')} <span class="tag-demo">{t('démo', 'demo')}</span> {t('utilisent des données simulées ou des corpus rédigés pour l’exemple.', 'use simulated data or corpora written for the example.')}</p>
-        <p class="colophon__c"><span class="meta">{pick(site.publication, lang)}</span><br />{site.issue} · {pick(site.issueDate, lang)} · © {new Date().getFullYear()} {site.name}</p>
+      <footer class="colophon small muted">
+        <p>{t('Les figures marquées', 'Figures marked')} <span class="tag-demo">{t('démo', 'demo')}</span> {t('utilisent des données simulées ou des textes écrits pour l’exemple.', 'use simulated data or texts written for the example.')}</p>
+        <p>© {new Date().getFullYear()} {site.name}</p>
       </footer>
     </div>
   </div>
@@ -46,9 +40,6 @@ const links = [
 <style>
   .contact { padding-bottom: var(--s-4); }
   .contact__page { border-top: 3px solid var(--ink); padding-top: 12px; }
-  .contact__top { align-items: baseline; }
-  .contact__top .sec-num { grid-column: 1 / span 6; padding: 0; }
-  .contact__end { grid-column: 7 / -1; text-align: right; }
   .contact__title { margin-top: var(--s-6); margin-left: -0.04em; }
   .contact__body { margin-top: var(--s-6); row-gap: var(--s-4); align-items: end; }
   .contact__invite { grid-column: 1 / span 5; max-width: 26em; }
@@ -69,20 +60,12 @@ const links = [
   .contact__list { grid-column: 7 / -1; }
   .contact__list > div { display: grid; grid-template-columns: 10ch 1fr; padding-block: 9px; border-bottom: 1px solid var(--rule); font-size: 15px; }
 
-  .colophon { margin-top: var(--s-8); border-top: 1px solid var(--ink); padding-top: 12px; row-gap: var(--s-3); }
-  .colophon .meta { color: var(--ink); }
-  .colophon__a { grid-column: 1 / span 4; }
-  .colophon__b { grid-column: 5 / span 4; }
-  .colophon__c { grid-column: 9 / -1; text-align: right; }
+  .colophon { margin-top: var(--s-8); border-top: 1px solid var(--ink); padding-top: 12px; }
+  .colophon { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--s-2); }
 
   @media (max-width: 1024px) {
     .contact__invite, .contact__mail, .contact__list { grid-column: 1 / -1; }
-    .colophon__a, .colophon__b { grid-column: span 3; }
-    .colophon__c { grid-column: 1 / -1; text-align: left; }
   }
   @media (max-width: 640px) {
-    .contact__end { display: none; }
-    .contact__top .sec-num { grid-column: 1 / -1; }
-    .colophon__a, .colophon__b { grid-column: 1 / -1; }
   }
 </style>

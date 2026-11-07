@@ -1,14 +1,11 @@
 ---
-/** Section numérotée d'une étude de cas : étiquette collante à gauche, texte à droite. */
+/** Section d'une étude de cas : un titre, puis le corps centré. `n` est conservé pour l'ordre mais n'est plus affiché. */
 interface Props { n: string; title: string; id?: string }
 const { n, title, id } = Astro.props;
 ---
 <section class="csec g12" id={id} aria-labelledby={id ? `${id}-t` : undefined}>
-  <div class="csec__label">
-    <p class="meta"><span class="accent">{n}</span> — {title}</p>
-  </div>
+  <h2 class="csec__label" id={id ? `${id}-t` : undefined}>{title}</h2>
   <div class="csec__body">
-    <h2 class="sr-only" id={id ? `${id}-t` : undefined}>{title}</h2>
     <slot />
   </div>
 </section>
@@ -16,12 +13,14 @@ const { n, title, id } = Astro.props;
 <style>
   .csec { border-top: 1px solid var(--ink); padding-top: 12px; padding-bottom: var(--s-7); align-items: start; }
   /* Étiquette au-dessus, corps centré : texte en colonne de lecture centrée, figures sur toute la largeur */
-  .csec__label { grid-column: 1 / -1; margin-bottom: var(--s-3); }
+  .csec__label { grid-column: 1 / -1; margin-bottom: var(--s-4); font-family: var(--f-display); font-size: var(--t-h3); font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; }
   .csec__body { grid-column: 1 / -1; display: flex; flex-direction: column; gap: var(--s-3); min-width: 0; }
-  .csec__body :global(> p), .csec__body :global(> ul), .csec__body :global(> ol), .csec__body :global(> h3) { width: 100%; max-width: 68ch; margin-inline: auto; }
-  .csec__body :global(h3) { font-family: var(--f-display); font-size: var(--t-h3); line-height: 1.12; letter-spacing: -0.02em; font-weight: 600; }
+  /* Colonne de lecture centrée, en largeur fixe pour que titres et paragraphes partagent le même bord gauche */
+  .csec__body :global(> p), .csec__body :global(> ul), .csec__body :global(> ol), .csec__body :global(> h3), .csec__body :global(> dl) { width: 100%; max-width: 44rem; margin-inline: auto; }
+  /* Le h3 d'ouverture se lit comme un chapô sous le titre de section */
+  .csec__body :global(h3) { font-family: var(--f-display); font-size: var(--t-lead); line-height: 1.25; letter-spacing: -0.01em; font-weight: 500; text-wrap: balance; }
   .csec__body :global(ul.bul li) { padding-left: 1.2em; position: relative; margin-top: 6px; }
-  .csec__body :global(ul.bul li)::before { content: '—'; position: absolute; left: 0; color: var(--ink-3); }
+  .csec__body :global(ul.bul li)::before { content: '–'; position: absolute; left: 0; color: var(--ink-3); }
   @media (max-width: 1024px) {
     .csec__label { grid-column: 1 / -1; position: static; margin-bottom: var(--s-2); }
     .csec__body { grid-column: 1 / -1; }

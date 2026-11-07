@@ -8,11 +8,6 @@ const t = (fr: string, en: string) => (lang === 'fr' ? fr : en);
 ---
 <section class="hero" id="sommaire" data-section={t('Sommaire', 'Contents')} aria-labelledby="hero-title">
   <div class="wrap">
-    <div class="g12 hero__top">
-      <p class="meta hero__kicker"><span class="accent">01</span> — {pick(site.hero.kicker, lang)}</p>
-      <p class="meta meta--ink2 hero__ed">{t('Portfolio · édition', 'Portfolio · edition')} {new Date().getFullYear()}</p>
-    </div>
-
     <h1 class="display hero__title" id="hero-title">
       {pick(site.hero.headline, lang).map((line, i) => (
         <span class:list={['hero__line', { 'hero__line--indent': i === 1 }]}>{line}</span>
@@ -21,7 +16,6 @@ const t = (fr: string, en: string) => (lang === 'fr' ? fr : en);
 
     <div class="g12 hero__body">
       <dl class="hero__facts">
-        <div><dt class="meta meta--ink2">{t('Auteur', 'Author')}</dt><dd>{site.name}</dd></div>
         <div><dt class="meta meta--ink2">{t('Poste', 'Role')}</dt><dd>{t('Data analyst, Ministère des Armées', 'Data analyst, French Ministry of the Armed Forces')}</dd></div>
         <div><dt class="meta meta--ink2">{t('Formation', 'Education')}</dt><dd>{t('Cycle ingénieur Big Data & ML, EFREI Paris', 'Big Data & ML engineering degree, EFREI Paris')}</dd></div>
       </dl>
@@ -29,8 +23,8 @@ const t = (fr: string, en: string) => (lang === 'fr' ? fr : en);
         <p class="lead">{pick(site.hero.intro, lang)}</p>
         <p class="hero__links">
           <a class="link link-arrow" href={site.contact.cv} download="Matteo-Louet-CV.pdf">{t('Télécharger le CV', 'Download the CV')} <span class="muted small">(PDF)</span> <span class="arr" aria-hidden="true">↓</span></a>
-          <a class="link link-arrow" href="#travaux">{t('Lire les travaux', 'Read the work')} <span class="arr" aria-hidden="true">↓</span></a>
-          <a class="link link-arrow muted" href={href('cmapss', lang)}>{t('Étude de cas : C-MAPSS', 'Case study: C-MAPSS')} <span class="arr" aria-hidden="true">→</span></a>
+          <a class="link" href="#travaux">{t('Voir les projets', 'See the projects')}</a>
+          <a class="link muted" href={href('cmapss', lang)}>{t('Étude de cas C-MAPSS', 'C-MAPSS case study')}</a>
         </p>
       </div>
     </div>

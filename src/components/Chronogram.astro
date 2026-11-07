@@ -151,7 +151,7 @@ const monthNames = lang === 'fr'
 
     const showTip = (btn: HTMLElement) => {
       const d = btn.dataset;
-      tip.innerHTML = `<span class="meta">${d.label}${d.approx ? ' · approx.' : ''}</span><strong>${d.title}</strong><br>${d.org}${d.note ? `<br><span style="color:#b9b6ae">${d.note}</span>` : ''}`;
+      tip.innerHTML = `<span class="meta">${d.label}${d.approx ? ' · approx.' : ''}</span><strong>${d.title}</strong><br>${d.org}${d.note ? `<br><span style="color:var(--tip-sub)">${d.note}</span>` : ''}`;
       const pr = plot.getBoundingClientRect();
       const br = btn.querySelector('.chrono__bar')!.getBoundingClientRect();
       let left = br.left - pr.left;

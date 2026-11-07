@@ -105,9 +105,9 @@ const bx = (v: number) => (v / MAXE) * (BW - LBL - 60);
     </div>
 
     <figcaption class="fig-source">{lang === 'fr' ? (
-      <><strong>Source :</strong> RTE éCO2mix, données régionales consolidées et définitives (12 régions métropolitaines, hors Corse). <strong>Prévision :</strong> le modèle de base du notebook (arbre de décision sur la consommation de la veille et de la semaine précédente, l’heure, le jour et le mois), reproduit à l’identique — MAE de test {n(elec.meta.baseline.mae, 2)} MW, comme dans le notebook. Elle n’existe que pour la période de test (depuis le 9 décembre 2023) ; le modèle final, plus précis, utilise en plus la météo et les jours fériés.</>
+      <><strong>Source :</strong> RTE éCO2mix, données régionales consolidées et définitives (12 régions métropolitaines, hors Corse). <strong>Prévision :</strong> le modèle de base du notebook (arbre de décision sur la consommation de la veille et de la semaine précédente, l’heure, le jour et le mois), reproduit à l’identique : MAE de test {n(elec.meta.baseline.mae, 2)} MW, comme dans le notebook. Elle n’existe que pour la période de test (depuis le 9 décembre 2023) ; le modèle final, plus précis, utilise en plus la météo et les jours fériés.</>
     ) : (
-      <><strong>Source:</strong> RTE éCO2mix, consolidated regional data (12 mainland regions, Corsica excluded). <strong>Forecast:</strong> the notebook’s baseline model (decision tree on the previous day’s and previous week’s demand, hour, weekday and month), reproduced exactly — test MAE {n(elec.meta.baseline.mae, 2)} MW, as in the notebook. It only exists for the test period (from 9 December 2023); the final, more accurate model also uses weather and public holidays.</>
+      <><strong>Source:</strong> RTE éCO2mix, consolidated regional data (12 mainland regions, Corsica excluded). <strong>Forecast:</strong> the notebook’s baseline model (decision tree on the previous day’s and previous week’s demand, hour, weekday and month), reproduced exactly: test MAE {n(elec.meta.baseline.mae, 2)} MW, as in the notebook. It only exists for the test period (from 9 December 2023); the final, more accurate model also uses weather and public holidays.</>
     )}</figcaption>
   </figure>
 
@@ -176,7 +176,7 @@ const bx = (v: number) => (v / MAXE) * (BW - LBL - 60);
       </figure>
       <figure class="nbfig">
         <img src={img('regions-annees')} alt={t('Évolution annuelle de la consommation par région', 'Yearly demand by region')} loading="lazy" />
-        <figcaption class="fig-source"><span class="accent">Fig. 6</span> {t('Par région, une tendance à la baisse et deux creux communs, en 2020 et en 2023 — années de la crise sanitaire et de la sobriété énergétique.', 'By region, a downward trend and two shared dips, in 2020 and 2023 — the years of the pandemic and of energy-saving measures.')} <em>{cap}</em></figcaption>
+        <figcaption class="fig-source"><span class="accent">Fig. 6</span> {t('Par région, une tendance à la baisse et deux creux communs, en 2020 et en 2023, années de la crise sanitaire et de la sobriété énergétique.', 'By region, a downward trend and two shared dips, in 2020 and 2023, the years of the pandemic and of energy-saving measures.')} <em>{cap}</em></figcaption>
       </figure>
     </div>
   </CaseSection>
@@ -187,7 +187,7 @@ const bx = (v: number) => (v / MAXE) * (BW - LBL - 60);
         <h3>Partir d’une base simple, puis n’ajouter que ce qui fait baisser l’erreur.</h3>
         <ul class="bul">
           <li><strong>Variables de base</strong> : la consommation de la veille et de la semaine précédente au même créneau, l’heure, le jour de la semaine, le mois, un indicateur de week-end.</li>
-          <li><strong>Découpage chronologique</strong> : 80 % des données pour apprendre (jusqu’au 9 décembre 2023), les 20 % suivantes pour tester — jamais de mélange entre passé et futur.</li>
+          <li><strong>Découpage chronologique</strong> : 80 % des données pour apprendre (jusqu’au 9 décembre 2023), les 20 % suivantes pour tester, sans jamais mélanger passé et futur.</li>
           <li><strong>Trois premiers modèles</strong> comparés sur ces variables ; l’arbre de décision l’emporte et sert de référence pour mesurer l’apport de chaque nouvelle source.</li>
           <li><strong>Ajouts successifs</strong> : météo, jours fériés, vacances scolaires par zone, puis passage à une forêt aléatoire (100 arbres, profondeur 12).</li>
         </ul>
@@ -197,7 +197,7 @@ const bx = (v: number) => (v / MAXE) * (BW - LBL - 60);
         <h3>Start from a simple baseline, then only add what lowers the error.</h3>
         <ul class="bul">
           <li><strong>Base features</strong>: demand at the same slot the day before and the week before, hour, weekday, month and a weekend flag.</li>
-          <li><strong>Chronological split</strong>: 80% of the data to learn (up to 9 December 2023), the next 20% to test — past and future are never mixed.</li>
+          <li><strong>Chronological split</strong>: 80% of the data to learn (up to 9 December 2023), the next 20% to test, never mixing past and future.</li>
           <li><strong>Three first models</strong> compared on these features; the decision tree wins and becomes the reference to measure each new source.</li>
           <li><strong>Successive additions</strong>: weather, public holidays, school holidays by zone, then a switch to a random forest (100 trees, depth 12).</li>
         </ul>
@@ -206,7 +206,7 @@ const bx = (v: number) => (v / MAXE) * (BW - LBL - 60);
 
     <figure class="steps" aria-labelledby="steps-title">
       <div class="fig-head">
-        <span class="meta"><span class="accent">Fig. 7</span>&nbsp;&nbsp;<span id="steps-title">{t('Ce que chaque ajout fait gagner — erreur absolue moyenne sur la période de test', 'What each addition gains — mean absolute error on the test period')}</span></span>
+        <span class="meta"><span class="accent">Fig. 7</span>&nbsp;&nbsp;<span id="steps-title">{t('Ce que chaque ajout fait gagner (erreur absolue moyenne sur la période de test)', 'What each addition gains — mean absolute error on the test period')}</span></span>
         <span class="meta meta--ink2">MAE, MW</span>
       </div>
       <p class="steps__sub meta meta--ink2">{t('A · Premier tour, variables de base', 'A · First round, base features')}</p>
@@ -269,7 +269,7 @@ const bx = (v: number) => (v / MAXE) * (BW - LBL - 60);
   <CaseSection n="06" title={t('Réflexion', 'Reflection')} id="reflexion">
     {lang === 'fr' ? (
       <>
-        <h3>Un bon score de laboratoire, pas encore une prévision opérationnelle.</h3>
+        <h3>Un bon score en laboratoire, qui reste à tester en conditions réelles.</h3>
         <ul class="bul">
           <li><strong>Météo observée, pas prévue</strong> : le modèle utilise la météo réellement mesurée. En conditions réelles, à J+1, il faudrait la prévision météo de la veille, moins précise.</li>
           <li><strong>La veille au même créneau</strong> n’est pas toujours connue au moment de prévoir : une prévision émise à midi ignore la consommation de l’après-midi. Le gain réel sera un peu plus faible.</li>
@@ -279,7 +279,7 @@ const bx = (v: number) => (v / MAXE) * (BW - LBL - 60);
       </>
     ) : (
       <>
-        <h3>A good lab score, not yet an operational forecast.</h3>
+        <h3>A good lab score that still has to be tested in real conditions.</h3>
         <ul class="bul">
           <li><strong>Observed weather, not forecast weather</strong>: the model uses measured weather. In real conditions, one day ahead, it would need the previous day’s weather forecast, which is less accurate.</li>
           <li><strong>The same slot the day before</strong> is not always known at forecast time: a forecast issued at noon cannot see the afternoon. The real gain will be slightly lower.</li>

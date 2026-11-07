@@ -32,9 +32,9 @@ const RUNS = [
 const SOILS = [
   { c: 'rv-s0', fr: 'Base', en: 'Base', cost: '0' },
   { c: 'rv-s1', fr: 'Plaine', en: 'Plain', cost: '1' },
-  { c: 'rv-s2', fr: 'Erg — mouvements affaiblis', en: 'Erg — weakened moves', cost: '2' },
-  { c: 'rv-s3', fr: 'Reg — 4 mouvements seulement', en: 'Reg — only 4 moves', cost: '4' },
-  { c: 'rv-s4', fr: 'Crevasse — interdite', en: 'Crevasse — forbidden', cost: '10 000' },
+  { c: 'rv-s2', fr: 'Erg : mouvements affaiblis', en: 'Erg: weakened moves', cost: '2' },
+  { c: 'rv-s3', fr: 'Reg : 4 mouvements seulement', en: 'Reg: only 4 moves', cost: '4' },
+  { c: 'rv-s4', fr: 'Crevasse : interdite', en: 'Crevasse: forbidden', cost: '10 000' },
 ];
 const bar = [
   { k: 'arrived', fr: 'Base atteinte', en: 'Base reached', v: b.arrived },
@@ -49,8 +49,8 @@ const bar = [
       <span class="tag-demo">{t('Carte de démo · sorties réelles du programme', 'Demo map · real program output')}</span>
     </div>
     <p class="fig-notice rv__notice">{t(
-      'À chaque phase, le rover tire 5 mouvements au hasard et construit l’arbre de toutes les suites de 3 d’entre eux. Chaque point est une feuille de l’arbre — une position d’arrivée possible — avec son coût jusqu’à la base. Le rover exécute la suite qui mène au point le moins cher, puis recommence.',
-      'At each phase the rover draws 5 random moves and builds the tree of every sequence of 3 of them. Each dot is a leaf of the tree — a possible landing position — with its cost to the base. The rover runs the sequence leading to the cheapest dot, then starts again.'
+      'À chaque phase, le rover tire 5 mouvements au hasard et construit l’arbre de toutes les suites de 3 d’entre eux. Chaque point est une feuille de l’arbre, c’est-à-dire une position d’arrivée possible, avec son coût jusqu’à la base. Le rover exécute la suite qui mène au point le moins cher, puis recommence.',
+      'At each phase the rover draws 5 random moves and builds the tree of every sequence of 3 of them. Each dot is a leaf of the tree, that is a possible landing position, with its cost to the base. The rover runs the sequence leading to the cheapest dot, then starts again.'
     )}</p>
     <div class="rv__ctrls">
       <div class="seg rv__runs" role="group" aria-label={t('Trajet', 'Run')}>
@@ -75,9 +75,9 @@ const bar = [
       </div>
     </div>
     <figcaption class="fig-source">{lang === 'fr' ? (
-      <><strong>Données :</strong> sorties du programme C du dépôt, exécuté sans modification par un petit harnais qui enregistre chaque phase (tirages, feuilles, branche retenue). <strong>Carte :</strong> carte de démonstration de 12 × 9 cases dessinée pour cette page — la carte du cours appelée par le programme n’est pas dans le dépôt. Les chiffres sur les cases sont les coûts jusqu’à la base calculés par le programme.</>
+      <><strong>Données :</strong> sorties du programme C du dépôt, exécuté sans modification par un petit programme de test qui enregistre chaque phase (tirages, feuilles, branche retenue). <strong>Carte :</strong> carte de démonstration de 12 × 9 cases dessinée pour cette page, car la carte du cours appelée par le programme n’est pas dans le dépôt. Les chiffres sur les cases sont les coûts jusqu’à la base calculés par le programme.</>
     ) : (
-      <><strong>Data:</strong> output of the repository’s C program, run unmodified by a small harness that records each phase (draws, leaves, chosen branch). <strong>Map:</strong> a 12 × 9 demo map drawn for this page — the course map the program loads is not in the repository. The numbers on the cells are the costs to the base computed by the program.</>
+      <><strong>Data:</strong> output of the repository’s C program, run unmodified by a small test program that records each phase (draws, leaves, chosen branch). <strong>Map:</strong> a 12 × 9 demo map drawn for this page, because the course map the program loads is not in the repository. The numbers on the cells are the costs to the base computed by the program.</>
     )}</figcaption>
   </figure>
 
@@ -104,7 +104,7 @@ const bar = [
         <ul class="bul">
           <li><strong>Carte de coûts</strong> : un parcours en largeur (file) part de la base et donne à chaque case son coût d’accès, selon le sol traversé (plaine 1, erg 2, reg 4, crevasse 10 000).</li>
           <li><strong>Tirage</strong> : 5 mouvements selon des probabilités fixées (avancer 10 m 22 %, tourner à gauche ou à droite 21 % chacun, demi-tour 7 %…).</li>
-          <li><strong>Arbre n-aire</strong> : la racine a 5 fils, chacun 4, chacun 3 — soit jusqu’à 5 × 4 × 3 = 60 suites ordonnées. Une branche est coupée si elle sort de la carte ou entre dans une crevasse.</li>
+          <li><strong>Arbre n-aire</strong> : la racine a 5 fils, chacun 4, chacun 3, soit jusqu’à 5 × 4 × 3 = 60 suites ordonnées. Une branche est coupée si elle sort de la carte ou entre dans une crevasse.</li>
           <li><strong>Règles de terrain</strong> : sur un erg, chaque mouvement est affaibli (avancer de 20 m n’avance que de 10 m, tourner ne fait rien) ; sur un reg, seuls 4 mouvements sont possibles.</li>
           <li><strong>Choix</strong> : parmi les feuilles, celle dont la case d’arrivée a le plus petit coût ; le rover joue ses 3 mouvements. Quand le coût vaut 0, il est à la base.</li>
         </ul>
@@ -115,7 +115,7 @@ const bar = [
         <ul class="bul">
           <li><strong>Cost map</strong>: a breadth-first search (queue) starts from the base and gives every cell its access cost, depending on the soil crossed (plain 1, erg 2, reg 4, crevasse 10,000).</li>
           <li><strong>Draw</strong>: 5 moves with fixed probabilities (forward 10 m 22%, turn left or right 21% each, U-turn 7%…).</li>
-          <li><strong>N-ary tree</strong>: the root has 5 children, each has 4, each 3 — up to 5 × 4 × 3 = 60 ordered sequences. A branch is cut if it leaves the map or enters a crevasse.</li>
+          <li><strong>N-ary tree</strong>: the root has 5 children, each has 4, each 3: up to 5 × 4 × 3 = 60 ordered sequences. A branch is cut if it leaves the map or enters a crevasse.</li>
           <li><strong>Terrain rules</strong>: on an erg every move is weakened (forward 20 m only moves 10 m, turning does nothing); on a reg only 4 moves are possible.</li>
           <li><strong>Choice</strong>: among the leaves, the one whose landing cell has the lowest cost; the rover plays its 3 moves. When the cost is 0, it is home.</li>
         </ul>
@@ -175,7 +175,7 @@ const bar = [
         <ul class="bul">
           <li><strong>Glouton</strong> : le rover choisit la meilleure position à 3 mouvements, sans tenir compte de son orientation à l’arrivée. Il peut se retrouver dos à la base et perdre une phase à se retourner.</li>
           <li><strong>Coût en mémoire</strong> : chaque nœud alloue son propre tableau de mouvements et sa file de chemin, sans jamais les libérer.</li>
-          <li><strong>Tester tôt avec des outils</strong> : AddressSanitizer et une campagne de quelques centaines d’essais révèlent ce bogue en quelques secondes — c’est ainsi qu’il a été trouvé, en relisant le code pour ce portfolio.</li>
+          <li><strong>Tester tôt avec des outils</strong> : AddressSanitizer et une campagne de quelques centaines d’essais révèlent ce bogue en quelques secondes. C’est ainsi qu’il a été trouvé, en relisant le code pour ce portfolio.</li>
         </ul>
       </>
     ) : (
@@ -184,7 +184,7 @@ const bar = [
         <ul class="bul">
           <li><strong>Greedy</strong>: the rover picks the best position 3 moves ahead, ignoring its orientation on arrival. It can end up facing away from the base and lose a phase turning around.</li>
           <li><strong>Memory cost</strong>: every node allocates its own moves array and path queue, and never frees them.</li>
-          <li><strong>Test early, with tools</strong>: AddressSanitizer and a campaign of a few hundred runs reveal this bug in seconds — which is how it was found, while re-reading the code for this portfolio.</li>
+          <li><strong>Test early, with tools</strong>: AddressSanitizer and a campaign of a few hundred runs reveal this bug in seconds. That is how it was found, while re-reading the code for this portfolio.</li>
         </ul>
       </>
     )}

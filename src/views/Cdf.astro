@@ -70,21 +70,21 @@ const facts = [
   <CaseSection n="02" title={t('Structure', 'Structure')} id="structure">
     {lang === 'fr' ? (
       <>
-        <h3>Deux structures, deux tailles chacune.</h3>
+        <h3>Deux structures, chacune avec une taille physique et une taille logique.</h3>
         <ul class="bul">
           <li><strong><code>COLUMN</code></strong> : un titre, un tableau d’entiers, une taille physique (le nombre de valeurs) et une taille logique (la capacité).</li>
           <li><strong><code>CDATAFRAME</code></strong> : un tableau de pointeurs vers des colonnes, avec les mêmes deux tailles.</li>
-          <li><strong>Croissance par blocs</strong> : quand la colonne est pleine, on agrandit de 256 cases d’un coup plutôt qu’une par une — le principe des tableaux dynamiques.</li>
+          <li><strong>Croissance par blocs</strong> : quand la colonne est pleine, on agrandit de 256 cases d’un coup plutôt qu’une par une. C’est le principe des tableaux dynamiques.</li>
           <li><strong>Fonctions</strong> : <code>create_column</code>, <code>insert_value</code>, <code>delete_column</code>, <code>print_col</code>, <code>nbr_occu</code>, <code>position</code>, <code>nbr_sup</code>, <code>nbr_inf</code>, puis le remplissage et l’affichage du dataframe, complet ou partiel.</li>
         </ul>
       </>
     ) : (
       <>
-        <h3>Two structures, two sizes each.</h3>
+        <h3>Two structures, each with a physical and a logical size.</h3>
         <ul class="bul">
           <li><strong><code>COLUMN</code></strong>: a title, an integer array, a physical size (the number of values) and a logical size (the capacity).</li>
           <li><strong><code>CDATAFRAME</code></strong>: an array of pointers to columns, with the same two sizes.</li>
-          <li><strong>Growth in blocks</strong>: when a column is full, it grows by 256 cells at once rather than one by one — the principle of dynamic arrays.</li>
+          <li><strong>Growth in blocks</strong>: when a column is full, it grows by 256 cells at once rather than one by one. This is how dynamic arrays work.</li>
           <li><strong>Functions</strong>: <code>create_column</code>, <code>insert_value</code>, <code>delete_column</code>, <code>print_col</code>, <code>nbr_occu</code>, <code>position</code>, <code>nbr_sup</code>, <code>nbr_inf</code>, then filling and displaying the dataframe, fully or partially.</li>
         </ul>
       </>
@@ -106,7 +106,7 @@ const facts = [
         <h3>Un pointeur partagé et une réallocation qui ne grandit pas.</h3>
         <ul class="bul">
           <li><strong>Les titres</strong> : chaque colonne garde un <em>pointeur</em> vers le même tampon <code>titre_col</code>, au lieu d’une copie. Toutes les colonnes affichent donc le dernier titre écrit. Pire, ce tampon fait 5 octets (<code>"col_"</code> plus le <code>'\0'</code>) : écrire la lettre en position 4 efface la fin de chaîne, et l’affichage continue dans la chaîne <code>num</code> voisine. Correction : <code>strdup</code> du titre, et un tampon plus grand.</li>
-          <li><strong>La capacité</strong> : <code>insert_value</code> augmente la capacité déclarée de 256, mais réalloue toujours <code>256 * sizeof(int)</code>. La 257ᵉ valeur s’écrit hors de la mémoire allouée — AddressSanitizer le signale à la ligne 26 de <code>column.c</code>. Correction : <code>realloc(col-&gt;valeurs, col-&gt;taille_logique * sizeof(int))</code>.</li>
+          <li><strong>La capacité</strong> : <code>insert_value</code> augmente la capacité déclarée de 256, mais réalloue toujours <code>256 * sizeof(int)</code>. La 257ᵉ valeur s’écrit hors de la mémoire allouée, et AddressSanitizer le signale à la ligne 26 de <code>column.c</code>. Correction : <code>realloc(col-&gt;valeurs, col-&gt;taille_logique * sizeof(int))</code>.</li>
           <li><strong>Plus discret</strong> : l’affichage teste <code>valeur == '\0'</code> pour repérer une case vide, si bien qu’un vrai 0 s’afficherait « NULL » ; et une colonne plus courte que les autres est lue au-delà de sa fin.</li>
         </ul>
       </>
@@ -115,7 +115,7 @@ const facts = [
         <h3>A shared pointer and a reallocation that does not grow.</h3>
         <ul class="bul">
           <li><strong>Titles</strong>: each column keeps a <em>pointer</em> to the same <code>titre_col</code> buffer instead of a copy, so every column shows the last title written. Worse, that buffer is 5 bytes (<code>"col_"</code> plus <code>'\0'</code>): writing the letter at index 4 erases the terminator, and printing runs on into the neighbouring <code>num</code> string. Fix: <code>strdup</code> the title, and a larger buffer.</li>
-          <li><strong>Capacity</strong>: <code>insert_value</code> raises the declared capacity by 256 but always reallocates <code>256 * sizeof(int)</code>. The 257th value is written outside allocated memory — AddressSanitizer flags line 26 of <code>column.c</code>. Fix: <code>realloc(col-&gt;valeurs, col-&gt;taille_logique * sizeof(int))</code>.</li>
+          <li><strong>Capacity</strong>: <code>insert_value</code> raises the declared capacity by 256 but always reallocates <code>256 * sizeof(int)</code>. The 257th value is written outside allocated memory, and AddressSanitizer flags line 26 of <code>column.c</code>. Fix: <code>realloc(col-&gt;valeurs, col-&gt;taille_logique * sizeof(int))</code>.</li>
           <li><strong>More subtle</strong>: the display tests <code>value == '\0'</code> to spot an empty cell, so a real 0 would print as “NULL”; and a column shorter than the others is read past its end.</li>
         </ul>
       </>
@@ -126,13 +126,13 @@ const facts = [
     {lang === 'fr' ? (
       <>
         <h3>Ce que ce projet m’a appris sur les outils que j’utilise aujourd’hui.</h3>
-        <p>Quand pandas ajoute une ligne, il fait ce que ce projet faisait à la main : réserver de la place d’avance, recopier, garder deux tailles cohérentes. Les deux bogues sont des erreurs classiques — confondre un pointeur et une copie, oublier de faire grandir l’allocation avec la capacité — et ils ne se voient pas sur de petits exemples : le programme « marche » avec 5 valeurs.</p>
+        <p>Quand pandas ajoute une ligne, il fait ce que ce projet faisait à la main : réserver de la place d’avance, recopier, garder deux tailles cohérentes. Les deux bogues sont des erreurs classiques : confondre un pointeur et une copie, oublier de faire grandir l’allocation avec la capacité. Aucun des deux ne se voit sur de petits exemples : le programme « marche » avec 5 valeurs.</p>
         <p>Ils ont été mis au jour en relisant le code pour ce portfolio, avec AddressSanitizer. La leçon : écrire d’abord un test qui insère 1 000 valeurs.</p>
       </>
     ) : (
       <>
         <h3>What this project taught me about the tools I use today.</h3>
-        <p>When pandas appends a row, it does what this project did by hand: reserve space in advance, copy, keep two sizes consistent. Both bugs are classic mistakes — confusing a pointer with a copy, forgetting to grow the allocation with the capacity — and neither shows on small examples: the program “works” with 5 values.</p>
+        <p>When pandas appends a row, it does what this project did by hand: reserve space in advance, copy, keep two sizes consistent. Both bugs are classic mistakes: confusing a pointer with a copy, forgetting to grow the allocation with the capacity. Neither shows on small examples: the program “works” with 5 values.</p>
         <p>They surfaced while re-reading the code for this portfolio, with AddressSanitizer. The lesson: first write a test that inserts 1,000 values.</p>
       </>
     )}

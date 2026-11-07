@@ -12,7 +12,7 @@ const t = (fr: string, en: string) => (lang === 'fr' ? fr : en);
 const isDemo = data.meta.demo;
 const lives = data.units.map((u) => u.life);
 const facts = [
-  { k: t('Jeu de données', 'Dataset'), v: 'NASA C-MAPSS — FD001' },
+  { k: t('Jeu de données', 'Dataset'), v: 'NASA C-MAPSS, FD001' },
   { k: 'Question', v: t('Panne dans ≤ 30 cycles ? (binaire)', 'Failure within ≤ 30 cycles? (binary)') },
   { k: t('Modèle retenu', 'Chosen model'), v: t('Régression logistique, seuil 0,592', 'Logistic regression, threshold 0.592') },
   { k: 'Stack', v: 'Python · pandas · scikit-learn · Plotly' },
@@ -42,9 +42,9 @@ const BW = 176, BH = 54, GAP = 38;
 const AW = 5 * BW + 4 * GAP;
 ---
 <CaseStudy slug="cmapss" lang={lang} kicker={t('Machine learning · Maintenance prédictive', 'Machine learning · Predictive maintenance')} facts={facts}>
-  <div slot="bleed" class="fd-band">
+  <div slot="bleed" class="fd-band theme-light">
     <div class="wrap fd-band__head">
-      <p class="meta"><span class="accent">{t('Livrable', 'Deliverable')}</span> — {t('Le site du projet, conçu par Daniil Hirchyts', 'The project website, designed by Daniil Hirchyts')}</p>
+      <p class="meta">{t('Le site du projet, conçu par Daniil Hirchyts', 'The project website, designed by Daniil Hirchyts')}</p>
       <a class="meta link" href={REPO} rel="noopener">Code &amp; notebook ↗</a>
     </div>
     <Fd001 client:load lang={lang} />
@@ -54,14 +54,14 @@ const AW = 5 * BW + 4 * GAP;
   <CaseSection n="01" title={t('Contexte', 'Context')} id="contexte">
     {lang === 'fr' ? (
       <>
-        <h3>Remplacer une pièce juste avant qu’elle ne casse — ni trop tard, ni trop tôt.</h3>
+        <h3>Remplacer une pièce juste avant qu’elle ne casse.</h3>
         <p>La maintenance prédictive cherche à anticiper la défaillance d’une machine à partir de ses capteurs. Une alarme trop prudente immobilise des moteurs sains ; trop tardive, elle laisse survenir la panne.</p>
         <p>Nous avons posé la question sous sa forme la plus utile en exploitation : <strong>à partir des 21 capteurs d’un seul cycle, ce moteur va-t-il tomber en panne dans les 30 prochains cycles&nbsp;?</strong> C’est une classification binaire : <em>y</em> = 1 quand la durée de vie restante (RUL) est inférieure ou égale à 30.</p>
         <p>Projet de machine learning réalisé à l’EFREI avec Daniil Hirchyts : un notebook unique qui va de l’exploration à l’évaluation, un rapport technique et un site de restitution.</p>
       </>
     ) : (
       <>
-        <h3>Replace a part just before it breaks — neither too late nor too early.</h3>
+        <h3>Replace a part just before it breaks.</h3>
         <p>Predictive maintenance tries to anticipate a machine’s failure from its sensors. An over-cautious alarm grounds healthy engines; a late one lets the failure happen.</p>
         <p>We framed the question in its most useful operational form: <strong>from the 21 sensors of a single cycle, will this engine fail within the next 30 cycles?</strong> It is a binary classification: <em>y</em> = 1 when the remaining useful life (RUL) is 30 or less.</p>
         <p>A machine learning project carried out at EFREI with Daniil Hirchyts: one notebook from exploration to evaluation, a technical report and a presentation website.</p>
@@ -72,7 +72,7 @@ const AW = 5 * BW + 4 * GAP;
   <CaseSection n="02" title={t('Données', 'Data')} id="donnees">
     {lang === 'fr' ? (
       <>
-        <h3>Cent moteurs, vingt et un capteurs, une seule façon de tomber en panne.</h3>
+        <h3>100 moteurs simulés, suivis jusqu’à la panne par 21 capteurs.</h3>
         <p>C-MAPSS (<em>Commercial Modular Aero-Propulsion System Simulation</em>) est publié par le Prognostics Center of Excellence de la NASA (Saxena et al., 2008). Il simule des turbofans dont l’usure progresse jusqu’à la panne.</p>
         <dl class="ds">
           <div><dt class="meta meta--ink2">FD001</dt><dd>100 moteurs d’entraînement, 100 de test ; 1 condition de vol ; 1 mode de panne (dégradation du compresseur haute pression)</dd></div>
@@ -83,13 +83,13 @@ const AW = 5 * BW + 4 * GAP;
       </>
     ) : (
       <>
-        <h3>One hundred engines, twenty-one sensors, a single way to fail.</h3>
+        <h3>100 simulated engines, tracked to failure by 21 sensors.</h3>
         <p>C-MAPSS (<em>Commercial Modular Aero-Propulsion System Simulation</em>) is published by NASA’s Prognostics Center of Excellence (Saxena et al., 2008). It simulates turbofans whose wear progresses until failure.</p>
         <dl class="ds">
           <div><dt class="meta meta--ink2">FD001</dt><dd>100 training engines, 100 test engines; 1 flight condition; 1 failure mode (high-pressure compressor degradation)</dd></div>
           <div><dt class="meta meta--ink2">One row</dt><dd>= one cycle: engine id, cycle number, 3 operational settings, 21 sensors</dd></div>
           <div><dt class="meta meta--ink2">Volumes</dt><dd>20,631 training rows (complete series up to failure); 13,096 test rows (truncated series, true RUL given separately)</dd></div>
-          <div><dt class="meta meta--ink2">Classes</dt><dd>At a 30-cycle window, about 15% of training rows are positive: a model that never predicts failure already reaches 85% accuracy — so accuracy is the wrong metric</dd></div>
+          <div><dt class="meta meta--ink2">Classes</dt><dd>At a 30-cycle window, about 15% of training rows are positive: a model that never predicts failure already reaches 85% accuracy, so accuracy is the wrong metric</dd></div>
         </dl>
       </>
     )}
@@ -135,19 +135,19 @@ const AW = 5 * BW + 4 * GAP;
         </ul>
       </div>
       <div class="exp__histwrap">
-        <p class="meta meta--ink2">{t('Durées de vie — cliquez une classe pour n’afficher que ces moteurs', 'Lifetimes — click a bin to show only those engines')}</p>
+        <p class="meta meta--ink2">{t('Durées de vie. Cliquez une classe pour n’afficher que ces moteurs.', 'Lifetimes. Click a bin to show only those engines.')}</p>
         <div data-hist class="exp__hist"></div>
       </div>
 
       <figcaption class="fig-source">{lang === 'fr' ? (
         <>{isDemo
           ? <><strong>Données de démonstration.</strong> Trajectoires simulées qui reproduisent la structure de FD001 ; ce ne sont pas des mesures. Pour afficher les vraies données : <code>python3 scripts/prepare_cmapss.py train_FD001.txt</code>.</>
-          : <><strong>Source :</strong> NASA Prognostics Center of Excellence, C-MAPSS {data.meta.subset}, jeu d’entraînement — les 100 moteurs, 8 des 14 capteurs informatifs.</>}
+          : <><strong>Source :</strong> NASA Prognostics Center of Excellence, C-MAPSS {data.meta.subset}, jeu d’entraînement : les 100 moteurs, 8 des 14 capteurs informatifs.</>}
         {' '}<strong>Méthode :</strong> lissage par moyenne glissante centrée (fenêtre de 11 cycles) ; médiane et quartiles calculés pour chaque cycle avant panne dès que 8 moteurs au moins sont présents (3 lorsqu’une classe de durée de vie est filtrée). Survol : moteur le plus proche du curseur ; clic : épingler.</>
       ) : (
         <>{isDemo
           ? <><strong>Demo data.</strong> Simulated trajectories reproducing the structure of FD001; these are not measurements. To show the real data: <code>python3 scripts/prepare_cmapss.py train_FD001.txt</code>.</>
-          : <><strong>Source:</strong> NASA Prognostics Center of Excellence, C-MAPSS {data.meta.subset}, training set — all 100 engines, 8 of the 14 informative sensors.</>}
+          : <><strong>Source:</strong> NASA Prognostics Center of Excellence, C-MAPSS {data.meta.subset}, training set: all 100 engines, 8 of the 14 informative sensors.</>}
         {' '}<strong>Method:</strong> centred moving average (11-cycle window); median and quartiles computed for each cycle before failure as soon as at least 8 engines are present (3 when a lifetime bin is filtered). Hover: engine closest to the cursor; click: pin.</>
       )}</figcaption>
     </figure>
@@ -165,7 +165,7 @@ const AW = 5 * BW + 4 * GAP;
   </CaseSection>
 
   <CaseSection n="03" title="Architecture" id="architecture">
-    <h3>{t('Deux chaînes : celle du modèle, et celle qui publie cette page.', 'Two pipelines: the model’s, and the one that publishes this page.')}</h3>
+    <h3>{t('La chaîne du modèle et celle qui publie cette page.', 'The model pipeline and the one that publishes this page.')}</h3>
     <figure class="arch" aria-labelledby="fig2-title">
       <div class="fig-head">
         <span class="meta"><span class="accent">Fig. 2b</span>&nbsp;&nbsp;<span id="fig2-title">{t('Flux de données', 'Data flow')}</span></span>
@@ -173,7 +173,7 @@ const AW = 5 * BW + 4 * GAP;
       </div>
       <div class="arch__scroll">
         <svg viewBox={`0 0 ${AW} 250`} class="arch__svg" role="img" aria-label={t('Deux chaînes de traitement : publication de la figure, et pipeline de machine learning', 'Two processing pipelines: publishing the figure, and the machine learning pipeline')}>
-          <defs><marker id="ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#181818" /></marker></defs>
+          <defs><marker id="ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 z" style="fill: var(--ink)" /></marker></defs>
           <text class="ax-label" x="0" y="12">{t('A · PIPELINE DE MACHINE LEARNING', 'A · MACHINE LEARNING PIPELINE')}</text>
           {mlFlow.map((b, i) => (
             <g transform={`translate(${i * (BW + GAP)},24)`}>
@@ -194,7 +194,7 @@ const AW = 5 * BW + 4 * GAP;
           ))}
         </svg>
       </div>
-      <figcaption class="fig-source">{t('A — chaîne du notebook, de l’étiquette au test. B — chaîne réelle de ce site, voir', 'A — the notebook pipeline, from label to test. B — this site’s actual pipeline, see')} <code>scripts/</code> {t('et', 'and')} <code>src/pages/data/cmapss/</code>.</figcaption>
+      <figcaption class="fig-source">{t('A : chaîne du notebook, de l’étiquette au test. B : chaîne réelle de ce site, voir', 'A: the notebook pipeline, from label to test. B: this site’s actual pipeline, see')} <code>scripts/</code> {t('et', 'and')} <code>src/pages/data/cmapss/</code>.</figcaption>
     </figure>
   </CaseSection>
 
@@ -206,7 +206,7 @@ const AW = 5 * BW + 4 * GAP;
           <li><strong>Validation croisée groupée par moteur</strong> (5 plis) : toutes les lignes d’un même moteur restent du même côté, sinon le modèle « reconnaît » le moteur au lieu d’apprendre l’usure.</li>
           <li><strong>Sept modèles comparés</strong> : régression logistique, Naive Bayes, k-NN, SVM (RBF), arbre de décision, forêt aléatoire, gradient boosting, puis optimisés par recherche en grille.</li>
           <li><strong>Choix du modèle</strong> : cinq modèles sont à moins de 0,005 de la meilleure précision moyenne (AP 0,955). Règle fixée à l’avance : prendre le plus simple et le plus lisible, la régression logistique (C = 100, poids de classes équilibrés).</li>
-          <li><strong>Choix du seuil</strong> : sur les scores hors-pli, le seuil qui maximise le F2 (qui privilégie le rappel : rater une panne coûte plus cher qu’une fausse alarme) — 0,592.</li>
+          <li><strong>Choix du seuil</strong> : sur les scores hors-pli, le seuil qui maximise le F2 (qui privilégie le rappel : rater une panne coûte plus cher qu’une fausse alarme) : 0,592.</li>
           <li><strong>Test</strong> : une seule évaluation, sur la dernière ligne enregistrée de chacun des 100 moteurs de test ; intervalles de confiance par bootstrap (2 000 tirages).</li>
         </ul>
       </>
@@ -217,7 +217,7 @@ const AW = 5 * BW + 4 * GAP;
           <li><strong>Cross-validation grouped by engine</strong> (5 folds): all rows of an engine stay on the same side, otherwise the model “recognises” the engine instead of learning wear.</li>
           <li><strong>Seven models compared</strong>: logistic regression, Naive Bayes, k-NN, SVM (RBF), decision tree, random forest, gradient boosting, then tuned with a grid search.</li>
           <li><strong>Model choice</strong>: five models are within 0.005 of the best average precision (AP 0.955). A rule set in advance: take the simplest and most readable one, logistic regression (C = 100, balanced class weights).</li>
-          <li><strong>Threshold choice</strong>: on out-of-fold scores, the threshold that maximises F2 (which favours recall: missing a failure costs more than a false alarm) — 0.592.</li>
+          <li><strong>Threshold choice</strong>: on out-of-fold scores, the threshold that maximises F2 (which favours recall: missing a failure costs more than a false alarm): 0.592.</li>
           <li><strong>Test</strong>: a single evaluation, on the last recorded row of each of the 100 test engines; bootstrap confidence intervals (2,000 draws).</li>
         </ul>
       </>
@@ -264,25 +264,25 @@ const AW = 5 * BW + 4 * GAP;
   <CaseSection n="06" title={t('Réflexion', 'Reflection')} id="reflexion">
     {lang === 'fr' ? (
       <>
-        <h3>Les erreurs viennent de la frontière qu’on a tracée, pas d’un angle mort.</h3>
+        <h3>Les erreurs se concentrent autour de la limite des 30 cycles.</h3>
         <ul class="bul">
           <li><strong>L’exactitude ment</strong> quand 85 % des cas sont sains : il faut lire rappel, précision, F1, AUC et AP.</li>
           <li><strong>Un modèle linéaire suffit</strong> : six modèles se tiennent à 0,01 près ; la complexité n’achète rien ici.</li>
           <li><strong>La validation par moteur était le bon protocole</strong> : les scores de validation tombent dans les intervalles du test.</li>
           <li><strong>100 moteurs, c’est peu</strong> : le rappel peut aller de 0,67 à 0,96. On ne départage pas des modèles sur quelques points.</li>
         </ul>
-        <p><strong>Pour aller plus loin :</strong> donner au modèle l’historique de chaque moteur (moyennes glissantes et pentes sur 5 à 30 cycles, calculées sans regarder le futur) — c’est la principale limite, une prédiction n’utilisant qu’une seule ligne ; fixer le seuil par un coût réel plutôt que le F2 ; prédire la RUL elle-même ; passer à FD002–FD004 et leurs conditions de vol multiples.</p>
+        <p><strong>Pour aller plus loin :</strong> donner au modèle l’historique de chaque moteur (moyennes glissantes et pentes sur 5 à 30 cycles, calculées sans regarder le futur). C’est la principale limite, une prédiction n’utilisant qu’une seule ligne ; fixer le seuil par un coût réel plutôt que le F2 ; prédire la RUL elle-même ; passer à FD002–FD004 et leurs conditions de vol multiples.</p>
       </>
     ) : (
       <>
-        <h3>The errors come from the boundary we drew, not from a blind spot.</h3>
+        <h3>The errors cluster around the 30-cycle boundary.</h3>
         <ul class="bul">
           <li><strong>Accuracy lies</strong> when 85% of cases are healthy: read recall, precision, F1, AUC and AP instead.</li>
           <li><strong>A linear model is enough</strong>: six models sit within 0.01 of each other; complexity buys nothing here.</li>
           <li><strong>Validating by engine was the right protocol</strong>: validation scores fall inside the test intervals.</li>
           <li><strong>100 engines is few</strong>: recall could be anywhere from 0.67 to 0.96. Models cannot be separated on a few points.</li>
         </ul>
-        <p><strong>Next steps:</strong> give the model each engine’s history (moving averages and slopes over 5 to 30 cycles, computed without looking ahead) — the main limit, since a prediction uses a single row; set the threshold from a real cost rather than F2; predict the RUL itself; move to FD002–FD004 and their multiple flight conditions.</p>
+        <p><strong>Next steps:</strong> give the model each engine’s history (moving averages and slopes over 5 to 30 cycles, computed without looking ahead). That is the main limit, since a prediction uses a single row; set the threshold from a real cost rather than F2; predict the RUL itself; move to FD002–FD004 and their multiple flight conditions.</p>
       </>
     )}
   </CaseSection>
@@ -316,7 +316,7 @@ const AW = 5 * BW + 4 * GAP;
   .exp__under { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; margin-top: 6px; }
   .exp__legend { display: flex; flex-wrap: wrap; gap: 6px 16px; color: var(--ink-2); }
   .exp__legend i { display: inline-block; width: 18px; height: 0; vertical-align: middle; margin-right: 6px; border-top: 1px solid; }
-  .lg-trace { border-color: rgba(24, 24, 24, 0.3) !important; }
+  .lg-trace { border-color: color-mix(in srgb, var(--ink) 30%, transparent) !important; }
   .lg-med { border-top-width: 2.5px !important; border-color: var(--ink) !important; }
   .lg-iqr { height: 9px !important; border: 0 !important; background: color-mix(in srgb, var(--blue) 20%, transparent); }
   .lg-focus { border-top-width: 2.5px !important; border-color: var(--accent) !important; }
