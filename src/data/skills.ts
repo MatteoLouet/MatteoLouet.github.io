@@ -50,6 +50,7 @@ export const skills: SkillGroup[] = [
       { name: 'TypeScript · React', ctx: ['aca'] },
       { name: 'Java', ctx: ['aca'] },
       { name: 'C', ctx: ['aca'], detail: 'RoverRun' },
+      { name: 'Scala', ctx: ['aca'] },
       { name: 'Matlab', ctx: ['aca'] },
     ],
   },
