@@ -22,7 +22,7 @@ const t = (fr: string, en: string) => (lang === 'fr' ? fr : en);
       <div class="hero__intro">
         <p class="lead">{pick(site.hero.intro, lang)}</p>
         <p class="hero__links">
-          <a class="link link-arrow" href={site.contact.cv} download="Matteo-Louet-CV.pdf">{t('Télécharger le CV', 'Download the CV')} <span class="muted small">(PDF)</span> <span class="arr" aria-hidden="true">↓</span></a>
+          <a class="link link-arrow" href={pick(site.contact.cv, lang)} download>{t('Télécharger le CV', 'Download the CV')} <span class="muted small">(PDF)</span> <span class="arr" aria-hidden="true">↓</span></a>
           <a class="link" href="#travaux">{t('Voir les projets', 'See the projects')}</a>
           <a class="link muted" href={href('cmapss', lang)}>{t('Étude de cas C-MAPSS', 'C-MAPSS case study')}</a>
         </p>

@@ -28,7 +28,7 @@ const otherPath = switchPath(Astro.url.pathname, other);
           {links.map((l) => (
             <li class={l.hash === 'labo' ? 'nav__lab' : undefined}><a data-nav href={href('home', lang, l.hash)}>{l.label}</a></li>
           ))}
-          <li><a class="nav__cv" href={site.contact.cv} download="Matteo-Louet-CV.pdf" aria-label={t('Télécharger le CV (PDF)', 'Download the CV (PDF)')}>CV&nbsp;↓</a></li>
+          <li><a class="nav__cv" href={pick(site.contact.cv, lang)} download aria-label={t('Télécharger le CV (PDF)', 'Download the CV (PDF)')}>CV&nbsp;↓</a></li>
         </ul>
       </nav>
       <button type="button" class="nav__theme" data-theme-toggle aria-pressed="false" aria-label={t('Activer le mode sombre', 'Switch to dark mode')} data-label-dark={t('Activer le mode sombre', 'Switch to dark mode')} data-label-light={t('Activer le mode clair', 'Switch to light mode')}>

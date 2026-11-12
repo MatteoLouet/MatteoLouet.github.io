@@ -8,7 +8,7 @@ const links = [
   { k: 'E-mail', v: site.contact.email, href: `mailto:${site.contact.email}` },
   { k: 'LinkedIn', v: site.contact.linkedin && 'linkedin.com/in/mattéo-louet', href: site.contact.linkedin },
   { k: 'GitHub', v: site.contact.github && 'github.com/MatteoLouet', href: site.contact.github },
-  { k: 'CV', v: t('Télécharger (PDF) ↓', 'Download (PDF) ↓'), href: site.contact.cv, download: true },
+  { k: 'CV', v: t('Télécharger (PDF) ↓', 'Download (PDF) ↓'), href: pick(site.contact.cv, lang), download: true },
 ];
 ---
 <section class="section contact" id="contact" data-section="Contact" aria-labelledby="contact-title">
@@ -23,7 +23,7 @@ const links = [
           {links.map((l) => (
             <div>
               <dt class="meta meta--ink2">{l.k}</dt>
-              <dd>{l.v ? <a class="link" href={l.href} rel={l.download ? undefined : 'me noopener'} download={l.download ? 'Matteo-Louet-CV.pdf' : undefined}>{l.v.replace(/^https?:\/\/(www\.)?/, '')}</a> : null}</dd>
+              <dd>{l.v ? <a class="link" href={l.href} rel={l.download ? undefined : 'me noopener'} download={l.download || undefined}>{l.v.replace(/^https?:\/\/(www\.)?/, '')}</a> : null}</dd>
             </div>
           ))}
         </dl>

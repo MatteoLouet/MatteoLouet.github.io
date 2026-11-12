@@ -38,7 +38,7 @@ const t = (fr: string, en: string) => (lang === 'fr' ? fr : en);
         <div><dt class="meta meta--ink2">{t('Langues', 'Languages')}</dt><dd>{languages.map((l) => <span>{pick(l.name, lang)} <span class="muted">· {pick(l.level, lang)}</span></span>)}</dd></div>
         <div><dt class="meta meta--ink2">{t('Activités', 'Activities')}</dt><dd>{interests.map((i) => <span>{pick(i, lang)}</span>)}</dd></div>
         <div><dt class="meta meta--ink2">{t('Mobilité', 'Mobility')}</dt><dd><span>{t('Permis B', 'Driving licence (B)')}</span></dd></div>
-        <div><dt class="meta meta--ink2">CV</dt><dd><a class="link" href={site.contact.cv} download="Matteo-Louet-CV.pdf">{t('Télécharger le CV', 'Download the CV')} (PDF) ↓</a></dd></div>
+        <div><dt class="meta meta--ink2">CV</dt><dd><a class="link" href={pick(site.contact.cv, lang)} download>{t('Télécharger le CV', 'Download the CV')} (PDF) ↓</a></dd></div>
       </dl>
     </div>
 

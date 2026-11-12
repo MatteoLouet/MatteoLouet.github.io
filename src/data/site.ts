@@ -35,7 +35,8 @@ export const site = {
     email: 'matteo.louet2@gmail.com',
     linkedin: 'https://www.linkedin.com/in/matt%C3%A9o-louet-97506b292/',
     github: 'https://github.com/MatteoLouet',
-    cv: '/cv/Matteo-Louet-CV.pdf', // public/cv — remplacer le fichier pour mettre le CV à jour
+    // public/cv — le CV téléchargé suit la langue de la page ; remplacer les fichiers pour les mettre à jour
+    cv: { fr: '/cv/Matteo-Louet-CV.pdf', en: '/cv/Matteo-Louet-CV-EN.pdf' },
   },
 
   seo: {
