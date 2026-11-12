@@ -1,0 +1,185 @@
+<!doctype html>
+<!--
+  CV de Mattéo Louet, une seule source pour les deux langues.
+  Export PDF : node cv/build.mjs  (écrit public/cv/Matteo-Louet-CV.pdf et Matteo-Louet-CV-EN.pdf)
+  Aperçu : ouvrir cv.html?lang=fr ou cv.html?lang=en dans Chrome.
+-->
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>CV Mattéo Louet</title>
+<style>
+  @font-face { font-family: 'Raleway'; src: url('assets/Raleway-VF.ttf') format('truetype'); font-weight: 100 900; }
+  @page { size: A4; margin: 0; }
+  :root {
+    --ink: #1a1917;
+    --x: 32pt;            /* marge gauche et droite : tout s'aligne sur ces deux bords */
+    --gap: 30pt;          /* gouttière entre les deux colonnes */
+    --left: 198pt;        /* largeur de la colonne gauche */
+    --rule: 0.8pt solid var(--ink);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: #fff; }
+  body {
+    font-family: 'Raleway', sans-serif; color: var(--ink); font-size: 9pt; line-height: 1.45;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  a { color: inherit; text-decoration: none; }
+  .page { width: 210mm; height: 297mm; padding: 22pt var(--x) 16pt; display: flex; flex-direction: column; overflow: hidden; }
+
+  /* ---------- en-tête ---------- */
+  .head { display: grid; grid-template-columns: 102pt 1fr 152pt; column-gap: 16pt; align-items: start; }
+  .photo { width: 102pt; height: 119pt; object-fit: cover; display: block; }
+  .id { padding-top: 2pt; }
+  .name { font-size: 26pt; font-weight: 700; letter-spacing: 1.6pt; line-height: 1.12; text-transform: uppercase; }
+  .role { margin-top: 9pt; font-size: 11pt; font-weight: 500; letter-spacing: 1.25pt; line-height: 1.12; text-transform: uppercase; }
+  .contact { list-style: none; display: grid; row-gap: 7.5pt; padding-top: 1pt; }
+  .contact li { display: grid; grid-template-columns: 17pt 1fr; column-gap: 8pt; align-items: center; min-height: 13.5pt; }
+  .contact .ic { width: 17pt; height: 11.5pt; display: grid; place-items: center; }
+  .contact .ic.big { height: 13pt; }
+  .contact .ic img { height: 10.5pt; width: auto; max-width: 15pt; object-fit: contain; display: block; }
+  .contact .ic.big img { height: 13pt; }
+  .contact .ic svg { width: 11pt; height: 11pt; display: block; }
+  .contact a { text-decoration: underline; text-underline-offset: 1.6pt; text-decoration-thickness: 0.6pt; }
+  .contact span, .contact a { font-weight: 500; white-space: nowrap; }
+
+  /* ---------- profil ---------- */
+  .profile { margin-top: 10pt; border-top: var(--rule); padding-top: 9pt; }
+  .profile p { text-align: justify; font-weight: 500; line-height: 1.5; }
+
+  /* ---------- corps en deux colonnes ---------- */
+  .body { margin-top: 9pt; flex: 1; display: grid; grid-template-columns: var(--left) 1fr; column-gap: var(--gap); }
+  .col { display: flex; flex-direction: column; gap: 9pt; }
+  section { border-top: var(--rule); padding-top: 8pt; }
+  h2 { font-size: 12.5pt; font-weight: 700; letter-spacing: 1.3pt; text-transform: uppercase; line-height: 1.2; margin-bottom: 6pt; }
+  h3 { font-size: 9pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.15pt; line-height: 1.3; }
+  .meta { font-weight: 400; margin-top: 1pt; }
+  p.desc { text-align: justify; hyphens: auto; hyphenate-limit-chars: 8 4 4; font-weight: 500; font-size: 8.3pt; line-height: 1.45; margin-top: 3pt; }
+  .item + .item { margin-top: 6pt; }
+  .edu p { text-align: justify; hyphens: auto; font-size: 9pt; margin-top: 2pt; }
+
+  /* une seule forme de puce, un seul retrait, partout */
+  ul.dots { list-style: none; }
+  ul.dots li { position: relative; padding-left: 11pt; }
+  ul.dots li::before { content: ''; position: absolute; left: 2pt; top: 0.62em; width: 3pt; height: 3pt; border-radius: 50%; background: var(--ink); }
+  .exp ul.dots { margin-top: 3pt; }
+
+  h4 { font-size: 8.5pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4pt; margin: 2pt 0 3pt; }
+  h4:not(:first-of-type) { margin-top: 8pt; }
+  .skills-grid { display: grid; grid-template-columns: repeat(2, 1fr); column-gap: 6pt; }
+  .skills-grid li, .soft li, .langs li, .acts li { font-size: 9pt; line-height: 1.65; font-weight: 500; }
+
+  /* projets : grille 3 × 2, colonnes de largeur égale */
+  .projects { display: grid; grid-template-columns: repeat(2, 1fr); column-gap: 16pt; row-gap: 5pt; }
+  .projects h3 { text-transform: none; font-size: 9.5pt; letter-spacing: 0; }
+  .projects p.desc { font-size: 8.1pt; margin-top: 1.5pt; }
+
+  [data-l]:not(.on) { display: none !important; }
+</style>
+</head>
+<body>
+<div class="page" id="cv"></div>
+
+<script>
+const lang = new URLSearchParams(location.search).get('lang') === 'en' ? 'en' : 'fr';
+document.documentElement.lang = lang;
+const T = (fr, en) => (lang === 'fr' ? fr : en);
+const esc = (s) => { s = s.replace(/&/g, '&amp;').replace(/</g, '&lt;'); return lang === 'fr' ? s.replace(/ ([:;!?])/g, '\u00a0$1') : s; };
+
+const contact = [
+  { ic: 'assets/github.png', big: true, html: `<a href="https://github.com/MatteoLouet">Github</a>` },
+  { ic: 'assets/mail.png', html: `<a href="mailto:matteo.louet2@gmail.com" style="text-decoration:none">matteo.louet2@gmail.com</a>` },
+  { ic: 'assets/phone.png', html: `<span>${T('07 68 14 38 01', '+33 7 68 14 38 01')}</span>` },
+  { ic: 'assets/linkedin.png', html: `<a href="https://www.linkedin.com/in/matt%C3%A9o-louet-97506b292/">Mattéo Louet</a>` },
+  { svg: true, html: `<a href="${T('https://matteolouet.github.io/', 'https://matteolouet.github.io/en/')}">matteolouet.github.io</a>` },
+  { ic: 'assets/car.png', html: `<span style="font-weight:400">${T('Permis B', 'Driving licence (B)')}</span>` },
+];
+const globe = `<svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><ellipse cx="12" cy="12" rx="4.4" ry="10"/><path d="M2 12h20M12 2v20"/></svg>`;
+
+const profile = T(
+  `Actuellement étudiant en deuxième année de cycle ingénieur à l'EFREI Paris, j'étudie l'ingénierie en combinant un enseignement approfondi en mathématiques, physique et informatique. Mon alternance au ministère des armées me fait continuellement monter en compétence dans un milieu technique et exigeant, où j'apprends à manipuler des données sensibles. Ma formation m'apporte continuellement de nouvelles compétences techniques grâce à une approche pluridisciplinaire. J'ai également l'occasion d'aiguiser mon esprit critique grâce à des analyses variées et de développer mes compétences en communication ; je suis sérieux et j'ai une bonne capacité d'adaptation.`,
+  `Currently a second-year student in the engineering cycle at EFREI Paris, I study engineering through in-depth teaching in mathematics, physics and computer science. My work-study placement at the French Ministry of the Armed Forces keeps building my skills in a technical and demanding environment, where I am learning to handle sensitive data. My studies keep bringing me new technical skills through a multidisciplinary approach. I also have the opportunity to sharpen my critical thinking through varied analyses and to develop my communication skills; I am reliable and adapt easily.`
+);
+
+const education = [
+  { h: T('Cycle ingénieur - EFREI Paris', 'Engineering cycle - EFREI Paris'),
+    p: [T("Classée 1ère école d'ingénieurs en informatique (L'Étudiant, 2024). Prépa intégrée de 2023 à 2025, cycle ingénieur de 2025 à 2028.",
+           "Ranked 1st engineering school in computer science (L'Étudiant, 2024). Integrated preparatory years 2023-2025, engineering cycle 2025-2028.")] },
+  { h: T('Baccalauréat général - Saint François de Sales, Troyes', 'French baccalaureate - Saint François de Sales, Troyes'),
+    p: [T('Mention bien, spécialités mathématiques et NSI. 2023.', 'With honours (mention bien), majors in mathematics and computer science. 2023.')] },
+];
+
+const hard = [['Python', 'Java', 'Scala', 'C', 'Matlab'], ['MySQL', 'Postman', 'Qlik Sense', 'Talend', 'PowerBI']];
+const soft = T(['Méthode 5S', 'Méthode agile', 'Travail en équipe', 'Autonomie', 'Communication'],
+               ['5S method', 'Agile methods', 'Teamwork', 'Autonomy', 'Communication']);
+const langs = T(['Français : langue maternelle', 'Anglais : B2 (certification Cambridge FCE)', 'Espagnol : B1'],
+                ['French: native language', 'English: B2 (Cambridge FCE certificate)', 'Spanish: B1']);
+const acts = T(['Professeur de danse', 'Boxe', 'Œnologie'], ['Dance teacher', 'Boxing', 'Oenology']);
+
+const exp = [
+  { h: T('Data analyst - alternance', 'Data analyst - work-study'),
+    m: T('Ministère des armées | 2025 - maintenant', 'French Ministry of the Armed Forces | 2025 - present'),
+    ul: T(['Cartographie des données, data lineage', 'Conception de flux ETL (Talend)', 'ETL et développement de dashboards Qlik Sense', "Création et intégration d'API", 'Création de tableaux de bord stratégiques'],
+          ['Data mapping, data lineage', 'ETL flow design (Talend)', 'ETL and Qlik Sense dashboard development', 'API creation and integration', 'Building strategic dashboards']) },
+  { h: T('Stage commercial', 'Sales internship'), m: T('Granja 3 | février 2025', 'Granja 3 | February 2025'),
+    d: T('Accueil, conseil et accompagnement des clients, gestion des stocks et des rayons.', 'Welcoming, advising and assisting customers; stock and shelf management.') },
+  { h: T("Stage d'exécution", 'Shop-floor internship'), m: T('Lacoste | juillet 2024', 'Lacoste | July 2024'),
+    d: T("Travail dans une usine de teinturerie et au contrôle qualité. L'organisation du travail se basait sur la méthode 5S afin d'optimiser l'espace de travail ainsi que la communication en équipe.",
+         'Worked in a dyeing plant and in quality control. Work was organised around the 5S method to optimise both the workspace and team communication.') },
+  { h: T('Ouvrier agricole', 'Farm worker'), m: T('Ferme du Val St Jean, Montsuzain | 2022-2023', 'Ferme du Val St Jean, Montsuzain | 2022-2023') },
+  { h: T("Stage d'observation", 'Observation internship'), m: T('Mc Arthur Glen Troyes | février 2020', 'Mc Arthur Glen Troyes | February 2020'),
+    d: T('Stage d’observation au service marketing du centre Mc Arthur Glen Troyes.', 'Observation internship in the marketing department of the Mc Arthur Glen Troyes centre.') },
+];
+
+const projects = [
+  { h: 'Chatbot', d: T("Génération de réponses à l'aide de l'analyse d'une matrice TF-IDF.", 'Generates replies by analysing a TF-IDF matrix.') },
+  { h: 'ML C-MAPSS', d: T('Projet de machine learning sur le dataset C-MAPSS : un travail complet sur les turbofans, de la classification à la prédiction.', 'Machine learning project on the C-MAPSS dataset: a complete study of turbofans, from classification to prediction.') },
+  { h: 'RoverRun', d: T("Programme en C cherchant à optimiser les déplacements d'un véhicule : structures de données et algorithmes d'optimisation.", "A C program that optimises a vehicle's movements, using data structures and optimisation algorithms.") },
+  { h: T("App d'audit", 'Audit app'), d: T("Application d'audit basée sur un modèle normalisé et des requêtes SQL complexes.", 'An audit app built on a normalised model and complex SQL queries.') },
+  { h: T('ML Consommation', 'ML Consumption'), d: T("Projet de machine learning visant à prédire la consommation d'électricité par région selon différents paramètres.", 'Machine learning project predicting electricity consumption by region from various parameters.') },
+  { h: T('Messagerie', 'Messaging'), d: T('Application de messagerie instantanée permettant la communication entre plusieurs appareils.', 'Instant messaging app enabling communication across multiple devices.') },
+];
+
+const li = (xs) => xs.map((x) => `<li>${esc(x)}</li>`).join('');
+document.title = T('CV Mattéo Louet', 'Mattéo Louet - CV');
+document.getElementById('cv').innerHTML = `
+  <header class="head">
+    <img class="photo" src="assets/photo.png" alt="">
+    <div class="id">
+      <h1 class="name">Mattéo<br>Louet</h1>
+      <p class="role">${T('Étudiant en Big Data &amp; Machine Learning - Data analyst au ministère des armées',
+                          'Big Data &amp; Machine Learning student - Data analyst at the French Armed Forces Ministry')}</p>
+    </div>
+    <ul class="contact">${contact.map((c) => `<li><span class="ic${c.big ? ' big' : ''}">${c.svg ? globe : `<img src="${c.ic}" alt="">`}</span>${c.html}</li>`).join('')}</ul>
+  </header>
+
+  <div class="profile"><p>${esc(profile)}</p></div>
+
+  <div class="body">
+    <div class="col">
+      <section class="edu"><h2>${T('Formation', 'Education')}</h2>
+        ${education.map((e) => `<div class="item"><h3>${esc(e.h)}</h3>${e.p.map((p) => `<p>${esc(p)}</p>`).join('')}</div>`).join('')}
+      </section>
+      <section><h2>${T('Compétences', 'Skills')}</h2>
+        <h4>Hard skills</h4>
+        <div class="skills-grid">${hard.map((c) => `<ul class="dots">${li(c)}</ul>`).join('')}</div>
+        <h4>Soft skills</h4>
+        <ul class="dots soft">${li(soft)}</ul>
+      </section>
+      <section><h2>${T('Langues', 'Languages')}</h2><ul class="dots langs">${li(langs)}</ul></section>
+      <section><h2>${T('Vie associative', 'Activities')}</h2><ul class="dots acts">${li(acts)}</ul></section>
+    </div>
+
+    <div class="col">
+      <section class="exp"><h2>${T('Expérience', 'Experience')}</h2>
+        ${exp.map((e) => `<div class="item"><h3>${esc(e.h)}</h3><p class="meta">${esc(e.m)}</p>
+          ${e.ul ? `<ul class="dots">${li(e.ul)}</ul>` : ''}${e.d ? `<p class="desc">${esc(e.d)}</p>` : ''}</div>`).join('')}
+      </section>
+      <section><h2>${T('Projets académiques et personnels', 'Academic and personal projects')}</h2>
+        <div class="projects">${projects.map((p) => `<div><h3>${esc(p.h)}</h3><p class="desc">${esc(p.d).replace(/(C-MAPSS|TF-IDF)/g, '<span style="white-space:nowrap">$1</span>')}</p></div>`).join('')}</div>
+      </section>
+    </div>
+  </div>`;
+</script>
+</body>
+</html>
