@@ -1,0 +1,248 @@
+---
+/**
+ * Étude de cas — Qui contrôle l'infrastructure mobile française ? (FR / EN)
+ * Projet individuel BDML « Data Visualization, Data Storytelling & BI », tableau de bord Streamlit.
+ * Chiffres : scripts/anfr/export.py, calculés avec src/analytics.py du dépôt, périmètre par défaut
+ * de l'application (France métropolitaine, export ANFR d'octobre 2026).
+ */
+import CaseStudy from '../layouts/CaseStudy.astro';
+import CaseSection from '../components/CaseSection.astro';
+import AnfrExplorer from '../components/AnfrExplorer.astro';
+import d from '../data/anfr.json';
+import type { Lang } from '../i18n';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+// en français, espace insécable avant : ; ? ! % et après « (aucun signe ne commence une ligne)
+const nb = (s: string) => s.replace(/ ([:;?!%»])/g, '\u00a0$1').replace(/« /g, '«\u00a0');
+const t = (fr: string, en: string) => (lang === 'fr' ? nb(fr) : en);
+const loc = lang === 'fr' ? 'fr-FR' : 'en-GB';
+const n = (v: number, dd = 0) => v.toLocaleString(loc, { minimumFractionDigits: dd, maximumFractionDigits: dd });
+const pc = (v: number, dd = 0) => (lang === 'fr' ? `${n(v * 100, dd)}\u00a0%` : `${n(v * 100, dd)}%`);
+const REPO = 'https://github.com/MatteoLouet/anfr-supports-dashboard';
+const DATASET = 'https://www.data.gouv.fr/datasets/donnees-sur-les-installations-radioelectriques-de-plus-de-5-watts-1';
+
+const k = d.kpis, h = d.historique, q = d.qualite;
+const A = h.annees;
+const i0 = 0, i1 = A.length - 1;
+const yr = (y: number) => A.indexOf(y);
+const P = h.parts as Record<string, number[]>;
+const top = [...d.departements].sort((a, b) => b.indice_py - a.indice_py);
+const niveau = (v: number) => (v < 1000 ? t('peu concentré', 'unconcentrated') : v < 1800 ? t('modérément concentré', 'moderately concentrated') : t('très concentré', 'highly concentrated'));
+
+const facts = [
+  { k: t('Données', 'Data'), v: t('Registre ANFR des antennes, data.gouv.fr, 9 exports annuels 2018 – 2026', 'ANFR antenna register, data.gouv.fr, 9 yearly exports 2018 – 2026') },
+  { k: t('Périmètre', 'Scope'), v: t(`${n(k.n_supports)} supports d’antennes mobiles, France métropolitaine`, `${n(k.n_supports)} mobile antenna sites, metropolitan France`) },
+  { k: 'Stack', v: 'Python · pandas · Streamlit · Plotly · PyArrow' },
+  { k: t('Cadre', 'Setting'), v: t('Projet individuel, Data Visualization, Data Storytelling & BI', 'Individual project, Data Visualization, Data Storytelling & BI') },
+  { k: t('Livrable', 'Deliverable'), v: t('Tableau de bord Streamlit en 7 pages, filtres globaux', '7-page Streamlit dashboard with global filters') },
+];
+
+/* ---- Fig. 1 : part des supports par type de propriétaire, 2018 → 2026 ---- */
+const FW = 1100, FH = 420, m = { l: 52, r: 190, t: 20, b: 34 };
+const fx = (i: number) => m.l + (i / (A.length - 1)) * (FW - m.l - m.r);
+const fy = (v: number) => m.t + (1 - v / 0.6) * (FH - m.t - m.b);
+const path = (vs: number[]) => 'M' + vs.map((v, i) => `${fx(i).toFixed(1)},${fy(v).toFixed(1)}`).join('L');
+const series = [
+  { k: 'tc', v: h.part_towerco, l: t('TowerCos', 'TowerCos') },
+  { k: 'op', v: h.part_operateur, l: t('Opérateurs', 'Operators') },
+  { k: 'q4', v: h.quatre_ops, l: t('Sites à 4 opérateurs', '4-operator sites') },
+];
+const ev = [
+  { y: 2020, l: t('SFR → Hivory', 'SFR → Hivory') },
+  { y: 2022, l: t('Orange → TOTEM', 'Orange → TOTEM') },
+];
+
+/* ---- KPIs ---- */
+const KPI = [
+  { n: t('Part TowerCo', 'TowerCo share'), d: t('supports détenus par une société d’infrastructures (TOTEM, TDF, Hivory, Cellnex, ATC…)', 'sites owned by an infrastructure company (TOTEM, TDF, Hivory, Cellnex, ATC…)'), v: pc(k.part_towerco, 1), b: pc(h.part_towerco[i0], 1) },
+  { n: t('Auto-détention', 'Self-ownership'), d: t('supports détenus par un opérateur télécom', 'sites owned by a telecom operator'), v: pc(k.part_operateur, 1), b: pc(h.part_operateur[i0], 1) },
+  { n: t('1er propriétaire / CR4', 'Largest owner / CR4'), d: t('part du 1er et des 4 premiers propriétaires identifiés', 'share of the largest and the top 4 identified owners'), v: `${k.top1} ${pc(k.top1_part, 1)} / ${pc(k.cr4, 1)}`, b: `${h.top1[i0]} ${pc(P[h.top1[i0]][i0], 1)} / ${pc(h.cr4[i0], 1)}` },
+  { n: 'HHI', d: t('Herfindahl-Hirschman sur les propriétaires identifiés (0 – 10 000)', 'Herfindahl-Hirschman on identified owners (0 – 10,000)'), v: n(k.hhi), b: n(h.hhi[i0]) },
+  { n: t('Mutualisation', 'Sharing rate'), d: t('supports hébergeant au moins 2 opérateurs', 'sites hosting at least 2 operators'), v: pc(k.mutualisation, 1), b: pc(h.mutualisation[i0], 1) },
+  { n: t('Sites « tout-en-un »', '“All-in-one” sites'), d: t('supports hébergeant les 4 opérateurs : un point unique de défaillance', 'sites hosting all 4 operators: a single point of failure'), v: pc(k.quatre_ops, 1), b: pc(h.quatre_ops[i0], 1) },
+  { n: t('Communes captives', 'Captive communes'), d: t('communes d’au moins 2 supports, tous au même propriétaire', 'communes with 2+ sites, all owned by the same company'), v: pc(k.communes_mono, 1), b: '—' },
+];
+const OPN: Record<string, string> = { 'Orange': 'Orange', 'SFR': 'SFR', 'Bouygues Telecom': 'Bouygues Telecom', 'Free Mobile': 'Free Mobile' };
+---
+<CaseStudy slug="anfr" lang={lang} kicker={t('Business intelligence · Data storytelling', 'Business intelligence · Data storytelling')} facts={facts}>
+  <div slot="bleed" class="anfr-band">
+    <div class="wrap anfr-band__head">
+      <p class="meta">{t('Deux pages du tableau de bord, recalculées dans votre navigateur', 'Two pages of the dashboard, recomputed in your browser')}</p>
+      <a class="meta link" href={REPO} rel="noopener">Code ↗</a>
+    </div>
+    <AnfrExplorer lang={lang} />
+    <p class="wrap anfr-band__foot small muted">{t(
+      `Données : ANFR, Licence Ouverte Etalab, export du ${d.export.slice(6)}/${d.export.slice(4, 6)}/${d.export.slice(0, 4)}. L’original est une application Streamlit, qui demande un serveur Python. Ici, les supports et les composantes de l’indice sont pré-calculés avec le code du dépôt, et l’indice est recalculé en JavaScript ; avec des poids égaux, il retrouve la valeur Python pour les ${k.n_dep} départements.`,
+      `Data: ANFR, Etalab Open Licence, export of ${d.export.slice(0, 4)}-${d.export.slice(4, 6)}-${d.export.slice(6)}. The original is a Streamlit app, which needs a Python server. Here, the sites and the index components are pre-computed with the repository’s code, and the index is recomputed in JavaScript; with equal weights it matches the Python value for all ${k.n_dep} départements.`
+    )}</p>
+  </div>
+
+  <CaseSection n="01" title={t('Contexte', 'Context')} id="contexte">
+    {lang === 'fr' ? (
+      <>
+        <h3>Les opérateurs ne possèdent plus les pylônes qui portent leurs réseaux.</h3>
+        <p>Le sujet imposé&nbsp;: construire un tableau de bord décisionnel Streamlit sur un jeu de données public, avec un récit complet, du problème aux recommandations. J’ai choisi le registre des antennes de l’ANFR, et une question&nbsp;: <strong>qui contrôle l’infrastructure mobile française, et cette concentration crée-t-elle des risques de dépendance&nbsp;?</strong></p>
+        <p>En {A[i0]}, les opérateurs possédaient {pc(h.part_operateur[i0])} des supports (pylônes, toits, châteaux d’eau) qui portent leurs antennes. En {A[i1]}, {pc(h.part_operateur[i1])}. Le reste est passé à des sociétés d’infrastructures, les TowerCos, qui louent les emplacements.</p>
+        <p>Le tableau de bord s’adresse aux décideurs publics du numérique&nbsp;: régulateur, services de l’État, collectivités. Il suit sept pages&nbsp;: problème, données, indicateurs, qui contrôle, dépendances, territoires, recommandations. Une barre latérale filtre toutes les pages par zone, région, département, opérateur et technologie.</p>
+      </>
+    ) : (
+      <>
+        <h3>Operators no longer own the masts that carry their networks.</h3>
+        <p>The brief: build a decision-support dashboard in Streamlit on a public dataset, with a complete story from problem to recommendations. I chose the ANFR antenna register and one question: <strong>who controls France’s mobile infrastructure, and does that concentration create dependency risks?</strong></p>
+        <p>In {A[i0]}, operators owned {pc(h.part_operateur[i0])} of the sites (masts, rooftops, water towers) that carry their antennas. In {A[i1]}, {pc(h.part_operateur[i1])}. The rest moved to infrastructure companies, the TowerCos, which rent out the slots.</p>
+        <p>The dashboard is aimed at public decision-makers in digital policy: the regulator, State services, local authorities. It follows seven pages: problem, data, indicators, who controls, dependencies, territories, recommendations. A sidebar filters every page by zone, region, département, operator and technology.</p>
+      </>
+    )}
+  </CaseSection>
+
+  <CaseSection n="02" title={t('Données', 'Data')} id="donnees">
+    <h3>{t('Du registre des émetteurs à une ligne par support.', 'From the transmitter register to one row per site.')}</h3>
+    <p>{t(
+      'Le jeu de l’ANFR décrit toutes les installations radio de plus de 5 watts, en tables reliées : supports, stations, émetteurs, propriétaires, exploitants, natures de support. download.py récupère les exports d’octobre de 2018 à 2026 par l’API de data.gouv.fr (environ 600 Mo) ; prepare.py les nettoie, les joint et les agrège.',
+      'The ANFR dataset describes every radio installation above 5 watts, in linked tables: sites, stations, transmitters, owners, operators, site types. download.py fetches the October exports from 2018 to 2026 through the data.gouv.fr API (about 600 MB); prepare.py cleans, joins and aggregates them.'
+    )}</p>
+    <table class="an-tab">
+      <caption class="meta meta--ink2">{t(`Chaîne de traitement, export ${d.export.slice(0, 4)} (France entière)`, `Processing chain, ${d.export.slice(0, 4)} export (all of France)`)}</caption>
+      <tbody>
+        <tr><td>{t('Émetteurs, toutes technologies', 'Transmitters, all technologies')}</td><td class="num">{n(q.lignes_emetteurs_brutes)}</td></tr>
+        <tr><td>{t('Émetteurs mobiles (GSM, UMTS, LTE, 5G NR)', 'Mobile transmitters (GSM, UMTS, LTE, 5G NR)')}</td><td class="num">{n(q.emetteurs_mobiles)}</td></tr>
+        <tr><td>{t('Stations qui les portent', 'Stations carrying them')}</td><td class="num">{n(q.stations_mobiles)}</td></tr>
+        <tr><td>{t('Supports physiques', 'Physical sites')}</td><td class="num">{n(q.supports_mobiles)}</td></tr>
+        <tr class="an-tab__hi"><td>{t('dont France métropolitaine', 'of which metropolitan France')}</td><td class="num">{n(k.n_supports)}</td></tr>
+      </tbody>
+    </table>
+    <ul class="bul">
+      <li><strong>{t('Unité d’analyse', 'Unit of analysis')}</strong>{t(' : le support physique. Chaque support garde son propriétaire, les opérateurs qu’il héberge et les technologies présentes.', ': the physical site. Each site keeps its owner, the operators it hosts and the technologies present.')}</li>
+      <li><strong>{t('Catégories de propriétaires', 'Owner categories')}</strong>{t(' : TowerCo, opérateur en propre, acteur public, transport et énergie, privés et particuliers, à partir des libellés ANFR normalisés.', ': TowerCo, operator-owned, public body, transport and energy, private owners, built from the normalised ANFR labels.')}</li>
+      <li><strong>{t('Contrôle qualité', 'Quality checks')}</strong>{t(` : ${q.doublons_supports_exacts} doublons exacts de supports supprimés, ${n(q.supports_hauteur_aberrante)} hauteurs aberrantes signalées, ${n(q.emetteurs_mobiles_sans_date)} émetteurs sans date de mise en service. Les résultats sont affichés dans la page « Données » de l’application.`, `: ${q.doublons_supports_exacts} exact duplicate sites removed, ${n(q.supports_hauteur_aberrante)} aberrant heights flagged, ${n(q.emetteurs_mobiles_sans_date)} transmitters with no commissioning date. The results are shown on the app’s “Data” page.`)}</li>
+      <li><strong>{t('Libellés génériques', 'Generic labels')}</strong>{t(' : « copropriété », « commune », « particulier » regroupent des milliers de propriétaires distincts. Ils sont exclus du calcul de concentration.', ': “co-ownership”, “commune”, “private individual” group thousands of distinct owners. They are left out of the concentration measure.')}</li>
+    </ul>
+  </CaseSection>
+
+  <CaseSection n="03" title={t('Indicateurs', 'Indicators')} id="indicateurs">
+    <h3>{t('Sept indicateurs, et un indice pour comparer les départements.', 'Seven indicators, and an index to compare départements.')}</h3>
+    <table class="an-tab an-tab--wide">
+      <thead><tr><th>{t('Indicateur', 'Indicator')}</th><th>{t('Définition', 'Definition')}</th><th class="num">{A[i0]}</th><th class="num">{A[i1]}</th></tr></thead>
+      <tbody>
+        {KPI.map((x) => <tr><td><strong>{x.n}</strong></td><td class="an-tab__d">{x.d}</td><td class="num">{x.b}</td><td class="num">{x.v}</td></tr>)}
+      </tbody>
+    </table>
+    <p>{t(
+      `L’indice de dépendance combine quatre composantes par département : le HHI, le poids du 1er propriétaire, la part de communes captives et la part de sites à 4 opérateurs. Chacune est ramenée de 0 à 1 entre le département le moins et le plus exposé, puis l’indice fait leur moyenne pondérée, de 0 à 100. Les départements de moins de 20 supports sont écartés. Les poids sont réglables dans l’application, comme dans l’explorateur ci-dessus.`,
+      `The dependency index combines four components per département: the HHI, the largest owner’s share, the share of captive communes and the share of 4-operator sites. Each is scaled from 0 to 1 between the least and the most exposed département, and the index is their weighted mean, from 0 to 100. Départements with fewer than 20 sites are left out. The weights are adjustable in the app, as in the explorer above.`
+    )}</p>
+  </CaseSection>
+
+  <CaseSection n="04" title={t('Ce que montrent les données', 'What the data shows')} id="resultats">
+    <h3>{t(
+      `En ${A[i1] - A[i0]} ans, la part des TowerCos est passée de ${pc(h.part_towerco[i0])} à ${pc(h.part_towerco[i1])} des supports.`,
+      `In ${A[i1] - A[i0]} years, the TowerCos’ share went from ${pc(h.part_towerco[i0])} to ${pc(h.part_towerco[i1])} of sites.`
+    )}</h3>
+    <figure class="an-fig" aria-labelledby="an-f1">
+      <div class="fig-head">
+        <span class="meta"><span class="accent">Fig. 1</span>&nbsp;&nbsp;<span id="an-f1">{t('Part des supports, France métropolitaine, export d’octobre', 'Share of sites, metropolitan France, October export')}</span></span>
+        <span class="meta meta--ink2">ANFR</span>
+      </div>
+      <svg viewBox={`0 0 ${FW} ${FH}`} role="img" aria-label={t(`Part TowerCo de ${pc(h.part_towerco[i0])} à ${pc(h.part_towerco[i1])}, part opérateurs de ${pc(h.part_operateur[i0])} à ${pc(h.part_operateur[i1])}, de ${A[i0]} à ${A[i1]}.`, `TowerCo share from ${pc(h.part_towerco[i0])} to ${pc(h.part_towerco[i1])}, operator share from ${pc(h.part_operateur[i0])} to ${pc(h.part_operateur[i1])}, ${A[i0]} to ${A[i1]}.`)}>
+        {[0, 0.2, 0.4, 0.6].map((v) => (
+          <g><line class="an-grid" x1={m.l} x2={FW - m.r} y1={fy(v)} y2={fy(v)} /><text class="an-ax" x={m.l - 8} y={fy(v) + 4} text-anchor="end">{pc(v)}</text></g>
+        ))}
+        {A.map((y, i) => <text class="an-ax" x={fx(i)} y={FH - 10} text-anchor="middle">{y}</text>)}
+        {ev.map((e) => (
+          <g><line class="an-ev" x1={fx(yr(e.y))} x2={fx(yr(e.y))} y1={m.t} y2={FH - m.b} /><text class="an-ax an-ax--ev" x={fx(yr(e.y)) + 5} y={m.t + 10}>{e.l}</text></g>
+        ))}
+        {series.map((s) => (
+          <g>
+            <path class={`an-l an-l--${s.k}`} d={path(s.v)} />
+            {s.v.map((v, i) => <circle class={`an-p an-p--${s.k}`} cx={fx(i)} cy={fy(v)} r="3" />)}
+            <text class={`an-lab an-lab--${s.k}`} x={fx(i1) + 10} y={fy(s.v[i1]) + 4}>{s.l} {pc(s.v[i1])}</text>
+          </g>
+        ))}
+      </svg>
+      <figcaption class="small muted">{t(
+        `Les deux sauts sont visibles dans le registre : en 2020, SFR passe de ${pc(P.SFR[yr(2019)], 1)} à ${pc(P.SFR[yr(2020)], 1)} des supports et Hivory apparaît à ${pc(P.HIVORY[yr(2020)], 1)} ; en 2022, Orange passe de ${pc(P.ORANGE[yr(2021)], 1)} à ${pc(P.ORANGE[yr(2022)], 1)} et TOTEM apparaît à ${pc(P.TOTEM[yr(2022)], 1)}.`,
+        `Both jumps are visible in the register: in 2020, SFR drops from ${pc(P.SFR[yr(2019)], 1)} to ${pc(P.SFR[yr(2020)], 1)} of sites and Hivory appears at ${pc(P.HIVORY[yr(2020)], 1)}; in 2022, Orange drops from ${pc(P.ORANGE[yr(2021)], 1)} to ${pc(P.ORANGE[yr(2022)], 1)} and TOTEM appears at ${pc(P.TOTEM[yr(2022)], 1)}.`
+      )}</figcaption>
+    </figure>
+
+    <ul class="bul">
+      <li><strong>{t('Le marché national reste fragmenté', 'The national market remains fragmented')}</strong>{t(` : HHI de ${n(k.hhi)}, ${niveau(k.hhi)} selon les seuils des autorités de concurrence. Le 1er propriétaire, ${k.top1}, détient ${pc(k.top1_part, 1)} des supports, les quatre premiers ${pc(k.cr4, 1)}.`, `: an HHI of ${n(k.hhi)}, ${niveau(k.hhi)} by competition authorities’ thresholds. The largest owner, ${k.top1}, holds ${pc(k.top1_part, 1)} of sites, the top four ${pc(k.cr4, 1)}.`)}</li>
+      <li><strong>{t('La dépendance est locale', 'Dependency is local')}</strong>{t(` : ${k.n_dep_hhi_1000} départements sur ${k.n_dep} dépassent un HHI de 1 000. Les plus exposés selon l’indice à poids égaux, ${top.slice(0, 3).map((x) => x.nom).join(', ')}, ont tous TDF comme 1er propriétaire.`, `: ${k.n_dep_hhi_1000} of ${k.n_dep} départements exceed an HHI of 1,000. The most exposed by the equal-weight index, ${top.slice(0, 3).map((x) => x.nom).join(', ')}, all have TDF as their largest owner.`)}</li>
+      <li><strong>{t('Les points uniques de défaillance se multiplient', 'Single points of failure are spreading')}</strong>{t(` : ${n(k.n_quatre_ops)} supports portent les quatre réseaux, soit ${pc(k.quatre_ops, 1)} contre ${pc(h.quatre_ops[i0], 1)} en ${A[i0]}. ${pc(k.towerco_parmi_4ops)} d’entre eux appartiennent à une TowerCo.`, `: ${n(k.n_quatre_ops)} sites carry all four networks, ${pc(k.quatre_ops, 1)} against ${pc(h.quatre_ops[i0], 1)} in ${A[i0]}. ${pc(k.towerco_parmi_4ops)} of them belong to a TowerCo.`)}</li>
+    </ul>
+
+    <table class="an-tab an-tab--wide">
+      <caption class="meta meta--ink2">{t(`Où sont installés les opérateurs, ${A[i1]}`, `Where operators are hosted, ${A[i1]}`)}</caption>
+      <thead><tr><th>{t('Opérateur', 'Operator')}</th><th class="num">{t('Sites', 'Sites')}</th><th class="num">{t('En propre', 'Own sites')}</th><th class="num">{t('Chez une TowerCo', 'At a TowerCo')}</th><th>{t('Principal bailleur', 'Main landlord')}</th></tr></thead>
+      <tbody>
+        {d.operateurs.map((o) => <tr><td>{OPN[o.op] ?? o.op}</td><td class="num">{n(o.sites)}</td><td class="num">{pc(o.propre, 1)}</td><td class="num">{pc(o.towerco, 1)}</td><td>{o.bailleur} · {pc(o.bailleur_part)}</td></tr>)}
+      </tbody>
+    </table>
+  </CaseSection>
+
+  <CaseSection n="05" title={t('Recommandations', 'Recommendations')} id="recommandations">
+    <h3>{t('La propriété des pylônes n’est pas régulée ; elle est devenue stratégique.', 'Mast ownership is not regulated; it has become strategic.')}</h3>
+    <p>{t(
+      'La dernière page du tableau de bord tire des constats chiffrés (ils se recalculent selon les filtres) et propose cinq actions, chacune avec un porteur et une échéance :',
+      'The dashboard’s last page draws figure-based findings (they recompute with the filters) and proposes five actions, each with an owner and a timeframe:'
+    )}</p>
+    <ol class="an-reco">
+      <li><strong>{t('Créer un observatoire des infrastructures passives', 'Create an observatory of passive infrastructure')}</strong>{t(' : publier chaque année la part des TowerCos, le HHI et le nombre de sites à 4 opérateurs. Régulateur, État · court terme.', ': publish the TowerCo share, the HHI and the number of 4-operator sites every year. Regulator, State · short term.')}</li>
+      <li><strong>{t('Cibler les départements les plus dépendants', 'Target the most dependent départements')}</strong>{t(` : financer des pylônes publics ouverts à plusieurs bailleurs, en priorité dans ${top.slice(0, 5).map((x) => x.nom).join(', ')}. Préfectures, conseils départementaux · moyen terme.`, `: fund public masts open to several landlords, first in ${top.slice(0, 5).map((x) => x.nom).join(', ')}. Prefectures, departmental councils · medium term.`)}</li>
+      <li><strong>{t('Encadrer les supports à quatre opérateurs', 'Regulate 4-operator sites')}</strong>{t(' : continuité de service (énergie de secours, redondance) et tarif d’accès non discriminatoire. Régulateur · moyen terme.', ': service continuity (backup power, redundancy) and non-discriminatory access pricing. Regulator · medium term.')}</li>
+      <li><strong>{t('Garder la main sur le foncier public', 'Keep control of public land')}</strong>{t(' : recenser les points hauts publics et refuser leur cession exclusive à un seul acteur. Collectivités · en continu.', ': map public high points and refuse their exclusive sale to a single player. Local authorities · ongoing.')}</li>
+      <li><strong>{t('Contrôler les rachats', 'Review acquisitions')}</strong>{t(' : examiner toute acquisition qui porterait un acteur au-delà de 25 % des supports d’un département. Autorité de la concurrence · en continu.', ': examine any acquisition that would take a player above 25% of a département’s sites. Competition authority · ongoing.')}</li>
+    </ol>
+  </CaseSection>
+
+  <CaseSection n="06" title={t('Limites', 'Limitations')} id="limites">
+    <h3>{t('La concentration réelle est sous-estimée.', 'Real concentration is underestimated.')}</h3>
+    <ul class="bul">
+      <li>{t('Le registre ne publie pas les liens capitalistiques entre TowerCos et opérateurs. La concentration est mesurée par propriétaire, pas par groupe.', 'The register does not publish ownership links between TowerCos and operators. Concentration is measured per owner, not per group.')}</li>
+      <li>{t('Les installations de la Défense, de l’Intérieur et de l’Aviation civile sont exclues du registre public.', 'Defence, Interior and Civil Aviation installations are excluded from the public register.')}</li>
+      <li>{t('Les dates de mise en service des émetteurs sont absentes de l’export 2018.', 'Transmitter commissioning dates are missing from the 2018 export.')}</li>
+      <li>{t('L’indice compare les départements entre eux : un score de 100 signifie « le plus exposé des 96 », pas un seuil absolu. Suite possible : pondérer par la population couverte (INSEE) et par la qualité de service mesurée.', 'The index compares départements with each other: a score of 100 means “the most exposed of the 96”, not an absolute threshold. A possible next step: weight it by population covered (INSEE) and by measured quality of service.')}</li>
+    </ul>
+    <p><a class="link link-arrow" href={REPO} rel="noopener">{t('Code sur GitHub', 'Code on GitHub')} <span class="arr" aria-hidden="true">↗</span></a> &nbsp; <a class="link link-arrow" href={DATASET} rel="noopener">{t('Jeu de données ANFR', 'ANFR dataset')} <span class="arr" aria-hidden="true">↗</span></a></p>
+  </CaseSection>
+</CaseStudy>
+
+<style>
+  .anfr-band { border-block: 1px solid var(--ink); }
+  .anfr-band__head { display: flex; justify-content: space-between; gap: var(--s-2); padding-block: 12px; border-bottom: 1px solid var(--ink); }
+  .anfr-band__foot { padding-block: var(--s-3); max-width: 110ch; }
+
+  .an-tab { width: 100%; max-width: 44rem; margin-inline: auto; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+  .an-tab--wide { max-width: none; }
+  .an-tab caption { text-align: left; padding-bottom: 8px; }
+  .an-tab th { text-align: left; font-weight: 500; color: var(--ink-2); padding: 8px 12px 8px 0; border-bottom: 1px solid var(--ink); }
+  .an-tab td { padding: 7px 12px 7px 0; border-bottom: 1px solid var(--rule); vertical-align: baseline; }
+  .an-tab .num { text-align: right; white-space: nowrap; }
+  .an-tab__d { color: var(--ink-2); font-size: 13px; }
+  .an-tab__hi td { font-weight: 600; border-bottom-color: var(--ink); }
+
+  .an-fig { width: 100%; }
+  .an-fig svg { width: 100%; height: auto; overflow: visible; margin-top: var(--s-2); }
+  .an-fig figcaption { margin-top: var(--s-2); max-width: 80ch; }
+  .an-grid { stroke: var(--rule); }
+  .an-ax { font-family: var(--f-mono); font-size: 11px; fill: var(--ink-2); }
+  .an-ax--ev { fill: var(--ink); }
+  .an-ev { stroke: var(--ink-3); stroke-dasharray: 3 4; }
+  .an-l { fill: none; stroke-width: 2.4; }
+  .an-l--tc { stroke: var(--blue); }
+  .an-l--op { stroke: var(--accent); }
+  .an-l--q4 { stroke: var(--ink); stroke-width: 1.4; stroke-dasharray: 5 4; }
+  .an-p--tc { fill: var(--blue); }
+  .an-p--op { fill: var(--accent); }
+  .an-p--q4 { fill: var(--ink); }
+  .an-lab { font-family: var(--f-text); font-size: 13px; font-weight: 600; }
+  .an-lab--tc { fill: var(--blue); }
+  .an-lab--op { fill: var(--accent-ink); }
+  .an-lab--q4 { fill: var(--ink); font-weight: 400; }
+
+  .an-reco { list-style: decimal; padding-left: 1.4em; display: grid; gap: 8px; max-width: 44rem; margin-inline: auto; }
+  @media (max-width: 640px) {
+    .an-tab--wide { display: block; overflow-x: auto; }
+  }
+</style>

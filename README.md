@@ -76,3 +76,16 @@ node scripts/pathfinding/verify.mjs parite.json src/data/pathfinding-parity.json
 ## Ajouter une étude de cas
 
 Créer `src/pages/travaux/<slug>.astro` sur le modèle de `cmapss.astro` (gabarit `CaseStudy` + sections `CaseSection`), puis renseigner `caseStudy: '/travaux/<slug>/'` dans `projects.ts`.
+
+## Étude de cas « Qui contrôle les antennes ? » (ANFR)
+
+Le tableau de bord d'origine (dépôt `anfr-supports-dashboard`) est une application Streamlit. Pour le site statique,
+`scripts/anfr/export.py` exécute le code d'analyse du dépôt (`src/analytics.py`) et écrit `src/data/anfr.json`
+(indicateurs, historique 2018-2026, composantes de l'indice par département) et `public/data/anfr/supports.bin.gz`
+(les 69 302 supports de métropole, 6 octets chacun). L'explorateur (`src/viz/anfr.ts`) recalcule l'indice de
+dépendance en JavaScript ; avec des poids égaux il retrouve la valeur Python pour les 96 départements.
+
+```bash
+cd <dépôt anfr-supports-dashboard>
+python <portfolio>/scripts/anfr/export.py <portfolio>
+```

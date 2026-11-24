@@ -23,6 +23,7 @@ export const routes = {
   planner: { fr: '/travaux/study-planner/', en: '/en/work/study-planner/' },
   cdataframe: { fr: '/travaux/cdataframe/', en: '/en/work/cdataframe/' },
   pathfinding: { fr: '/travaux/plus-court-chemin/', en: '/en/work/shortest-path/' },
+  anfr: { fr: '/travaux/antennes/', en: '/en/work/mobile-masts/' },
 } as const;
 export type RouteKey = keyof typeof routes;
 

@@ -12,6 +12,7 @@ const t = (fr: string, en: string) => (lang === 'fr' ? fr : en);
 const layout: Record<string, string> = {
   cmapss: 'e--feature',
   pathfinding: 'e--band',
+  anfr: 'e--band e--band-r',
   consommation: 'e--left7',
   audit: 'e--right5',
   chatbot: 'e--band',
@@ -49,7 +50,7 @@ const list = projects.map((p) => ({
       {list.map((p) => {
         const href = p.url;
         const isDemo = p.figure === 'degradation' && cmapss.meta.demo;
-        const isReal = (p.figure === 'degradation' && !cmapss.meta.demo) || p.figure === 'multiples' || p.figure === 'streets';
+        const isReal = (p.figure === 'degradation' && !cmapss.meta.demo) || p.figure === 'multiples' || p.figure === 'streets' || p.figure === 'towers';
         return (
           <article class:list={['e', layout[p.slug], 'reveal']} aria-labelledby={`p-${p.slug}`}>
             <figure class="e__fig">
@@ -62,7 +63,7 @@ const list = projects.map((p) => ({
               )}
               <figcaption class="e__cap">
                 <span class="meta"><span class="accent">Fig. 2.{Number(p.n)}</span>&nbsp;&nbsp;{p.figCaption}</span>
-                {isDemo ? <span class="tag-demo">{t('Données démo', 'Demo data')}</span> : isReal ? <span class="meta meta--ink2">{p.figure === 'multiples' ? t('Données RTE éCO2mix', 'RTE éCO2mix data') : p.figure === 'streets' ? t('Données OpenStreetMap', 'OpenStreetMap data') : t('Données NASA FD001', 'NASA FD001 data')}</span> : <span class="meta meta--ink2">{t('Figure illustrative', 'Illustrative figure')}</span>}
+                {isDemo ? <span class="tag-demo">{t('Données démo', 'Demo data')}</span> : isReal ? <span class="meta meta--ink2">{p.figure === 'multiples' ? t('Données RTE éCO2mix', 'RTE éCO2mix data') : p.figure === 'streets' ? t('Données OpenStreetMap', 'OpenStreetMap data') : p.figure === 'towers' ? t('Données ANFR', 'ANFR data') : t('Données NASA FD001', 'NASA FD001 data')}</span> : <span class="meta meta--ink2">{t('Figure illustrative', 'Illustrative figure')}</span>}
               </figcaption>
             </figure>
             <div class="e__text">
@@ -221,6 +222,8 @@ const list = projects.map((p) => ({
   .e--band { grid-column: 1 / -1; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--gutter); }
   .e--band .e__fig { grid-column: 4 / -1; grid-row: 1; }
   .e--band .e__text { grid-column: 1 / span 3; grid-row: 1; }
+  .e--band-r .e__fig { grid-column: 1 / span 9; }
+  .e--band-r .e__text { grid-column: 10 / -1; }
   .e--left5 { grid-column: 2 / span 5; }
   .e--right6 { grid-column: 8 / span 5; margin-top: var(--s-7); }
 

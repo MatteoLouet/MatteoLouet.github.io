@@ -10,6 +10,7 @@ import { rng } from '../../lib/rng';
 import cmapss from '../../data/cmapss.json';
 import elec from '../../data/elec.json';
 import pfThumb from '../../data/pathfinding-thumb.json';
+import anfr from '../../data/anfr.json';
 
 import type { Lang } from '../../i18n';
 interface Props { kind: FigureKey; label: string; lang: Lang }
@@ -187,6 +188,23 @@ if (kind === 'memory') {
 /* ---------------- 9. Plus court chemin : vraies sorties de Dijkstra et A* sur le réseau piéton ---------------- */
 const streets = kind === 'streets' ? pfThumb : null;
 
+/* ---------------- 10. Antennes : vraie part des supports par type de propriétaire (registre ANFR) ---------------- */
+let tow: any = null;
+if (kind === 'towers') {
+  const W = 800, H = 430, m = { l: 46, r: 132, t: 20, b: 34 };
+  const h = anfr.historique, A = h.annees, last = A.length - 1;
+  const x = (i: number) => m.l + (i / last) * (W - m.l - m.r);
+  const y = (v: number) => m.t + (1 - v / 0.6) * (H - m.t - m.b);
+  const pct = (v: number) => tr(`${Math.round(v * 100)} %`, `${Math.round(v * 100)}%`);
+  const s = (vs: number[]) => line(vs.map((v, i) => [x(i), y(v)] as [number, number]));
+  tow = {
+    W, H, A, x, y, pct, last,
+    grid: [0, 0.2, 0.4, 0.6].map((v) => ({ v, y: y(v), t: pct(v) })),
+    tc: { d: s(h.part_towerco), v: h.part_towerco, l: 'TowerCos' },
+    op: { d: s(h.part_operateur), v: h.part_operateur, l: tr('Opérateurs', 'Operators') },
+  };
+}
+
 /* ---------------- 6. Diagramme de séquence ---------------- */
 const seq = kind === 'sequence' ? {
   W: 600, H: 420,
@@ -302,6 +320,24 @@ const seq = kind === 'sequence' ? {
     </svg>
   )}
 
+  {tow && (
+    <svg viewBox={`0 0 ${tow.W} ${tow.H}`}>
+      {tow.grid.map((g: any) => (
+        <g><line class="g12" x1="46" x2={tow.W - 132} y1={g.y} y2={g.y} /><text class="ax-label" x="38" y={g.y + 4} text-anchor="end">{g.t}</text></g>
+      ))}
+      {tow.A.map((a: number, i: number) => (i % 2 === 0 ? <text class="ax-label" x={tow.x(i)} y={tow.H - 10} text-anchor="middle">{a}</text> : null))}
+      <path class="tw-tc" d={tow.tc.d} />
+      <path class="tw-op" d={tow.op.d} />
+      {[tow.tc, tow.op].map((s: any, k: number) => (
+        <g>
+          <circle class={k ? 'tw-dot-op' : 'tw-dot-tc'} cx={tow.x(0)} cy={tow.y(s.v[0])} r="4" />
+          <circle class={k ? 'tw-dot-op' : 'tw-dot-tc'} cx={tow.x(tow.last)} cy={tow.y(s.v[tow.last])} r="5" />
+          <text class={k ? 'tw-lab-op' : 'tw-lab-tc'} x={tow.x(tow.last) + 12} y={tow.y(s.v[tow.last]) + 5}>{s.l} {tow.pct(s.v[tow.last])}</text>
+        </g>
+      ))}
+    </svg>
+  )}
+
   {mem && (
     <svg viewBox={`0 0 ${mem.W} ${mem.H}`}>
       <rect class="tbl" x="10" y="150" width="150" height="120" />
@@ -362,6 +398,12 @@ const seq = kind === 'sequence' ? {
   .st-pin { fill: var(--paper); stroke: var(--ink); stroke-width: 2; }
   .st-pin--b { fill: var(--ink); }
   .pf svg { width: 100%; height: auto; overflow: visible; }
+  .tw-tc { fill: none; stroke: var(--blue); stroke-width: 3; stroke-linejoin: round; }
+  .tw-op { fill: none; stroke: var(--accent); stroke-width: 3; stroke-linejoin: round; }
+  .tw-dot-tc { fill: var(--blue); }
+  .tw-dot-op { fill: var(--accent); }
+  .tw-lab-tc { font-family: var(--f-text); font-size: 15px; font-weight: 600; fill: var(--blue); }
+  .tw-lab-op { font-family: var(--f-text); font-size: 15px; font-weight: 600; fill: var(--accent-ink); }
 
   .g12 { stroke: var(--rule); stroke-width: 1; }
   .thin { fill: none; stroke: var(--ink); stroke-opacity: 0.16; stroke-width: 1; }
